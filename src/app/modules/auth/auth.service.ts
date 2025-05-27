@@ -8,15 +8,14 @@ import { USER_STATUS } from '../../constant';
 import AppError from '../../utils/AppError';
 import { decodeToken } from '../../utils/decodeToken';
 import generateToken from '../../utils/generateToken';
-import { isMatchedPassword } from '../../utils/matchPassword';
 import { OtpService } from '../otp/otp.service';
 import { TUser } from '../user/user.interface';
 import User from '../user/user.model';
 
 
-const loginUser = async (payload: Pick<TUser, 'email' | 'password'>) => {
-  const { email, password } = payload;
-  const user = await User.findOne({ email }).select('+password');
+const loginUser = async (payload: Pick<TUser, 'phoneNumber'>) => {
+  const { phoneNumber } = payload;
+  const user = await User.findOne({ phoneNumber }).select('+password');
 
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, 'This user is not found!');
@@ -32,20 +31,15 @@ const loginUser = async (payload: Pick<TUser, 'email' | 'password'>) => {
     throw new AppError(httpStatus.FORBIDDEN, 'This user is blocked!');
   }
 
-  const matchPassword = await isMatchedPassword(password, user?.password);
-
-  if (!matchPassword) {
-    throw new AppError(httpStatus.FORBIDDEN, 'password not matched');
-  }
 
   const userData = {
-    email: user?.email,
     userId: user?._id,
     uid: user?.uid,
-    profileId: user?.profile,
-    assignedCompany: user?.assignedCompany,
-    myCompany: user?.myCompany,
-    dispatcherCompany: user?.dispatcherCompany,
+    studentId: user?.studentId,
+    parentsId: user?.parentsId,
+    schoolId: user?.schoolId,
+    teacherId: user?.teacherId,
+    phoneNumber: user?.phoneNumber,
     name: user?.name,
     role: user?.role,
   };
@@ -63,7 +57,7 @@ const loginUser = async (payload: Pick<TUser, 'email' | 'password'>) => {
   );
 
   const loginData = await User.findOne({
-    email,
+    phoneNumber,
   }).populate('profile');
   return {
     accessToken,

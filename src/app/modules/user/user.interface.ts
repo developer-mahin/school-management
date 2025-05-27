@@ -3,46 +3,25 @@ import { Model, ObjectId } from 'mongoose';
 
 export type TRole =
   | 'admin'
-  | 'customer'
-  | 'driver'
-  | 'dispatcher'
-  | 'company'
-  | 'hopperCompany';
+  | 'supper-admin'
+  | 'school'
+  | 'teacher'
+  | 'parents'
+  | 'student';
 export type TStatus = 'active' | 'blocked';
-export type TActivity = 'available' | 'offline' | 'on-job';
-
-export type TLocation = {
-  type: string;
-  coordinates: number[];
-};
-
-export type TServiceCategory = {
-  category: ObjectId;
-};
 
 export type TUser = {
   uid: string;
-  profile: ObjectId;
-  assignedCompany: ObjectId;
-  email: string;
+  studentId?: ObjectId;
+  parentsId?: ObjectId;
+  schoolId: ObjectId;
+  teacherId: ObjectId;
+  phoneNumber: string;
   name: string;
-  phone: string;
-  password: string;
+  image: string;
   role: TRole;
   status: TStatus;
-  location?: TLocation;
-  isCompanyAssigned?: boolean;
   isDeleted: boolean;
-  isSocialLogin: boolean;
-  isSubscribed: boolean;
-  isCompleted: boolean;
-  isApproved: boolean;
-  myCompany: ObjectId;
-  ratings: number;
-  distanceRedius?: number;
-  serviceCategory: TServiceCategory[];
-  activity?: TActivity;
-  dispatcherCompany: ObjectId;
 };
 
 export interface UserModel extends Model<TUser> {

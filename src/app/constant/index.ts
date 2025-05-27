@@ -1,10 +1,10 @@
 export const USER_ROLE = {
   admin: 'admin',
-  customer: 'customer',
-  driver: 'driver',
-  dispatcher: 'dispatcher',
-  company: 'company',
-  hopperCompany: 'hopperCompany',
+  supperAdmin: 'supper-admin',
+  school: 'school',
+  teacher: 'teacher',
+  parents: 'parents',
+  student: 'student',
 } as const;
 
 export const USER_STATUS = {
@@ -16,17 +16,4 @@ export const GENDER = {
   male: 'male',
   female: 'female',
   others: 'others',
-} as const;
-
-export const JOB_STATUS = {
-  pending: 'pending',
-  in_progress: 'in-progress',
-  dispatched: 'dispatched',
-  en_route: 'en-route',
-  working: 'working',
-  completed: 'completed',
-  cancelled: 'cancelled',
-  just: 'just',
-  picked_up: 'picked-up',
-  dropped_off: 'dropped-off',
 } as const;

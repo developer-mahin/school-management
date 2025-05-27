@@ -1,11 +1,11 @@
 export type TAuthUser = {
-  email: string;
   userId: string;
   uid: string;
-  profileId: string;
-  assignedCompany?: string;
-  dispatcherCompany?: string;
-  myCompany?: string;
+  studentId: string;
+  parentsId: string;
+  schoolId: string;
+  teacherId: string;
+  phoneNumber: string;
   name: string;
   role: string;
   iat: number;
