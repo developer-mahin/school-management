@@ -6,6 +6,7 @@ import { PaymentRoutes } from '../modules/payment/payment.routes';
 import { SubscriptionRoutes } from '../modules/subscription/subscription.routes';
 import { UserRoutes } from '../modules/user/user.routes';
 import { StaticContentRoutes } from '../modules/staticContent/staticContent.routes';
+import { SchoolRoutes } from '../modules/school/school.routes';
 const router = Router();
 
 type TRoutes = {
@@ -21,6 +22,10 @@ const routes: TRoutes[] = [
   {
     path: '/auth',
     route: AuthRoutes,
+  },
+    {
+    path: '/school',
+    route: SchoolRoutes,
   },
   {
     path: '/payment',
