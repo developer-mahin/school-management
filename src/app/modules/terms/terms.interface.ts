@@ -1,6 +1,6 @@
-import { ObjectId } from "mongoose"
+import { ObjectId } from 'mongoose';
 
 export type TTerms = {
-    schoolId: ObjectId;
-    termsName: string;
-}
+  schoolId: ObjectId;
+  termsName: string;
+};

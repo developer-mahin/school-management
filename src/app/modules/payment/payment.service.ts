@@ -1,59 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import crypto from 'crypto';
 import httpStatus from 'http-status';
 import mongoose from 'mongoose';
-import { TAuthUser } from '../../interface/authUser';
-import AppError from '../../utils/AppError';
-import Job from '../job/job.model';
-import { TJobRequest } from '../jobRequest/jobRequest.interface';
-import JobRequest from '../jobRequest/jobRequest.model';
-import { TSubscription } from '../subscription/subscription.interface';
-import Subscription from '../subscription/subscription.model';
-import { SubscriptionService } from '../subscription/subscription.service';
-import User from '../user/user.model';
-import { PaymentHelper } from './payment.helper';
-import { TPayment } from './payment.interface';
-import { createCheckoutSession } from './payment.utils';
-import crypto from 'crypto';
-import Payment from './payment.model';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 import { months, StatisticHelper } from '../../helper/staticsHelper';
-import { USER_ROLE } from '../../constant';
+import { TAuthUser } from '../../interface/authUser';
+import AppError from '../../utils/AppError';
+import { TSubscription } from '../subscription/subscription.interface';
+import { SubscriptionService } from '../subscription/subscription.service';
+import { PaymentHelper } from './payment.helper';
+import { TPayment } from './payment.interface';
+import Payment from './payment.model';
+import { createCheckoutSession } from './payment.utils';
 
 const makePayment = async (
   payload: Partial<TPayment | TSubscription | any>,
   user: TAuthUser,
 ) => {
   let paymentData = {} as any;
-
-  const jobRequest = (await JobRequest.findById(
-    payload.jobRequestId,
-  )) as TJobRequest;
-
-  const findDriver = await User.findById(jobRequest?.driver);
-
-  const findJob = await Job.findOne({ _id: jobRequest?.jobId });
-
-  let subscription;
-  if (payload.subscriptionId) {
-    subscription = await Subscription.findById(payload.subscriptionId);
-    paymentData.subscriptionId = payload.subscriptionId;
-    paymentData.price = subscription?.price;
-    payload.companyId = user.userId as any;
-    payload.price = subscription?.price;
-
-    if (!subscription)
-      throw new AppError(httpStatus.NOT_FOUND, 'Subscription not found');
-  } else {
-    if (!findJob) throw new AppError(httpStatus.NOT_FOUND, 'Job not found');
-    if (!findDriver)
-      throw new AppError(httpStatus.NOT_FOUND, 'Driver not found');
-    if (!jobRequest)
-      throw new AppError(httpStatus.NOT_FOUND, 'Job request not found');
-
-    payload.driverId = jobRequest?.driver;
-    payload.companyId = findDriver?.assignedCompany;
-    payload.userId = user.userId as any;
-  }
 
   paymentData = {
     ...payload,
@@ -151,14 +115,6 @@ const earningStatistic = async (
     query.year as string,
   );
 
-  const hopperCompany = await User.findOne({
-    role: USER_ROLE.hopperCompany,
-  });
-
-  if (user.role === USER_ROLE.admin) {
-    user.myCompany = hopperCompany?.myCompany as any;
-  }
-
   // Aggregation pipeline
   const monthlyCounts = await Payment.aggregate([
     {
@@ -170,7 +126,7 @@ const earningStatistic = async (
                 createdAt: { $gte: startDate, $lt: endDate },
               },
               {
-                companyId: new mongoose.Types.ObjectId(String(user.myCompany)),
+                companyId: new mongoose.Types.ObjectId(String(user.userId)),
               },
             ],
           },
@@ -219,7 +175,7 @@ const paymentList = async (user: TAuthUser, query: Record<string, unknown>) => {
     .customPipeline([
       {
         $match: {
-          companyId: new mongoose.Types.ObjectId(String(user.myCompany)),
+          companyId: new mongoose.Types.ObjectId(String(user.userId)),
         },
       },
       {

@@ -4,7 +4,6 @@ import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { AuthService } from './auth.service';
 
-
 const loginUser = catchAsync(async (req, res) => {
   const { accessToken, refreshToken, user } = await AuthService.loginUser(
     req.body,
@@ -27,7 +26,6 @@ const loginUser = catchAsync(async (req, res) => {
   });
 });
 
-
 const verifyOtp = catchAsync(async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
   const otp = req.body;
@@ -41,8 +39,6 @@ const verifyOtp = catchAsync(async (req, res) => {
   });
 });
 
-
-
 const resendOtp = catchAsync(async (req, res) => {
   const token = req.headers.authorization;
   const result = await AuthService.resendOtp(token as string, req.body);
@@ -54,7 +50,6 @@ const resendOtp = catchAsync(async (req, res) => {
     data: result,
   });
 });
-
 
 export const AuthController = {
   resendOtp,

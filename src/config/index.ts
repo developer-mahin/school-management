@@ -42,4 +42,10 @@ export default {
   logger_username: process.env.LOGGER_USERNAME,
   logger_password: process.env.LOGGER_PASSWORD,
   admin_password: process.env.ADMIN_PASSWORD,
+
+  twilio: {
+    account_sid: process.env.TWILIO_ACCOUNT_SID,
+    auth_token: process.env.TWILIO_AUTH_TOKEN,
+    phone_number: process.env.TWILIO_PHONE_NUMBER,
+  },
 };

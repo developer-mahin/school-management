@@ -11,10 +11,23 @@ import generateToken from '../../utils/generateToken';
 import { OtpService } from '../otp/otp.service';
 import { TUser } from '../user/user.interface';
 import User from '../user/user.model';
+import twilio from 'twilio';
 
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const client = twilio(accountSid, authToken);
 
 const loginUser = async (payload: Pick<TUser, 'phoneNumber'>) => {
   const { phoneNumber } = payload;
+
+  const message = await client.messages.create({
+    body: 'kire hala',
+    from: '+880 1781-254023',
+    to: '+880 1798-552909',
+  });
+
+  return message;
+
   const user = await User.findOne({ phoneNumber }).select('+password');
 
   if (!user) {
@@ -30,7 +43,6 @@ const loginUser = async (payload: Pick<TUser, 'phoneNumber'>) => {
   if (checkUserStatus === USER_STATUS.blocked) {
     throw new AppError(httpStatus.FORBIDDEN, 'This user is blocked!');
   }
-
 
   const userData = {
     userId: user?._id,
@@ -137,9 +149,8 @@ const resendOtp = async (
   );
 };
 
-
 export const AuthService = {
   resendOtp,
   loginUser,
-  verifyOtp
+  verifyOtp,
 };

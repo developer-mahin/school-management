@@ -1,14 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import crypto from 'crypto';
-import MySubscription from '../mySubscription/mySubscription.model';
 import httpStatus from 'http-status';
-import AppError from '../../utils/AppError';
-import Payment from './payment.model';
-import { NOTIFICATION_TYPE } from '../notification/notification.interface';
 import sendNotification from '../../../socket/sendNotification';
-import JobRequest from '../jobRequest/jobRequest.model';
-import mongoose from 'mongoose';
+import AppError from '../../utils/AppError';
+import MySubscription from '../mySubscription/mySubscription.model';
+import { NOTIFICATION_TYPE } from '../notification/notification.interface';
 import User from '../user/user.model';
+import Payment from './payment.model';
 
 const handleMySubscriptionAndPayment = async ({
   session,
@@ -41,7 +39,6 @@ const handleMySubscriptionAndPayment = async ({
       { new: true, session },
     );
 
-    findUser!.isSubscribed = true;
     await findUser?.save({ session });
   } else {
     const mySubscription = await MySubscription.create([mySubscriptionBody], {
@@ -120,72 +117,6 @@ const handleNonSubscriptionPayment = async ({
     earnFrom: paymentBody.earnFrom,
   };
 
-  const findJobReQuest = await JobRequest.aggregate([
-    {
-      $match: {
-        _id: new mongoose.Types.ObjectId(String(paymentBody.jobRequestId)),
-      },
-    },
-    {
-      $lookup: {
-        from: 'jobs',
-        localField: 'jobId',
-        foreignField: '_id',
-        as: 'jobs',
-      },
-    },
-    {
-      $unwind: {
-        path: '$jobs',
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: 'services',
-        localField: 'jobs.service',
-        foreignField: '_id',
-        as: 'jobs.service',
-      },
-    },
-    {
-      $unwind: {
-        path: '$jobs.service',
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: 'services',
-        localField: 'jobs.extraService',
-        foreignField: '_id',
-        as: 'jobs.extraService',
-        pipeline: [
-          {
-            $lookup: {
-              from: 'services',
-              localField: 'service',
-              foreignField: '_id',
-              as: 'service',
-            },
-          },
-          {
-            $unwind: {
-              path: '$service',
-              preserveNullAndEmptyArrays: true,
-            },
-          },
-        ],
-      },
-    },
-    {
-      $project: {
-        service: '$jobs.service',
-        extraService: '$jobs.extraService',
-      },
-    },
-  ]);
-
   const payment = await Payment.create([paymentData], { session });
   if (!payment)
     throw new AppError(httpStatus.BAD_REQUEST, 'Payment not created');
@@ -197,7 +128,6 @@ const handleNonSubscriptionPayment = async ({
     message: `Payment of $${amount} is received`,
     type: NOTIFICATION_TYPE.payment,
     linkId: payment[0]._id as any,
-    data: findJobReQuest[0],
   };
   await sendNotification({ userId }, notificationBody);
 };

@@ -1,14 +1,14 @@
-import { ObjectId } from "mongoose"
+import { ObjectId } from 'mongoose';
 
 export type TAssignment = {
-    schoolId: ObjectId
-    classId: ObjectId
-    subjectId: ObjectId
-    className: string;
-    subjectName: string;
-    title: string;
-    dueDate: Date;
-    marks: number;
-    fileUrl?: string;
-    status: "on-going" | "completed" | "not-started";
-}
+  schoolId: ObjectId;
+  classId: ObjectId;
+  subjectId: ObjectId;
+  className: string;
+  subjectName: string;
+  title: string;
+  dueDate: Date;
+  marks: number;
+  fileUrl?: string;
+  status: 'on-going' | 'completed' | 'not-started';
+};

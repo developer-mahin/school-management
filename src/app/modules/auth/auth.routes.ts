@@ -16,7 +16,6 @@ router
     validateRequest(AuthValidation.otpValidation),
     AuthController.verifyOtp,
   )
-  .post('/resend_otp', AuthController.resendOtp)
-
+  .post('/resend_otp', AuthController.resendOtp);
 
 export const AuthRoutes = router;

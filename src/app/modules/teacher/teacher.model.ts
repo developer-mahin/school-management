@@ -1,30 +1,33 @@
-import { model, Schema } from "mongoose";
-import { TTeacher } from "./teacher.interface";
+import { model, Schema } from 'mongoose';
+import { TTeacher } from './teacher.interface';
 
-const teacherSchema = new Schema<TTeacher>({
+const teacherSchema = new Schema<TTeacher>(
+  {
     userId: {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
     },
     schoolId: {
-        type: Schema.Types.ObjectId,
-        ref: 'School',
-        required: true
+      type: Schema.Types.ObjectId,
+      ref: 'School',
+      required: true,
     },
     schoolName: {
-        type: String,
-        required: true,
-        trim: true
+      type: String,
+      required: true,
+      trim: true,
     },
     subjectName: {
-        type: String,
-        required: true,
-        trim: true
-    }
-}, {
+      type: String,
+      required: true,
+      trim: true,
+    },
+  },
+  {
     timestamps: true,
-})
+  },
+);
 
 const Teacher = model<TTeacher>('Teacher', teacherSchema);
 export default Teacher;

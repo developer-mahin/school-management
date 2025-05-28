@@ -1,6 +1,6 @@
-import { ObjectId } from "mongoose";
+import { ObjectId } from 'mongoose';
 
 export type TSubject = {
-    schoolId: ObjectId;
-    subjectName: string;
-}
+  schoolId: ObjectId;
+  subjectName: string;
+};

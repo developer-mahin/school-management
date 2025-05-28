@@ -59,7 +59,6 @@ export const userSchema = new mongoose.Schema<TUser, UserModel>(
       type: Boolean,
       default: false,
     },
-
   },
   {
     timestamps: true,

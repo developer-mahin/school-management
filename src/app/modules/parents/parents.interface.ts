@@ -1,6 +1,6 @@
-import { ObjectId } from "mongoose";
+import { ObjectId } from 'mongoose';
 
 export type TParents = {
-    userId: ObjectId;
-    childId: ObjectId;
-}
+  userId: ObjectId;
+  childId: ObjectId;
+};
