@@ -69,6 +69,16 @@ export async function createUserWithProfile<T>(
         );
         if (!newProfile) throw new Error(`${payload.role} not created`);
 
+
+        const userIdField = `${payload.role}Id`;
+
+        const updateUser = await User.findOneAndUpdate(
+            { _id: newUser._id },
+            { [userIdField]: newProfile._id },
+            { new: true, session }
+        );
+
+        if (!updateUser) throw new Error('User not updated');
         await session.commitTransaction();
         session.endSession();
 

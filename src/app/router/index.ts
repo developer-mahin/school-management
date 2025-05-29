@@ -3,10 +3,11 @@ import { AuthRoutes } from '../modules/auth/auth.routes';
 import { ConversationRoutes } from '../modules/conversation/conversation.routes';
 import { NotificationRoutes } from '../modules/notification/notification.routes';
 import { PaymentRoutes } from '../modules/payment/payment.routes';
-import { SubscriptionRoutes } from '../modules/subscription/subscription.routes';
-import { UserRoutes } from '../modules/user/user.routes';
-import { StaticContentRoutes } from '../modules/staticContent/staticContent.routes';
 import { SchoolRoutes } from '../modules/school/school.routes';
+import { StaticContentRoutes } from '../modules/staticContent/staticContent.routes';
+import { SubscriptionRoutes } from '../modules/subscription/subscription.routes';
+import { TeacherRoutes } from '../modules/teacher/teacher.routes';
+import { UserRoutes } from '../modules/user/user.routes';
 const router = Router();
 
 type TRoutes = {
@@ -23,9 +24,13 @@ const routes: TRoutes[] = [
     path: '/auth',
     route: AuthRoutes,
   },
-    {
+  {
     path: '/school',
     route: SchoolRoutes,
+  },
+  {
+    path: '/teacher',
+    route: TeacherRoutes,
   },
   {
     path: '/payment',

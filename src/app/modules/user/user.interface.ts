@@ -3,11 +3,13 @@ import { Model, ObjectId } from 'mongoose';
 
 export type TRole =
   | 'admin'
-  | 'supper-admin'
+  | 'supperAdmin'
   | 'school'
   | 'teacher'
   | 'parents'
   | 'student';
+
+
 export type TStatus = 'active' | 'blocked';
 
 export type TUser = {

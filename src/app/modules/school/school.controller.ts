@@ -13,6 +13,17 @@ const createSchool = catchAsync(async (req, res) => {
     });
 });
 
+const getSchoolList = catchAsync(async (req, res) => {
+    const result = await SchoolService.getSchoolList();
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: 'Schools fetched successfully',
+        data: result,
+    });
+});
+
 export const SchoolController = {
     createSchool,
+    getSchoolList
 };

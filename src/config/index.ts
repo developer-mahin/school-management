@@ -13,8 +13,7 @@ export default {
   ip: process.env.IP,
 
   admin: {
-    admin_email: process.env.ADMIN_EMAIL,
-    admin_password: process.env.ADMIN_PASSWORD,
+    admin_phone_number: process.env.ADMIN_PHONE_NUMBER,
   },
 
   monitor_usernames: process.env.MONITOR_USERNAMES,

@@ -1,6 +1,6 @@
 export const USER_ROLE = {
   admin: 'admin',
-  supperAdmin: 'supper-admin',
+  supperAdmin: 'supperAdmin',
   school: 'school',
   teacher: 'teacher',
   parents: 'parents',

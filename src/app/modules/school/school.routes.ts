@@ -8,4 +8,5 @@ const router = Router()
 
 router.post("/create", validateRequest(SchoolValidation.createSchoolValidation), SchoolController.createSchool)
 
+
 export const SchoolRoutes = router
