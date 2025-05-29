@@ -2,29 +2,35 @@
 import httpStatus from 'http-status';
 import mongoose from 'mongoose';
 import AppError from '../../utils/AppError';
-import sendMail from '../../utils/sendMail';
 import OTP from './otp.model';
 
 const sendOTP = async (
-  payload: any,
+  phoneNumber: string,
   otpExpiryTime?: number,
   receiverType?: string,
   purpose?: string,
   otp?: number,
 ) => {
-  const subject =
-    purpose === 'email-verification' ? 'Email Verification' : 'Forget Password';
-  if (receiverType === 'email') {
-    const emailBody = {
-      email: payload.email,
-      subject: subject,
-      html: payload.html,
-    };
-    await sendMail(emailBody);
-  }
+
+  const expiredAt = new Date();
+  expiredAt.setMinutes(expiredAt.getMinutes() + otpExpiryTime!);
+
+  const message = `Your OTP code is ${otp}. 
+  It will expire in ${otpExpiryTime} minute${otpExpiryTime! > 1 ? 's' : ''}. 
+Please do not share this code with anyone.`;
+
+
+  // if (receiverType === 'phone') {
+  //   const emailBody = {
+  //     phoneNumber,
+  //     message
+  //   };
+
+  //   await sendSms(emailBody);
+  // }
 
   const findExistingOtp = await OTP.findOne({
-    sendTo: payload.email,
+    sendTo: phoneNumber,
     receiverType,
     purpose,
   });
@@ -33,13 +39,8 @@ const sendOTP = async (
     await OTP.findByIdAndDelete(findExistingOtp._id);
   }
 
-  // return
-  // const otpExpiryTime = parseInt(config.otp_expire_in as string) || 3;
-  const expiredAt = new Date();
-  expiredAt.setMinutes(expiredAt.getMinutes() + otpExpiryTime!);
-
   const newOtp = await OTP.create({
-    sendTo: payload.email,
+    sendTo: phoneNumber,
     receiverType,
     purpose,
     otp,
@@ -61,9 +62,9 @@ const sendOTP = async (
   return true;
 };
 
-const checkOtpByEmail = async (email: string) => {
+const checkOtpByPhoneNumber = async (phoneNumber: string) => {
   const data = await OTP.findOne({
-    sendTo: email,
+    sendTo: phoneNumber,
     status: 'pending',
     expiredAt: { $gt: new Date() },
   });
@@ -110,7 +111,7 @@ setTimeout(async () => {
 
 export const OtpService = {
   sendOTP,
-  checkOtpByEmail,
+  checkOtpByPhoneNumber,
   verifyOTP,
   deleteOtpById,
 };

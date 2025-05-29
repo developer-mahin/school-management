@@ -12,6 +12,7 @@ const schoolSchema = new Schema<TSchool>(
       type: String,
       required: true,
       trim: true,
+      unique: true,
     },
     schoolAddress: {
       type: String,

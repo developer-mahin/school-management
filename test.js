@@ -6,12 +6,14 @@ const client = twilio(accountSid, authToken);
 
 const sendMessage = async () => {
   const message = await client.messages.create({
-    body: 'kire hala',
-    from: '+8801785767584',
-    to: '+8801798552909',
+    from: '+19787231530',
+    to: '+96599551188',
+    body: `Hi Alajmi,
+    hopefully you are doing well,
+    Im Mahin, Developer in your school management app`,
   });
 
-  return message;
+  console.log(message);
 };
 
 sendMessage();

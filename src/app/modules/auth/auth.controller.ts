@@ -1,28 +1,23 @@
 import httpStatus from 'http-status';
-import config from '../../../config';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { AuthService } from './auth.service';
 
 const loginUser = catchAsync(async (req, res) => {
-  const { accessToken, refreshToken, user } = await AuthService.loginUser(
+  const result = await AuthService.loginUser(
     req.body,
   );
 
-  res.cookie('refreshToken', refreshToken, {
-    secure: config.NODE_ENV === 'production',
-    httpOnly: true,
-  });
+  // res.cookie('refreshToken', refreshToken, {
+  //   secure: config.NODE_ENV === 'production',
+  //   httpOnly: true,
+  // });
 
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
     message: 'User logged in successfully',
-    data: {
-      accessToken,
-      refreshToken,
-      user,
-    },
+    data: result,
   });
 });
 
@@ -40,8 +35,8 @@ const verifyOtp = catchAsync(async (req, res) => {
 });
 
 const resendOtp = catchAsync(async (req, res) => {
-  const token = req.headers.authorization;
-  const result = await AuthService.resendOtp(token as string, req.body);
+  const token = req.headers.authorization?.split(' ')[1];
+  const result = await AuthService.resendOtp(token as string);
 
   sendResponse(res, {
     success: true,

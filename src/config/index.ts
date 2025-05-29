@@ -24,14 +24,10 @@ export default {
   jwt: {
     access_token: process.env.ACCESS_KEY,
     access_expires_in: process.env.ACCESS_EXPIRE_IN,
-    sing_up_token: process.env.SIGNUP_KEY,
-    sing_up_expires_in: process.env.SIGNUP_EXPIRE_IN,
-    forgot_password_token: process.env.FORGOT_PASSWORD_KEY,
-    forgot_password_expires_in: process.env.FORGOT_PASSWORD_EXPIRE_IN,
+    sing_in_token: process.env.SIGNIN_KEY,
+    sing_in_expires_in: process.env.SIGNIN_EXPIRE_IN,
     refresh_token: process.env.REFRESH_KEY,
     refresh_expires_in: process.env.REFRESH_EXPIRE_IN,
-    reset_password_token: process.env.RESET_PASSWORD_KEY,
-    reset_password_expires_in: process.env.RESET_PASSWORD_EXPIRE_IN,
   },
 
   otp_expire_in: process.env.OTP_EXPIRE_IN,

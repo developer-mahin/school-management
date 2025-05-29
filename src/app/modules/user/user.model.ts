@@ -18,6 +18,14 @@ export const userSchema = new mongoose.Schema<TUser, UserModel>(
     phoneNumber: {
       type: String,
       unique: true,
+      trim: true,
+      validate: {
+        validator: function (v) {
+          return /^\+\d{1,4}\d{6,14}$/.test(v);
+        },
+        message: props => `${props.value} is not a valid phone number with country code! It should start with '+' followed by country code and number.`,
+      },
+      required: [true, 'Phone number is required'],
     },
     studentId: {
       type: mongoose.Schema.Types.ObjectId,

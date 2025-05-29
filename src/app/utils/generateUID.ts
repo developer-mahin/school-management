@@ -22,7 +22,7 @@ async function generateUID() {
     }
 
     // Generate the custom ID
-    const customID = `HR-${month}${year}-${newUserId}`;
+    const customID = `SM-${month}${year}-${newUserId}`;
     return customID;
   } catch (err) {
     console.error('Error generating custom ID:', err);

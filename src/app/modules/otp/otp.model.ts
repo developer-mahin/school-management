@@ -8,8 +8,8 @@ const otpSchema = new Schema<TOTP>(
     purpose: {
       type: String,
       required: true,
-      enum: ['email-verification', 'forget-password'],
-      default: 'email-verification',
+      enum: ['email-verification', 'forget-password', 'login-verification'],
+      default: 'login-verification',
     },
     otp: { type: String, required: [true, 'OTP is required'], trim: true },
     expiredAt: {
