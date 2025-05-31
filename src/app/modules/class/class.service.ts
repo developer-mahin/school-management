@@ -41,7 +41,6 @@ const deleteClass = async (id: string) => {
 };
 
 const getClassBySchoolId = async (id: string, user: TAuthUser) => {
-
   if (user.role === USER_ROLE.school) {
     id = user.schoolId;
   }
