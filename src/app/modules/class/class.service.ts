@@ -1,3 +1,4 @@
+import { USER_ROLE } from '../../constant';
 import { TAuthUser } from '../../interface/authUser';
 import Level from '../level/level.model';
 import { TClass } from './class.interface';
@@ -39,7 +40,12 @@ const deleteClass = async (id: string) => {
   return result;
 };
 
-const getClassBySchoolId = async (id: string) => {
+const getClassBySchoolId = async (id: string, user: TAuthUser) => {
+
+  if (user.role === USER_ROLE.school) {
+    id = user.schoolId;
+  }
+
   const result = await Class.find({ schoolId: id });
   return result;
 };

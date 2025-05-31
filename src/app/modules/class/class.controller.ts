@@ -51,7 +51,7 @@ const deleteClass = catchAsync(async (req, res) => {
 });
 
 const getClassBySchoolId = catchAsync(async (req, res) => {
-  const result = await ClassService.getClassBySchoolId(req.params.schoolId);
+  const result = await ClassService.getClassBySchoolId(req.params.schoolId, req.user as TAuthUser);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,

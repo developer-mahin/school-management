@@ -4,9 +4,9 @@ export type TStudent = {
   userId: ObjectId;
   schoolId: ObjectId;
   classId: ObjectId;
+  section: string;
   schoolName: string;
   className: string;
-  studentName: string;
   fatherPhoneNumber: string;
   motherPhoneNumber: string;
 };
