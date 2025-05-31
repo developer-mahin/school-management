@@ -10,6 +10,7 @@ import { TeacherRoutes } from '../modules/teacher/teacher.routes';
 import { UserRoutes } from '../modules/user/user.routes';
 import { StudentRoutes } from '../modules/student/student.routes';
 import { LevelRoutes } from '../modules/level/level.routes';
+import { ClassRoutes } from '../modules/class/class.routes';
 const router = Router();
 
 type TRoutes = {
@@ -41,6 +42,10 @@ const routes: TRoutes[] = [
   {
     path: '/level',
     route: LevelRoutes,
+  },
+  {
+    path: '/class',
+    route: ClassRoutes,
   },
   {
     path: '/payment',

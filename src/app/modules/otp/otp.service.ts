@@ -11,14 +11,12 @@ const sendOTP = async (
   purpose?: string,
   otp?: number,
 ) => {
-
   const expiredAt = new Date();
   expiredAt.setMinutes(expiredAt.getMinutes() + otpExpiryTime!);
 
   const message = `Your OTP code is ${otp}. 
   It will expire in ${otpExpiryTime} minute${otpExpiryTime! > 1 ? 's' : ''}. 
 Please do not share this code with anyone.`;
-
 
   // if (receiverType === 'phone') {
   //   const emailBody = {

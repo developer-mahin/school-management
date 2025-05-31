@@ -9,7 +9,6 @@ export type TRole =
   | 'parents'
   | 'student';
 
-
 export type TStatus = 'active' | 'blocked';
 
 export type TUser = {

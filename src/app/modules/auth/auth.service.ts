@@ -10,11 +10,10 @@ import { OtpService } from '../otp/otp.service';
 import { TUser } from '../user/user.interface';
 import User from '../user/user.model';
 
-
 const loginUser = async (payload: Pick<TUser, 'phoneNumber'>) => {
   const { phoneNumber } = payload;
 
-  const user = await User.findOne({ phoneNumber })
+  const user = await User.findOne({ phoneNumber });
 
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, 'This user is not found!');
@@ -38,7 +37,7 @@ const loginUser = async (payload: Pick<TUser, 'phoneNumber'>) => {
     phoneNumber,
     otpExpiryTime,
     'phone',
-    "login-verification",
+    'login-verification',
     otp,
   );
 
@@ -55,7 +54,7 @@ const loginUser = async (payload: Pick<TUser, 'phoneNumber'>) => {
   );
 
   return {
-    signInToken: accessToken
+    signInToken: accessToken,
   };
 };
 
@@ -72,7 +71,6 @@ const verifyOtp = async (token: string, otp: { otp: number }) => {
   const checkOtpExist = await OtpService.checkOtpByPhoneNumber(
     decodedUser.phoneNumber,
   );
-
 
   if (!checkOtpExist) {
     throw new AppError(httpStatus.NOT_FOUND, "Otp doesn't exist");
@@ -91,7 +89,7 @@ const verifyOtp = async (token: string, otp: { otp: number }) => {
 
   const findUser = await User.findOne({
     phoneNumber: decodedUser.phoneNumber,
-  })
+  });
 
   if (!findUser) throw new AppError(httpStatus.NOT_FOUND, 'User not found');
 
@@ -104,7 +102,6 @@ const verifyOtp = async (token: string, otp: { otp: number }) => {
     phoneNumber: findUser.phoneNumber,
     role: findUser.role,
   };
-
 
   const tokenGenerate = generateToken(
     userData,
@@ -121,9 +118,7 @@ const verifyOtp = async (token: string, otp: { otp: number }) => {
   return { accessToken: tokenGenerate, refreshToken, user: findUser };
 };
 
-const resendOtp = async (
-  token: string,
-) => {
+const resendOtp = async (token: string) => {
   const decodedUser = decodeToken(
     token,
     config.jwt.sing_in_token as Secret,
@@ -138,7 +133,7 @@ const resendOtp = async (
     phoneNumber,
     otpExpiryTime,
     'phone',
-    "login-verification",
+    'login-verification',
     otp,
   );
 };

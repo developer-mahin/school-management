@@ -4,9 +4,7 @@ import sendResponse from '../../utils/sendResponse';
 import { AuthService } from './auth.service';
 
 const loginUser = catchAsync(async (req, res) => {
-  const result = await AuthService.loginUser(
-    req.body,
-  );
+  const result = await AuthService.loginUser(req.body);
 
   // res.cookie('refreshToken', refreshToken, {
   //   secure: config.NODE_ENV === 'production',

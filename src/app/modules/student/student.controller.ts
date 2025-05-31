@@ -1,17 +1,17 @@
-import httpStatus from "http-status";
-import catchAsync from "../../utils/catchAsync";
-import sendResponse from "../../utils/sendResponse";
-import { StudentService } from "./student.service";
-import { TAuthUser } from "../../interface/authUser";
+import httpStatus from 'http-status';
+import catchAsync from '../../utils/catchAsync';
+import sendResponse from '../../utils/sendResponse';
+import { StudentService } from './student.service';
+import { TAuthUser } from '../../interface/authUser';
 
 const createStudent = catchAsync(async (req, res) => {
-    const result = await StudentService.createStudent(req.body);
-    sendResponse(res, {
-        success: true,
-        statusCode: httpStatus.CREATED,
-        message: 'Student created successfully',
-        data: result,
-    });
+  const result = await StudentService.createStudent(req.body);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.CREATED,
+    message: 'Student created successfully',
+    data: result,
+  });
 });
 
 // const getAllStudents = catchAsync(async (req, res) => {
@@ -25,6 +25,6 @@ const createStudent = catchAsync(async (req, res) => {
 // });
 
 export const StudentController = {
-    createStudent,
-    // getAllStudents
+  createStudent,
+  // getAllStudents
 };
