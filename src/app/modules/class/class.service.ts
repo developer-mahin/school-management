@@ -23,7 +23,25 @@ const getAllClasses = async (user: TAuthUser, id: string) => {
   return result;
 };
 
+const updateClass = async (id: string, payload: Partial<TClass>) => {
+  const section = payload?.section?.map((item) => item).join(' / ');
+
+  const result = await Class.findByIdAndUpdate(
+    id,
+    { ...payload, section },
+    { new: true },
+  );
+  return result;
+};
+
+const deleteClass = async (id: string) => {
+  const result = await Class.findByIdAndDelete(id);
+  return result;
+};
+
 export const ClassService = {
   createClass,
   getAllClasses,
+  updateClass,
+  deleteClass,
 };

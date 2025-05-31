@@ -30,7 +30,29 @@ const getAllClasses = catchAsync(async (req, res) => {
   });
 });
 
+const updateClass = catchAsync(async (req, res) => {
+  const result = await ClassService.updateClass(req.params.classId, req.body);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Class updated successfully',
+    data: result,
+  });
+});
+
+const deleteClass = catchAsync(async (req, res) => {
+  const result = await ClassService.deleteClass(req.params.classId);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Class deleted successfully',
+    data: result,
+  });
+});
+
 export const ClassController = {
   createClass,
   getAllClasses,
+  updateClass,
+  deleteClass,
 };

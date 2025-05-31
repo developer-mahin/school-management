@@ -11,6 +11,8 @@ route
     '/:levelId',
     auth(USER_ROLE.school, USER_ROLE.supperAdmin),
     ClassController.getAllClasses,
-  );
+  )
+  .patch('/:classId', auth(USER_ROLE.school), ClassController.updateClass)
+  .delete('/:classId', auth(USER_ROLE.school), ClassController.deleteClass);
 
 export const ClassRoutes = route;
