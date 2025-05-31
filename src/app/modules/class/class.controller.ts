@@ -30,7 +30,54 @@ const getAllClasses = catchAsync(async (req, res) => {
   });
 });
 
+const updateClass = catchAsync(async (req, res) => {
+  const result = await ClassService.updateClass(req.params.classId, req.body);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Class updated successfully',
+    data: result,
+  });
+});
+
+const deleteClass = catchAsync(async (req, res) => {
+  const result = await ClassService.deleteClass(req.params.classId);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Class deleted successfully',
+    data: result,
+  });
+});
+
+const getClassBySchoolId = catchAsync(async (req, res) => {
+  const result = await ClassService.getClassBySchoolId(
+    req.params.schoolId,
+    req.user as TAuthUser,
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Classes fetched successfully',
+    data: result,
+  });
+});
+
+const getSectionsByClassId = catchAsync(async (req, res) => {
+  const result = await ClassService.getSectionsByClassId(req.params.classId);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Sections fetched successfully',
+    data: result,
+  });
+});
+
 export const ClassController = {
   createClass,
   getAllClasses,
+  updateClass,
+  deleteClass,
+  getClassBySchoolId,
+  getSectionsByClassId,
 };

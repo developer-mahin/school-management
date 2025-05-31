@@ -28,7 +28,7 @@ const studentSchema = new Schema<TStudent>(
       required: true,
       trim: true,
     },
-    studentName: {
+    section: {
       type: String,
       required: true,
       trim: true,

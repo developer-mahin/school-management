@@ -26,7 +26,6 @@ export const userSchema = new mongoose.Schema<TUser, UserModel>(
         message: (props) =>
           `${props.value} is not a valid phone number with country code! It should start with '+' followed by country code and number.`,
       },
-      required: [true, 'Phone number is required'],
     },
     studentId: {
       type: mongoose.Schema.Types.ObjectId,

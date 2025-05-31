@@ -16,7 +16,7 @@ const createSchool = async (
 };
 
 const getSchoolList = async () => {
-  const schools = await School.find();
+  const schools = await School.find({});
   return schools;
 };
 

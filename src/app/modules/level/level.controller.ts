@@ -27,7 +27,29 @@ const getAllLevels = catchAsync(async (req, res) => {
   });
 });
 
+const updateLevel = catchAsync(async (req, res) => {
+  const result = await LevelService.updateLevel(req.params.levelId, req.body);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Level updated successfully',
+    data: result,
+  });
+});
+
+const deleteLevel = catchAsync(async (req, res) => {
+  const result = await LevelService.deleteLevel(req.params.levelId);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Level deleted successfully',
+    data: result,
+  });
+});
+
 export const LevelController = {
   createLevel,
   getAllLevels,
+  updateLevel,
+  deleteLevel,
 };

@@ -1,3 +1,4 @@
+import { USER_ROLE } from '../../constant';
 import { TAuthUser } from '../../interface/authUser';
 import Level from '../level/level.model';
 import { TClass } from './class.interface';
@@ -23,7 +24,46 @@ const getAllClasses = async (user: TAuthUser, id: string) => {
   return result;
 };
 
+const updateClass = async (id: string, payload: Partial<TClass>) => {
+  const section = payload?.section?.map((item) => item).join(' / ');
+
+  const result = await Class.findByIdAndUpdate(
+    id,
+    { ...payload, section },
+    { new: true },
+  );
+  return result;
+};
+
+const deleteClass = async (id: string) => {
+  const result = await Class.findByIdAndDelete(id);
+  return result;
+};
+
+const getClassBySchoolId = async (id: string, user: TAuthUser) => {
+  if (user.role === USER_ROLE.school) {
+    id = user.schoolId;
+  }
+
+  const result = await Class.find({ schoolId: id });
+  return result;
+};
+
+const getSectionsByClassId = async (id: string) => {
+  const result = await Class.findById(id);
+  const section = result?.section
+    ?.map((item) => item.replace(/\s*\/\s*/g, ','))
+    .join(',')
+    .split(',');
+
+  return section;
+};
+
 export const ClassService = {
   createClass,
   getAllClasses,
+  updateClass,
+  deleteClass,
+  getClassBySchoolId,
+  getSectionsByClassId,
 };
