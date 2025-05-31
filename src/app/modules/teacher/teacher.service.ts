@@ -16,8 +16,6 @@ const createTeacher = async (payload: Partial<TTeacher> & { phoneNumber: string,
         payload.schoolId = findSchool._id as any
     }
 
-    console.log(payload)
-    return
     const teacher = await createUserWithProfile({
         phoneNumber: payload.phoneNumber,
         role: USER_ROLE.teacher,

@@ -12,7 +12,7 @@ const seedAdmin = async () => {
     role: USER_ROLE.supperAdmin,
   };
 
-  const isAdminExist = await User.findOne({ role: USER_ROLE.admin });
+  const isAdminExist = await User.findOne({ role: USER_ROLE.supperAdmin });
 
   if (!isAdminExist) {
     const user = await User.create(admin);

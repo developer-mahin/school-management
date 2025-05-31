@@ -8,6 +8,8 @@ import { StaticContentRoutes } from '../modules/staticContent/staticContent.rout
 import { SubscriptionRoutes } from '../modules/subscription/subscription.routes';
 import { TeacherRoutes } from '../modules/teacher/teacher.routes';
 import { UserRoutes } from '../modules/user/user.routes';
+import { StudentRoutes } from '../modules/student/student.routes';
+import { LevelRoutes } from '../modules/level/level.routes';
 const router = Router();
 
 type TRoutes = {
@@ -31,6 +33,14 @@ const routes: TRoutes[] = [
   {
     path: '/teacher',
     route: TeacherRoutes,
+  },
+  {
+    path: '/student',
+    route: StudentRoutes,
+  },
+  {
+    path: '/level',
+    route: LevelRoutes,
   },
   {
     path: '/payment',
