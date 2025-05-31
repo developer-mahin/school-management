@@ -50,9 +50,31 @@ const deleteClass = catchAsync(async (req, res) => {
   });
 });
 
+const getClassBySchoolId = catchAsync(async (req, res) => {
+  const result = await ClassService.getClassBySchoolId(req.params.schoolId);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Classes fetched successfully',
+    data: result,
+  });
+});
+
+const getSectionsByClassId = catchAsync(async (req, res) => {
+  const result = await ClassService.getSectionsByClassId(req.params.classId);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Sections fetched successfully',
+    data: result,
+  });
+});
+
 export const ClassController = {
   createClass,
   getAllClasses,
   updateClass,
   deleteClass,
+  getClassBySchoolId,
+  getSectionsByClassId,
 };

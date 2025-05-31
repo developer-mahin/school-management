@@ -39,9 +39,26 @@ const deleteClass = async (id: string) => {
   return result;
 };
 
+const getClassBySchoolId = async (id: string) => {
+  const result = await Class.find({ schoolId: id });
+  return result;
+};
+
+const getSectionsByClassId = async (id: string) => {
+  const result = await Class.findById(id);
+  const section = result?.section
+    ?.map((item) => item.replace(/\s*\/\s*/g, ','))
+    .join(',')
+    .split(',');
+
+  return section;
+};
+
 export const ClassService = {
   createClass,
   getAllClasses,
   updateClass,
   deleteClass,
+  getClassBySchoolId,
+  getSectionsByClassId,
 };
