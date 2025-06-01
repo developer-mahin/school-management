@@ -18,6 +18,11 @@ const studentSchema = new Schema<TStudent>(
       ref: 'Class',
       required: true,
     },
+    sectionId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Section',
+      required: true,
+    },
     schoolName: {
       type: String,
       required: true,

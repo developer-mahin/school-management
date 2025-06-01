@@ -18,6 +18,16 @@ const classSchema = new Schema<TClassSchedule>(
       ref: 'Subject',
       required: true,
     },
+    sectionId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Section',
+      required: true,
+    },
+    teacherId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Teacher',
+      required: true,
+    },
     className: {
       type: String,
       required: true,
