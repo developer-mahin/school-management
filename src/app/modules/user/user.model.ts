@@ -17,7 +17,6 @@ export const userSchema = new mongoose.Schema<TUser, UserModel>(
     },
     phoneNumber: {
       type: String,
-      unique: true,
       trim: true,
       validate: {
         validator: function (v) {

@@ -17,6 +17,7 @@ router
     '/school_list',
     auth(USER_ROLE.admin, USER_ROLE.supperAdmin),
     SchoolController.getSchoolList,
-  );
+  )
+  .get('/teacher', auth(USER_ROLE.school), SchoolController.getTeachers);
 
 export const SchoolRoutes = router;

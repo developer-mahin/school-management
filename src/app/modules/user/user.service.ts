@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
-import mongoose from 'mongoose';
-import config from '../../../config';
 import QueryBuilder from '../../QueryBuilder/queryBuilder';
 import { USER_ROLE } from '../../constant';
 import AppError from '../../utils/AppError';
@@ -52,33 +50,19 @@ const getAllCustomers = async (query: Record<string, unknown>) => {
   return { meta, result };
 };
 
-const createAdmin = async (payload: { email: string; name: string }) => {
-  const { name, email } = payload;
-  const session = await mongoose.startSession();
-  session.startTransaction();
+const createAdmin = async (payload: { phoneNumber: string; name: string }) => {
+  const { name, phoneNumber } = payload;
+  const uniquePhoneNumber = await UserService.uniquePhoneNumber(phoneNumber);
+  if (uniquePhoneNumber) throw new Error('Phone number already exists');
 
-  try {
-    const createAdmin = await User.create(
-      [
-        {
-          name,
-          email,
-          password: config.admin_password,
-          uid: await generateUID(),
-          role: USER_ROLE.admin,
-        },
-      ],
-      { session, new: true },
-    );
+  const user = await User.create({
+    uid: await generateUID(),
+    phoneNumber,
+    role: USER_ROLE.admin,
+    name,
+  });
 
-    if (!createAdmin) {
-      throw new AppError(httpStatus.BAD_REQUEST, 'Dispatcher not created');
-    }
-  } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    throw error;
-  }
+  return user;
 };
 
 const getAllAdmin = async (query: Record<string, unknown>) => {
@@ -96,9 +80,15 @@ const getAllAdmin = async (query: Record<string, unknown>) => {
   return { meta, result };
 };
 
+const uniquePhoneNumber = async (phoneNumber: string) => {
+  const result = await User.findOne({ phoneNumber });
+  return result;
+};
+
 export const UserService = {
   updateUserActions,
   createAdmin,
   getAllCustomers,
   getAllAdmin,
+  uniquePhoneNumber,
 };
