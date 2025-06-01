@@ -6,6 +6,7 @@ import Student from '../student/student.model';
 import Parents from '../parents/parents.model';
 import User from './user.model';
 import generateUID from '../../utils/generateUID';
+import { UserService } from './user.service';
 
 type RoleModelsMap = {
   [USER_ROLE.school]: typeof School;
@@ -32,6 +33,11 @@ interface CreateUserPayload<T> {
 export async function createUserWithProfile<T>(
   payload: CreateUserPayload<T & { name?: string }>,
 ): Promise<mongoose.Document> {
+  const uniquePhoneNumber = await UserService.uniquePhoneNumber(
+    payload.phoneNumber,
+  );
+  if (uniquePhoneNumber) throw new Error('Phone number already exists');
+
   const session = await mongoose.startSession();
   session.startTransaction();
 

@@ -5,7 +5,10 @@ import { StudentService } from './student.service';
 import { TAuthUser } from '../../interface/authUser';
 
 const createStudent = catchAsync(async (req, res) => {
-  const result = await StudentService.createStudent(req.body);
+  const result = await StudentService.createStudent(
+    req.body,
+    req.user as TAuthUser,
+  );
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.CREATED,
