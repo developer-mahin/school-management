@@ -63,6 +63,7 @@ const getTeachers = async (user: TAuthUser, query: Record<string, unknown>) => {
         },
       },
     ])
+    .search(['name'])
     .paginate()
     .sort()
     .execute(Teacher);

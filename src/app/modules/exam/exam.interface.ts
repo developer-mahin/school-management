@@ -1,10 +1,11 @@
 import { ObjectId } from 'mongoose';
 
 export type TExam = {
+  termsId: ObjectId;
   subjectName: string;
   details: string;
   passGrade: number;
-  class: string;
+  className: string;
   date: Date;
   startTime: string;
   classRoom: string;

@@ -13,6 +13,7 @@ import { LevelRoutes } from '../modules/level/level.routes';
 import { ClassRoutes } from '../modules/class/class.routes';
 import { SubjectRoutes } from '../modules/subject/subject.routes';
 import { TermsRoutes } from '../modules/terms/terms.routes';
+import { ExamRoutes } from '../modules/exam/exam.routes';
 const router = Router();
 
 type TRoutes = {
@@ -56,6 +57,10 @@ const routes: TRoutes[] = [
   {
     path: '/terms',
     route: TermsRoutes,
+  },
+  {
+    path: '/exam',
+    route: ExamRoutes,
   },
   {
     path: '/payment',

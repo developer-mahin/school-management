@@ -13,6 +13,11 @@ const examSchema = new Schema<TExam>(
       required: true,
       ref: 'Teacher',
     },
+    termsId: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: 'Terms',
+    },
     subjectName: {
       type: String,
       required: true,
@@ -27,7 +32,7 @@ const examSchema = new Schema<TExam>(
       type: Number,
       required: true,
     },
-    class: {
+    className: {
       type: String,
       required: true,
       trim: true,
