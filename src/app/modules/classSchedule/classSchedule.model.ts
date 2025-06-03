@@ -1,7 +1,7 @@
 import { model, Schema } from 'mongoose';
 import { TClassSchedule } from './classSchedule.interface';
 
-const classSchema = new Schema<TClassSchedule>(
+const classScheduleSchema = new Schema<TClassSchedule>(
   {
     classId: {
       type: Schema.Types.ObjectId,
@@ -27,6 +27,20 @@ const classSchema = new Schema<TClassSchedule>(
       type: Schema.Types.ObjectId,
       ref: 'Teacher',
       required: true,
+    },
+    days: {
+      type: String,
+      required: true,
+      enum: [
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+        'sunday',
+      ],
+      trim: true,
     },
     className: {
       type: String,
@@ -84,5 +98,5 @@ const classSchema = new Schema<TClassSchedule>(
   },
 );
 
-const Class = model<TClassSchedule>('Class', classSchema);
-export default Class;
+const ClassSchedule = model<TClassSchedule>('Class', classScheduleSchema);
+export default ClassSchedule;
