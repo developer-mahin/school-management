@@ -57,9 +57,37 @@ const deleteClassSchedule = catchAsync(async (req, res) => {
   });
 });
 
+const getClassScheduleByDays = catchAsync(async (req, res) => {
+  const result = await ClassScheduleService.getClassScheduleByDays(
+    req.query,
+    req.user as TAuthUser,
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Class Schedule fetched successfully',
+    data: result,
+  });
+});
+
+const getUpcomingClasses = catchAsync(async (req, res) => {
+  const result = await ClassScheduleService.getUpcomingClasses(
+    req.user as TAuthUser,
+    req.query
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Class Schedule fetched successfully',
+    data: result,
+  });
+});
+
 export const ClassScheduleController = {
   createClassSchedule,
   getAllClassSchedule,
   updateClassSchedule,
   deleteClassSchedule,
+  getClassScheduleByDays,
+  getUpcomingClasses
 };

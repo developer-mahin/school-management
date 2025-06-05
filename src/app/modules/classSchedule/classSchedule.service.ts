@@ -1,10 +1,10 @@
 import httpStatus from 'http-status';
 import mongoose from 'mongoose';
 import { TAuthUser } from '../../interface/authUser';
+import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 import AppError from '../../utils/AppError';
 import { TClassSchedule } from './classSchedule.interface';
 import ClassSchedule from './classSchedule.model';
-import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 
 const createClassSchedule = async (
   payload: Partial<TClassSchedule>,
@@ -154,9 +154,143 @@ const deleteClassSchedule = async (
   return result;
 };
 
+const getClassScheduleByDays = async (
+  query: Record<string, unknown>,
+  user: TAuthUser,
+) => {
+  const scheduleAggregation = new AggregationQueryBuilder(query);
+
+  const result = await scheduleAggregation
+    .customPipeline([
+      {
+        $match: {
+          $and: [
+            { teacherId: new mongoose.Types.ObjectId(String(user.teacherId)) },
+            { days: query.days },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: 'classes',
+          localField: 'classId',
+          foreignField: '_id',
+          as: 'class',
+        },
+      },
+      {
+        $unwind: {
+          path: '$class',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'subjects',
+          localField: 'subjectId',
+          foreignField: '_id',
+          as: 'subject',
+        },
+      },
+      {
+        $unwind: {
+          path: '$subject',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          days: 1,
+          period: 1,
+          selectTime: 1,
+          section: 1,
+          endTime: 1,
+          className: '$class.className',
+          subjectName: '$subject.subjectName',
+        },
+      },
+    ])
+    .paginate()
+    .sort()
+    .execute(ClassSchedule);
+
+  const meta = await scheduleAggregation.countTotal(ClassSchedule);
+  return { meta, result };
+};
+
+const getUpcomingClasses = async (user: TAuthUser, query: Record<string, unknown>) => {
+  const { days, nowTime } = query;
+
+  const upcomingQuery = new AggregationQueryBuilder(query);
+
+  const result = await upcomingQuery
+    .customPipeline([
+      {
+        $match: {
+          teacherId: new mongoose.Types.ObjectId(String(user.teacherId)),
+          days,
+          $expr: {
+            $gt: ["$selectTime", nowTime]
+          }
+        }
+      },
+      {
+        $lookup: {
+          from: 'classes',
+          localField: 'classId',
+          foreignField: '_id',
+          as: 'class',
+        },
+      },
+      {
+        $unwind: {
+          path: '$class',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'subjects',
+          localField: 'subjectId',
+          foreignField: '_id',
+          as: 'subject',
+        },
+      },
+      {
+        $unwind: {
+          path: '$subject',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          days: 1,
+          period: 1,
+          selectTime: 1,
+          endTime: 1,
+          section: 1,
+          className: '$class.className',
+          levelName: '$class.levelName',
+          subjectName: '$subject.subjectName',
+        }
+      }
+    ])
+    .paginate()
+    .sort()
+    .execute(ClassSchedule);
+
+  const meta = await upcomingQuery.countTotal(ClassSchedule);
+
+  return { meta, result };
+}
+
 export const ClassScheduleService = {
   createClassSchedule,
   getAllClassSchedule,
   updateClassSchedule,
   deleteClassSchedule,
+  getClassScheduleByDays,
+  getUpcomingClasses,
 };

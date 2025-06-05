@@ -15,6 +15,11 @@ router
     ClassScheduleController.createClassSchedule,
   )
   .get('/', auth(USER_ROLE.school), ClassScheduleController.getAllClassSchedule)
+  .get(
+    '/schedule_by_days',
+    auth(USER_ROLE.school, USER_ROLE.teacher),
+    ClassScheduleController.getClassScheduleByDays,
+  ).get("/upcoming_classes", auth(USER_ROLE.school, USER_ROLE.teacher), ClassScheduleController.getUpcomingClasses)
   .patch(
     '/update/:classScheduleId',
     auth(USER_ROLE.school),
