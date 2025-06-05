@@ -20,7 +20,7 @@ const createClassSchedule = catchAsync(async (req, res) => {
 const getAllClassSchedule = catchAsync(async (req, res) => {
   const result = await ClassScheduleService.getAllClassSchedule(
     req.user as TAuthUser,
-    req.query
+    req.query,
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -30,8 +30,36 @@ const getAllClassSchedule = catchAsync(async (req, res) => {
   });
 });
 
+const updateClassSchedule = catchAsync(async (req, res) => {
+  const result = await ClassScheduleService.updateClassSchedule(
+    req.params.classScheduleId,
+    req.body,
+    req.user as TAuthUser,
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Class Schedule updated successfully',
+    data: result,
+  });
+});
+
+const deleteClassSchedule = catchAsync(async (req, res) => {
+  const result = await ClassScheduleService.deleteClassSchedule(
+    req.params.classScheduleId,
+    req.user as TAuthUser,
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Class Schedule deleted successfully',
+    data: result,
+  });
+});
+
 export const ClassScheduleController = {
   createClassSchedule,
   getAllClassSchedule,
-
+  updateClassSchedule,
+  deleteClassSchedule,
 };

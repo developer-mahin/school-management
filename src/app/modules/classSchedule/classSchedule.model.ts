@@ -78,5 +78,8 @@ const classScheduleSchema = new Schema<TClassSchedule>(
   },
 );
 
-const ClassSchedule = model<TClassSchedule>('ClassSchedule', classScheduleSchema);
+const ClassSchedule = model<TClassSchedule>(
+  'ClassSchedule',
+  classScheduleSchema,
+);
 export default ClassSchedule;
