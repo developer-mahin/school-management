@@ -12,6 +12,7 @@ router.post(
   auth(USER_ROLE.school),
   validateRequest(ClassScheduleValidation.classScheduleSchema),
   ClassScheduleController.createClassSchedule,
-);
-
+)
+  .get("/", auth(USER_ROLE.school), ClassScheduleController.getAllClassSchedule);
+  
 export const ClassScheduleRoutes = router;

@@ -17,6 +17,21 @@ const createClassSchedule = catchAsync(async (req, res) => {
   });
 });
 
+const getAllClassSchedule = catchAsync(async (req, res) => {
+  const result = await ClassScheduleService.getAllClassSchedule(
+    req.user as TAuthUser,
+    req.query
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Class Schedule fetched successfully',
+    data: result,
+  });
+});
+
 export const ClassScheduleController = {
   createClassSchedule,
+  getAllClassSchedule,
+
 };
