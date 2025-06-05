@@ -30,9 +30,12 @@ export const classScheduleSchema = z.object({
     selectTime: z.string().min(1, 'Select time is required'),
     section: z.string().min(1, 'Section is required'),
     endTime: z.string().min(1, 'End time is required'),
-    date: z.preprocess((arg) => {
-      if (typeof arg === 'string' || arg instanceof Date) return new Date(arg);
-    }, z.date()).optional(),
+    date: z
+      .preprocess((arg) => {
+        if (typeof arg === 'string' || arg instanceof Date)
+          return new Date(arg);
+      }, z.date())
+      .optional(),
     roomNo: z.string().min(1, 'Room number is required'),
   }),
 });
