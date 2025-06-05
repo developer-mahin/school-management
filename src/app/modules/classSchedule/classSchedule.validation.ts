@@ -20,23 +20,19 @@ const objectIdSchema = z
 // Main class schedule schema
 export const classScheduleSchema = z.object({
   body: z.object({
-    schoolId: objectIdSchema,
     classId: objectIdSchema,
-    sectionId: objectIdSchema,
     subjectId: objectIdSchema,
     teacherId: objectIdSchema,
+
     days: daysEnum,
-    className: z.string().min(1, 'Class name is required'),
-    subjectName: z.string().min(1, 'Subject name is required'),
     period: z.string().min(1, 'Period is required'),
-    description: z.string().optional(), // description can be empty, so optional
-    teacherName: z.string().min(1, 'Teacher name is required'),
+    description: z.string().optional(),
     selectTime: z.string().min(1, 'Select time is required'),
     section: z.string().min(1, 'Section is required'),
     endTime: z.string().min(1, 'End time is required'),
     date: z.preprocess((arg) => {
       if (typeof arg === 'string' || arg instanceof Date) return new Date(arg);
-    }, z.date()),
+    }, z.date()).optional(),
     roomNo: z.string().min(1, 'Room number is required'),
   }),
 });

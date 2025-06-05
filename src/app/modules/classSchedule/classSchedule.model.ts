@@ -18,11 +18,6 @@ const classScheduleSchema = new Schema<TClassSchedule>(
       ref: 'Subject',
       required: true,
     },
-    sectionId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Section',
-      required: true,
-    },
     teacherId: {
       type: Schema.Types.ObjectId,
       ref: 'Teacher',
@@ -42,18 +37,8 @@ const classScheduleSchema = new Schema<TClassSchedule>(
       ],
       trim: true,
     },
-    className: {
-      type: String,
-      required: true,
-      trim: true,
-    },
     date: {
       type: Date,
-      required: true,
-      trim: true,
-    },
-    subjectName: {
-      type: String,
       required: true,
       trim: true,
     },
@@ -63,11 +48,6 @@ const classScheduleSchema = new Schema<TClassSchedule>(
       trim: true,
     },
     description: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    teacherName: {
       type: String,
       required: true,
       trim: true,
@@ -98,5 +78,5 @@ const classScheduleSchema = new Schema<TClassSchedule>(
   },
 );
 
-const ClassSchedule = model<TClassSchedule>('Class', classScheduleSchema);
+const ClassSchedule = model<TClassSchedule>('ClassSchedule', classScheduleSchema);
 export default ClassSchedule;

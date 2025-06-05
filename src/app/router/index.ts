@@ -10,10 +10,14 @@ import { TeacherRoutes } from '../modules/teacher/teacher.routes';
 import { UserRoutes } from '../modules/user/user.routes';
 import { StudentRoutes } from '../modules/student/student.routes';
 import { LevelRoutes } from '../modules/level/level.routes';
-import { ClassRoutes } from '../modules/class/class.routes';
 import { SubjectRoutes } from '../modules/subject/subject.routes';
 import { TermsRoutes } from '../modules/terms/terms.routes';
 import { ExamRoutes } from '../modules/exam/exam.routes';
+import { ClassRoutes } from '../modules/class/class.routes';
+import { ClassScheduleRoutes } from '../modules/classSchedule/classSchedule.routes';
+
+
+
 const router = Router();
 
 type TRoutes = {
@@ -49,6 +53,10 @@ const routes: TRoutes[] = [
   {
     path: '/class',
     route: ClassRoutes,
+  },
+  {
+    path: '/class_schedule',
+    route: ClassScheduleRoutes,
   },
   {
     path: '/subject',
