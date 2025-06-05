@@ -12,15 +12,12 @@ type TDays =
 export type TClassSchedule = {
   schoolId: ObjectId;
   classId: ObjectId;
-  sectionId: ObjectId;
   subjectId: ObjectId;
   teacherId: ObjectId;
+
   days: TDays;
-  className: string;
-  subjectName: string;
   period: string;
   description: string;
-  teacherName: string;
   selectTime: string;
   section: string;
   endTime: string;

@@ -1,11 +1,31 @@
+import httpStatus from 'http-status';
+import mongoose from 'mongoose';
 import { TAuthUser } from '../../interface/authUser';
+import AppError from '../../utils/AppError';
 import { TClassSchedule } from './classSchedule.interface';
 import ClassSchedule from './classSchedule.model';
+import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 
 const createClassSchedule = async (
   payload: Partial<TClassSchedule>,
   user: TAuthUser,
 ) => {
+
+  const findClass = await ClassSchedule.findOne({
+    schoolId: user.schoolId,
+    teacherId: payload.teacherId,
+    days: payload.days,
+    period: payload.period,
+    section: payload.section,
+    selectTime: payload.selectTime,
+    endTime: payload.endTime
+  })
+
+  if (findClass) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Class Schedule already exists');
+  }
+
+
   const result = await ClassSchedule.create({
     ...payload,
     schoolId: user.schoolId,
@@ -13,6 +33,105 @@ const createClassSchedule = async (
   return result;
 };
 
+const getAllClassSchedule = async (user: TAuthUser, query: Record<string, unknown>) => {
+
+  const classQuery = new AggregationQueryBuilder(query);
+
+  const result = await classQuery
+    .customPipeline([
+      {
+        $match: {
+          schoolId: new mongoose.Types.ObjectId(String(user.schoolId)),
+        }
+      },
+      {
+        $lookup: {
+          from: 'classes',
+          localField: 'classId',
+          foreignField: '_id',
+          as: 'class'
+        }
+      },
+      {
+        $unwind: {
+          path: '$class',
+          preserveNullAndEmptyArrays: true,
+        }
+      },
+      {
+        $lookup: {
+          from: 'subjects',
+          localField: 'subjectId',
+          foreignField: '_id',
+          as: 'subject'
+        }
+      },
+      {
+        $unwind: {
+          path: '$subject',
+          preserveNullAndEmptyArrays: true,
+        }
+      },
+      {
+        $lookup: {
+          from: 'teachers',
+          localField: 'teacherId',
+          foreignField: '_id',
+          as: 'teacher'
+        }
+      },
+      {
+        $unwind: {
+          path: '$teacher',
+          preserveNullAndEmptyArrays: true,
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'teacher.userId',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      {
+        $unwind: {
+          path: '$user',
+          preserveNullAndEmptyArrays: true,
+        }
+      },
+      {
+        $project: {
+          section: 1,
+          days: 1,
+          period: 1,
+          selectTime: 1,
+          endTime: 1,
+          description: 1,
+          roomNo: 1,
+          date: 1,
+          _id: 1,
+
+          className: '$class.className',
+          subject: '$subject.subjectName',
+          teacherName: '$user.name',
+
+        }
+      }
+    ])
+    .search(['days', 'period', 'section'])
+    .paginate()
+    .sort()
+    .execute(ClassSchedule);
+
+
+  const meta = await classQuery.countTotal(ClassSchedule);
+
+  return { meta, result };
+};
+
+
 export const ClassScheduleService = {
   createClassSchedule,
+  getAllClassSchedule
 };
