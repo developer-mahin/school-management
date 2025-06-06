@@ -5,6 +5,7 @@ import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 import AppError from '../../utils/AppError';
 import { TClassSchedule } from './classSchedule.interface';
 import ClassSchedule from './classSchedule.model';
+import { commonPipeline } from './classSchedule.helper';
 
 const createClassSchedule = async (
   payload: Partial<TClassSchedule>,
@@ -219,7 +220,10 @@ const getClassScheduleByDays = async (
   return { meta, result };
 };
 
-const getUpcomingClasses = async (user: TAuthUser, query: Record<string, unknown>) => {
+const getUpcomingClasses = async (
+  user: TAuthUser,
+  query: Record<string, unknown>,
+) => {
   const { days, nowTime } = query;
 
   const upcomingQuery = new AggregationQueryBuilder(query);
@@ -231,36 +235,33 @@ const getUpcomingClasses = async (user: TAuthUser, query: Record<string, unknown
           teacherId: new mongoose.Types.ObjectId(String(user.teacherId)),
           days,
           $expr: {
-            $gt: ["$selectTime", nowTime]
-          }
-        }
+            $gt: ['$selectTime', nowTime],
+          },
+        },
       },
+      ...commonPipeline,
       {
         $lookup: {
-          from: 'classes',
-          localField: 'classId',
-          foreignField: '_id',
-          as: 'class',
-        },
-      },
-      {
-        $unwind: {
-          path: '$class',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: 'subjects',
-          localField: 'subjectId',
-          foreignField: '_id',
-          as: 'subject',
-        },
-      },
-      {
-        $unwind: {
-          path: '$subject',
-          preserveNullAndEmptyArrays: true,
+          from: 'students',
+          let: {
+            classId: '$classId',
+            section: '$section',
+            className: '$class.className',
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$classId', '$$classId'] },
+                    { $eq: ['$section', '$$section'] },
+                    { $eq: ['$className', '$$className'] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: 'matchedStudents',
         },
       },
       {
@@ -274,8 +275,9 @@ const getUpcomingClasses = async (user: TAuthUser, query: Record<string, unknown
           className: '$class.className',
           levelName: '$class.levelName',
           subjectName: '$subject.subjectName',
-        }
-      }
+          totalStudents: { $size: '$matchedStudents' },
+        },
+      },
     ])
     .paginate()
     .sort()
@@ -284,7 +286,82 @@ const getUpcomingClasses = async (user: TAuthUser, query: Record<string, unknown
   const meta = await upcomingQuery.countTotal(ClassSchedule);
 
   return { meta, result };
-}
+};
+
+const getUpcomingClassesByClassScheduleId = async (
+  classScheduleId: string,
+  user: TAuthUser,
+) => {
+  const result = await ClassSchedule.aggregate([
+    {
+      $match: {
+        teacherId: new mongoose.Types.ObjectId(String(user.teacherId)),
+        _id: new mongoose.Types.ObjectId(String(classScheduleId))
+      },
+    },
+    ...commonPipeline,
+    {
+      $lookup: {
+        from: 'students',
+        let: {
+          classId: '$classId',
+          section: '$section',
+          className: '$class.className',
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ['$classId', '$$classId'] },
+                  { $eq: ['$section', '$$section'] },
+                  { $eq: ['$className', '$$className'] },
+                ],
+              },
+            },
+          },
+          {
+            $lookup: {
+              from: 'users',
+              localField: 'userId',
+              foreignField: '_id',
+              as: 'userInfo',
+            }
+          },
+          {
+            $unwind: {
+              path: '$userInfo',
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+        ],
+        as: 'matchedStudents',
+      },
+    },
+
+    {
+      $project: {
+        _id: 1,
+        days: 1,
+        period: 1,
+        selectTime: 1,
+        endTime: 1,
+        section: 1,
+        description: 1,
+        className: '$class.className',
+        levelName: '$class.levelName',
+        subjectName: '$subject.subjectName',
+        totalStudents: { $size: '$matchedStudents' },
+        activeStudents: "$matchedStudents",
+      },
+    },
+
+
+
+  ])
+  return result[0] || {};
+};
+
 
 export const ClassScheduleService = {
   createClassSchedule,
@@ -293,4 +370,5 @@ export const ClassScheduleService = {
   deleteClassSchedule,
   getClassScheduleByDays,
   getUpcomingClasses,
+  getUpcomingClassesByClassScheduleId
 };

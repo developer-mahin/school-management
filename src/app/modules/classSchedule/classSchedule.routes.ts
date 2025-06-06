@@ -19,7 +19,17 @@ router
     '/schedule_by_days',
     auth(USER_ROLE.school, USER_ROLE.teacher),
     ClassScheduleController.getClassScheduleByDays,
-  ).get("/upcoming_classes", auth(USER_ROLE.school, USER_ROLE.teacher), ClassScheduleController.getUpcomingClasses)
+  )
+  .get(
+    '/upcoming_classes',
+    auth(USER_ROLE.school, USER_ROLE.teacher),
+    ClassScheduleController.getUpcomingClasses,
+  )
+  .get(
+    '/upcoming_classes/:classScheduleId',
+    auth(USER_ROLE.school, USER_ROLE.teacher),
+    ClassScheduleController.getUpcomingClassesByClassScheduleId,
+  )
   .patch(
     '/update/:classScheduleId',
     auth(USER_ROLE.school),

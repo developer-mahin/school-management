@@ -46,6 +46,7 @@ const getAllAdmin = catchAsync(async (req, res) => {
   });
 });
 
+
 export const UserController = {
   updateUserActions,
   createAdmin,
