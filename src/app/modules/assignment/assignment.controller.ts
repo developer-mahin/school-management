@@ -21,6 +21,19 @@ const createAssignment = catchAsync(async (req, res) => {
   });
 });
 
+const getActiveAssignment = catchAsync(async (req, res) => {
+  const result = await AssignmentService.getActiveAssignment(
+    req.user as TAuthUser,
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Assignment fetched successfully',
+    data: result,
+  });
+});
+
 export const AssignmentController = {
   createAssignment,
+  getActiveAssignment,
 };
