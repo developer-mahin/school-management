@@ -61,20 +61,20 @@ const getSectionsByClassId = async (id: string) => {
   return section;
 };
 
-const getStudentsOfClasses = async (user: TAuthUser, query: Record<string, unknown>) => {
-  const { className, section } = query
+const getStudentsOfClasses = async (
+  user: TAuthUser,
+  query: Record<string, unknown>,
+) => {
+  const { className, section } = query;
 
-  const studentQuery = new AggregationQueryBuilder(query)
+  const studentQuery = new AggregationQueryBuilder(query);
 
   const result = await studentQuery
     .customPipeline([
       {
         $match: {
-          $and: [
-            { className },
-            { section }
-          ]
-        }
+          $and: [{ className }, { section }],
+        },
       },
       {
         $lookup: {
@@ -82,7 +82,7 @@ const getStudentsOfClasses = async (user: TAuthUser, query: Record<string, unkno
           localField: 'userId',
           foreignField: '_id',
           as: 'user',
-        }
+        },
       },
       {
         $unwind: {
@@ -93,12 +93,11 @@ const getStudentsOfClasses = async (user: TAuthUser, query: Record<string, unkno
     ])
     .paginate()
     .sort()
-    .execute(Student)
+    .execute(Student);
 
-  const meta = await studentQuery.countTotal(Student)
+  const meta = await studentQuery.countTotal(Student);
 
-
-  return { meta, result }
+  return { meta, result };
 };
 
 export const ClassService = {
@@ -108,5 +107,5 @@ export const ClassService = {
   deleteClass,
   getClassBySchoolId,
   getSectionsByClassId,
-  getStudentsOfClasses
+  getStudentsOfClasses,
 };

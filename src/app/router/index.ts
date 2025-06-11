@@ -16,6 +16,7 @@ import { ExamRoutes } from '../modules/exam/exam.routes';
 import { ClassRoutes } from '../modules/class/class.routes';
 import { ClassScheduleRoutes } from '../modules/classSchedule/classSchedule.routes';
 import { AttendanceRoutes } from '../modules/attendance/attendance.routes';
+import { AssignmentRoutes } from '../modules/assignment/assignment.routes';
 
 const router = Router();
 
@@ -60,6 +61,10 @@ const routes: TRoutes[] = [
   {
     path: '/attendance',
     route: AttendanceRoutes,
+  },
+  {
+    path: '/assignment',
+    route: AssignmentRoutes,
   },
   {
     path: '/subject',

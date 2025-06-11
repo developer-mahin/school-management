@@ -20,7 +20,7 @@ const createAttendance = catchAsync(async (req, res) => {
 const getAttendanceHistory = catchAsync(async (req, res) => {
   const result = await AttendanceService.getAttendanceHistory(
     req.user as TAuthUser,
-    req.query
+    req.query,
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -32,5 +32,5 @@ const getAttendanceHistory = catchAsync(async (req, res) => {
 
 export const AttendanceController = {
   createAttendance,
-  getAttendanceHistory
+  getAttendanceHistory,
 };

@@ -18,12 +18,7 @@ const assignmentSchema = new Schema<TAssignment>(
       required: true,
       ref: 'Subject',
     },
-    className: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    subjectName: {
+    section: {
       type: String,
       required: true,
       trim: true,

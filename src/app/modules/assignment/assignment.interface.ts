@@ -4,8 +4,7 @@ export type TAssignment = {
   schoolId: ObjectId;
   classId: ObjectId;
   subjectId: ObjectId;
-  className: string;
-  subjectName: string;
+  section: string;
   title: string;
   dueDate: Date;
   marks: number;

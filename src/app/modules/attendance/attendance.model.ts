@@ -38,7 +38,15 @@ const attendanceSchema = new Schema<TAttendance>(
     days: {
       type: String,
       required: true,
-      enum: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+      enum: [
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+        'sunday',
+      ],
       trim: true,
     },
     presentStudents: [studentSchema],
