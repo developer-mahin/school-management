@@ -12,6 +12,6 @@ router
     UserController.createAdmin,
   )
   .get('/', auth(USER_ROLE.admin), UserController.getAllCustomers)
-  .get('/all_admin', auth(USER_ROLE.admin), UserController.getAllAdmin)
+  .get('/all_admin', auth(USER_ROLE.admin), UserController.getAllAdmin);
 
 export const UserRoutes = router;

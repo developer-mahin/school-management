@@ -296,7 +296,7 @@ const getUpcomingClassesByClassScheduleId = async (
     {
       $match: {
         teacherId: new mongoose.Types.ObjectId(String(user.teacherId)),
-        _id: new mongoose.Types.ObjectId(String(classScheduleId))
+        _id: new mongoose.Types.ObjectId(String(classScheduleId)),
       },
     },
     ...commonPipeline,
@@ -326,7 +326,7 @@ const getUpcomingClassesByClassScheduleId = async (
               localField: 'userId',
               foreignField: '_id',
               as: 'userInfo',
-            }
+            },
           },
           {
             $unwind: {
@@ -351,17 +351,70 @@ const getUpcomingClassesByClassScheduleId = async (
         className: '$class.className',
         levelName: '$class.levelName',
         subjectName: '$subject.subjectName',
-        totalStudents: { $size: '$matchedStudents' },
-        activeStudents: "$matchedStudents",
+        // totalStudents: { $size: '$matchedStudents' },
+        totalStudents: { $size: '$matchedStudents.userInfo' },
+        // activeStudents: "$matchedStudents",
+        activeStudents: '$matchedStudents.userInfo',
       },
     },
-
-
-
-  ])
+  ]);
   return result[0] || {};
 };
 
+const getWeeklySchedule = async (user: TAuthUser) => {
+  const result = await ClassSchedule.aggregate([
+    {
+      $match: {
+        teacherId: new mongoose.Types.ObjectId(String(user.teacherId)),
+      },
+    },
+    {
+      $lookup: {
+        from: 'subjects',
+        localField: 'subjectId',
+        foreignField: '_id',
+        as: 'subject',
+      },
+    },
+    {
+      $unwind: {
+        path: '$subject',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: 'classes',
+        localField: 'classId',
+        foreignField: '_id',
+        as: 'class',
+      },
+    },
+    {
+      $unwind: {
+        path: '$class',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $group: {
+        _id: '$days',
+        schedule: {
+          $push: {
+            period: '$period',
+            selectTime: '$selectTime',
+            endTime: '$endTime',
+            section: '$section',
+            className: '$class.className',
+            subjectName: '$subject.subjectName',
+          },
+        },
+      },
+    },
+  ]);
+
+  return result;
+};
 
 export const ClassScheduleService = {
   createClassSchedule,
@@ -370,5 +423,6 @@ export const ClassScheduleService = {
   deleteClassSchedule,
   getClassScheduleByDays,
   getUpcomingClasses,
-  getUpcomingClassesByClassScheduleId
+  getUpcomingClassesByClassScheduleId,
+  getWeeklySchedule,
 };

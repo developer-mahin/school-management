@@ -25,7 +25,7 @@ async function generateUID() {
     // Generate the custom ID
     const customID = `SM-${yearLastDigits + newUserId}`;
 
-    console.log(customID, "customID")
+    console.log(customID, 'customID');
     return customID;
   } catch (err) {
     console.error('Error generating custom ID:', err);

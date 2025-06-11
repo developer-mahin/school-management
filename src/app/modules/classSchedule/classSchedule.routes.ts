@@ -26,6 +26,11 @@ router
     ClassScheduleController.getUpcomingClasses,
   )
   .get(
+    '/weekly_schedule',
+    auth(USER_ROLE.teacher),
+    ClassScheduleController.getWeeklySchedule,
+  )
+  .get(
     '/upcoming_classes/:classScheduleId',
     auth(USER_ROLE.school, USER_ROLE.teacher),
     ClassScheduleController.getUpcomingClassesByClassScheduleId,
