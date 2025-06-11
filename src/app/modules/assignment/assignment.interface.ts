@@ -9,5 +9,5 @@ export type TAssignment = {
   dueDate: Date;
   marks: number;
   fileUrl?: string;
-  status: 'on-going' | 'completed' | 'not-started';
+  status: 'on-going' | 'completed' | 'expired';
 };
