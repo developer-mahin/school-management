@@ -12,6 +12,8 @@ router.post(
   auth(USER_ROLE.teacher),
   validateRequest(AttendanceValidation.attendanceSchema),
   AttendanceController.createAttendance,
-);
+).get("/history", auth(USER_ROLE.teacher), AttendanceController.getAttendanceHistory)
+
+  ;
 
 export const AttendanceRoutes = router;

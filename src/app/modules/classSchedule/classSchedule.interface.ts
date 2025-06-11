@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongoose';
 
-type TDays =
+export type TDays =
   | 'monday'
   | 'tuesday'
   | 'wednesday'
