@@ -73,11 +73,10 @@ const getSectionsByClassId = catchAsync(async (req, res) => {
   });
 });
 
-
 const getStudentsOfClasses = catchAsync(async (req, res) => {
   const result = await ClassService.getStudentsOfClasses(
     req.user as TAuthUser,
-    req.query
+    req.query,
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -94,5 +93,5 @@ export const ClassController = {
   deleteClass,
   getClassBySchoolId,
   getSectionsByClassId,
-  getStudentsOfClasses
+  getStudentsOfClasses,
 };
