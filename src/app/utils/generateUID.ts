@@ -4,7 +4,6 @@ async function generateUID() {
   try {
     const date = new Date();
     const year = date.getFullYear().toString().slice(-2);
-    const month = String(date.getMonth() + 1).padStart(2, '0');
     let newUserId = '';
 
     // Find the most recent non-deleted and non-blocked user
@@ -12,8 +11,8 @@ async function generateUID() {
 
     if (latestUser && latestUser.uid) {
       // Extract the last number from the userId and increment it
-      const lastNumber = parseInt(latestUser.uid.split('-')[2]);
-      console.log({ lastNumber });
+      const lastNumber = parseInt(latestUser.uid.split('-')[1]);
+      // console.log({ lastNumber });
       const newNumber = (lastNumber + 1).toString().padStart(5, '0');
       newUserId = newNumber;
     } else {
@@ -21,8 +20,12 @@ async function generateUID() {
       newUserId = '00001';
     }
 
+    const yearLastDigits = year.slice(0, 2);
+
     // Generate the custom ID
-    const customID = `SM-${month}${year}-${newUserId}`;
+    const customID = `SM-${yearLastDigits + newUserId}`;
+
+    console.log(customID, 'customID');
     return customID;
   } catch (err) {
     console.error('Error generating custom ID:', err);

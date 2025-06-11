@@ -30,6 +30,11 @@ const attendanceSchema = new Schema<TAttendance>(
       type: Number,
       required: true,
     },
+    section: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     presentStudents: [studentSchema],
     absentStudents: [studentSchema],
     date: {

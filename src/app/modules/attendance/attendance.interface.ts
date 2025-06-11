@@ -8,6 +8,7 @@ export type TAttendance = {
   classId: ObjectId;
   schoolId: ObjectId;
   className: string;
+  section: string;
   totalStudents: number;
   presentStudents: TAttendanceStudent[];
   absentStudents: TAttendanceStudent[];

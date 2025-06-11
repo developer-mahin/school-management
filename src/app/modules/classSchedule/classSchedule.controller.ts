@@ -73,7 +73,32 @@ const getClassScheduleByDays = catchAsync(async (req, res) => {
 const getUpcomingClasses = catchAsync(async (req, res) => {
   const result = await ClassScheduleService.getUpcomingClasses(
     req.user as TAuthUser,
-    req.query
+    req.query,
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Class Schedule fetched successfully',
+    data: result,
+  });
+});
+
+const getUpcomingClassesByClassScheduleId = catchAsync(async (req, res) => {
+  const result = await ClassScheduleService.getUpcomingClassesByClassScheduleId(
+    req.params.classScheduleId,
+    req.user as TAuthUser,
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Class Schedule details fetched successfully',
+    data: result,
+  });
+});
+
+const getWeeklySchedule = catchAsync(async (req, res) => {
+  const result = await ClassScheduleService.getWeeklySchedule(
+    req.user as TAuthUser,
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -89,5 +114,7 @@ export const ClassScheduleController = {
   updateClassSchedule,
   deleteClassSchedule,
   getClassScheduleByDays,
-  getUpcomingClasses
+  getUpcomingClasses,
+  getUpcomingClassesByClassScheduleId,
+  getWeeklySchedule,
 };
