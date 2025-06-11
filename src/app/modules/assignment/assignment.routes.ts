@@ -11,13 +11,19 @@ const upload = fileUpload('./public/uploads/files/');
 
 const router = Router();
 
-router.post(
-  '/create',
-  auth(USER_ROLE.teacher),
-  upload.single('file'),
-  parseFormData,
-  validateRequest(AssignmentValidation.assignmentSchema),
-  AssignmentController.createAssignment,
-);
+router
+  .post(
+    '/create',
+    auth(USER_ROLE.teacher),
+    upload.single('file'),
+    parseFormData,
+    validateRequest(AssignmentValidation.assignmentSchema),
+    AssignmentController.createAssignment,
+  )
+  .get(
+    '/active',
+    auth(USER_ROLE.teacher),
+    AssignmentController.getActiveAssignment,
+  );
 
 export const AssignmentRoutes = router;

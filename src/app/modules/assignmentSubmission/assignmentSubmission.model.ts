@@ -13,6 +13,10 @@ const assignmentSubmissionSchema = new Schema<TAssignmentSubmission>(
       ref: 'Student',
       required: true,
     },
+    submittedFile: {
+      type: String,
+      required: true,
+    },
   },
   {
     timestamps: true,

@@ -5,6 +5,10 @@ import { TAuthUser } from '../../interface/authUser';
 import { AssignmentSubmissionService } from './assignmentSubmission.service';
 
 const submitAssignment = catchAsync(async (req, res) => {
+  if (req.file) {
+    req.body.submittedFile = req.file.path;
+  }
+
   const result = await AssignmentSubmissionService.submitAssignment(
     req.body,
     req.user as TAuthUser,
