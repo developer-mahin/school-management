@@ -7,11 +7,17 @@ import validateRequest from '../../middleware/validation';
 
 const router = Router();
 
-router.post(
-  '/create',
-  auth(USER_ROLE.teacher),
-  validateRequest(AttendanceValidation.attendanceSchema),
-  AttendanceController.createAttendance,
-);
+router
+  .post(
+    '/create',
+    auth(USER_ROLE.teacher),
+    validateRequest(AttendanceValidation.attendanceSchema),
+    AttendanceController.createAttendance,
+  )
+  .get(
+    '/history',
+    auth(USER_ROLE.teacher),
+    AttendanceController.getAttendanceHistory,
+  );
 
 export const AttendanceRoutes = router;

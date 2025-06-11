@@ -1,5 +1,6 @@
 import { USER_ROLE } from '../../constant';
 import { TAuthUser } from '../../interface/authUser';
+import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 import Level from '../level/level.model';
 import Student from '../student/student.model';
 import { TClass } from './class.interface';
@@ -60,35 +61,43 @@ const getSectionsByClassId = async (id: string) => {
   return section;
 };
 
-const getStudentsOfClasses = async (user: TAuthUser, query: Record<string, unknown>) => {
-  const { className, section } = query
+const getStudentsOfClasses = async (
+  user: TAuthUser,
+  query: Record<string, unknown>,
+) => {
+  const { className, section } = query;
 
-  const students = await Student.aggregate([
-    {
-      $match: {
-        $and: [
-          { className },
-          { section }
-        ]
-      }
-    },
-    {
-      $lookup: {
-        from: 'users',
-        localField: 'userId',
-        foreignField: '_id',
-        as: 'user',
-      }
-    },
-    {
-      $unwind: {
-        path: '$user',
-        preserveNullAndEmptyArrays: true,
+  const studentQuery = new AggregationQueryBuilder(query);
+
+  const result = await studentQuery
+    .customPipeline([
+      {
+        $match: {
+          $and: [{ className }, { section }],
+        },
       },
-    }
-  ])
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      {
+        $unwind: {
+          path: '$user',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+    ])
+    .paginate()
+    .sort()
+    .execute(Student);
 
-  return students
+  const meta = await studentQuery.countTotal(Student);
+
+  return { meta, result };
 };
 
 export const ClassService = {
@@ -98,5 +107,5 @@ export const ClassService = {
   deleteClass,
   getClassBySchoolId,
   getSectionsByClassId,
-  getStudentsOfClasses
+  getStudentsOfClasses,
 };

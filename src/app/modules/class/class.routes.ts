@@ -7,7 +7,11 @@ const route = Router();
 
 route
   .post('/create', auth(USER_ROLE.school), ClassController.createClass)
-  .get("/students_of_classes", auth(USER_ROLE.teacher), ClassController.getStudentsOfClasses)
+  .get(
+    '/students_of_classes',
+    auth(USER_ROLE.teacher),
+    ClassController.getStudentsOfClasses,
+  )
   .get(
     '/:levelId',
     auth(USER_ROLE.school, USER_ROLE.supperAdmin, USER_ROLE.school),
