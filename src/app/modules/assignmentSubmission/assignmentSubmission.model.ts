@@ -13,6 +13,16 @@ const assignmentSubmissionSchema = new Schema<TAssignmentSubmission>(
       ref: 'Student',
       required: true,
     },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    grade: {
+      type: Number,
+      required: true,
+      default: 0
+    },
     submittedFile: {
       type: String,
       required: true,
