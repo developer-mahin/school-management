@@ -24,6 +24,11 @@ router
     '/active',
     auth(USER_ROLE.teacher),
     AssignmentController.getActiveAssignment,
+  )
+  .get(
+    '/assignment_details/:assignmentId',
+    auth(USER_ROLE.teacher),
+    AssignmentController.getAssignmentDetails,
   );
 
 export const AssignmentRoutes = router;
