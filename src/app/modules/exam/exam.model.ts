@@ -18,11 +18,17 @@ const examSchema = new Schema<TExam>(
       required: true,
       ref: 'Terms',
     },
-    subjectName: {
-      type: String,
+    subjectId: {
+      type: Schema.Types.ObjectId,
       required: true,
-      trim: true,
+      ref: 'Subject',
     },
+    classId: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: 'Class',
+    },
+
     details: {
       type: String,
       required: true,
@@ -32,11 +38,7 @@ const examSchema = new Schema<TExam>(
       type: Number,
       required: true,
     },
-    className: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+
     date: {
       type: Date,
       required: true,
@@ -52,10 +54,15 @@ const examSchema = new Schema<TExam>(
       trim: true,
     },
     duration: {
-      type: Number,
+      type: String,
       required: true,
     },
-    assignedTeacher: {
+    isSubmitted: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    instruction: {
       type: String,
       required: true,
       trim: true,

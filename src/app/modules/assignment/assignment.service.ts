@@ -7,14 +7,13 @@ import AssignmentSubmission from '../assignmentSubmission/assignmentSubmission.m
 import Teacher from '../teacher/teacher.model';
 import { TAssignment, TMarkComplete } from './assignment.interface';
 import Assignment from './assignment.model';
+import { TeacherService } from '../teacher/teacher.service';
 
 const createAssignment = async (
   user: TAuthUser,
   payload: Partial<TAssignment>,
 ) => {
-  const findTeacher = await Teacher.findById(user.teacherId);
-  if (!findTeacher)
-    throw new AppError(httpStatus.NOT_FOUND, 'Teacher not found');
+  const findTeacher = await TeacherService.findTeacher(user);
 
   const date = new Date(payload.dueDate as Date);
   date.setUTCHours(23, 59, 59, 999); // 23:59:59.999
@@ -34,9 +33,7 @@ const getActiveAssignment = async (
 ) => {
   const { graded } = query;
 
-  const findTeacher = await Teacher.findById(user.teacherId);
-  if (!findTeacher)
-    throw new AppError(httpStatus.NOT_FOUND, 'Teacher not found');
+  const findTeacher = await TeacherService.findTeacher(user);
 
   const date = new Date();
   date.setUTCHours(0, 0, 0, 0);

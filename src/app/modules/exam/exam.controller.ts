@@ -55,9 +55,38 @@ const deleteExams = catchAsync(async (req, res) => {
   });
 });
 
+const getExamsOfTeacher = catchAsync(async (req, res) => {
+  const result = await ExamService.getExamsOfTeacher(
+    req.user as TAuthUser,
+    req.query,
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Exams fetched successfully',
+    data: result,
+  });
+});
+
+const updateGrade = catchAsync(async (req, res) => {
+  const result = await ExamService.updateGrade(
+    req.params.examId,
+    req.body,
+    req.user as TAuthUser,
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Grade updated successfully',
+    data: result,
+  });
+});
+
 export const ExamController = {
   createExam,
   getTermsExams,
   updateExams,
   deleteExams,
+  getExamsOfTeacher,
+  updateGrade,
 };

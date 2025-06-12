@@ -12,11 +12,14 @@ export const ExamSchema = z.object({
     date: z.preprocess((arg) => {
       if (typeof arg == 'string' || arg instanceof Date) return new Date(arg);
     }, z.date()),
+    instruction: z.string().min(1, 'instruction is required'),
     startTime: z.string().min(1, 'startTime is required'),
     classRoom: z.string().min(1, 'classRoom is required'),
     duration: z.number().min(1, 'duration must be at least 1 minute'),
     assignedTeacher: z.string().min(1, 'assignedTeacher is required'),
     teacherId: z.string().regex(objectIdRegex, 'Invalid teacherId'),
+    subjectId: z.string().regex(objectIdRegex, 'Invalid subjectId'),
+    classId: z.string().regex(objectIdRegex, 'Invalid classId'),
   }),
 });
 
