@@ -41,8 +41,8 @@ const getAllCustomers = async (query: Record<string, unknown>) => {
   const result = await queryBuilder
     .search(['name', 'email'])
     .filter(['role'])
-    .paginate()
     .sort()
+    .paginate()
     .queryModel.sort();
 
   const meta = await queryBuilder.countTotal();
@@ -69,10 +69,10 @@ const getAllAdmin = async (query: Record<string, unknown>) => {
   const queryBuilder = new QueryBuilder(User.find({ role: 'admin' }), query);
 
   const result = await queryBuilder
-    .paginate()
     .search(['name', 'email'])
     .filter(['name', 'email'])
     .sort()
+    .paginate()
     .queryModel.sort();
 
   const meta = await queryBuilder.countTotal();

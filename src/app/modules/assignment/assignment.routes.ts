@@ -29,6 +29,11 @@ router
     '/assignment_details/:assignmentId',
     auth(USER_ROLE.teacher),
     AssignmentController.getAssignmentDetails,
+  )
+  .patch(
+    '/mark_as_completed/:assignmentId',
+    auth(USER_ROLE.teacher),
+    AssignmentController.markAssignmentAsCompleted,
   );
 
 export const AssignmentRoutes = router;

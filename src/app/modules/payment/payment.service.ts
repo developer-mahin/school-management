@@ -253,10 +253,10 @@ const paymentList = async (user: TAuthUser, query: Record<string, unknown>) => {
         },
       },
     ])
+    .sort()
     .paginate()
     .search(['name'])
     .filter(['paymentStatus'])
-    .sort()
     .execute(Payment);
 
   const meta = await paymentAggregation.countTotal(Payment);

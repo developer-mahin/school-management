@@ -15,7 +15,7 @@ const getSubject = async (user: TAuthUser, query: Record<string, unknown>) => {
     }),
     query,
   );
-  const result = await subjectQuery.paginate().sort().search(['subjectName'])
+  const result = await subjectQuery.sort().paginate().search(['subjectName'])
     .queryModel;
 
   const meta = await subjectQuery.countTotal();
