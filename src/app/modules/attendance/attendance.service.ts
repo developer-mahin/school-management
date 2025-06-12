@@ -1,19 +1,15 @@
-import httpStatus from 'http-status';
-import { TAuthUser } from '../../interface/authUser';
-import AppError from '../../utils/AppError';
-import Teacher from '../teacher/teacher.model';
-import { TAttendance } from './attendance.interface';
-import Student from '../student/student.model';
-import Attendance from './attendance.model';
 import mongoose from 'mongoose';
+import { TAuthUser } from '../../interface/authUser';
+import Student from '../student/student.model';
+import { TeacherService } from '../teacher/teacher.service';
+import { TAttendance } from './attendance.interface';
+import Attendance from './attendance.model';
 
 const createAttendance = async (
   payload: Partial<TAttendance>,
   user: TAuthUser,
 ) => {
-  const findTeacher = await Teacher.findById(user.teacherId);
-  if (!findTeacher)
-    throw new AppError(httpStatus.NOT_FOUND, 'Teacher not found');
+  const findTeacher = await TeacherService.findTeacher(user);
 
   const totalStudents = await Student.find({
     schoolId: findTeacher.schoolId,
@@ -52,9 +48,7 @@ const getAttendanceHistory = async (
 ) => {
   const { date } = query;
 
-  const findTeacher = await Teacher.findById(user.teacherId);
-  if (!findTeacher)
-    throw new AppError(httpStatus.NOT_FOUND, 'Teacher not found');
+  const findTeacher = await TeacherService.findTeacher(user);
 
   const startOfDay = new Date(date as string);
   startOfDay.setUTCHours(0, 0, 0, 0); // 00:00:00.000
