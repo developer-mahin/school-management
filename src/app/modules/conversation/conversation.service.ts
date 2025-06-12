@@ -159,8 +159,8 @@ const getConversations = async (
         },
       },
     ])
-    .paginate()
     .sort()
+    .paginate()
     .search(['self.name', 'otherUser.name'])
     .execute(Conversation);
 
@@ -183,8 +183,8 @@ const getMessages = async (
         },
       },
     ])
-    .paginate()
     .sort()
+    .paginate()
     .search(['text_message'])
     .execute(Message);
 

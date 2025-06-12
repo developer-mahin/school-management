@@ -21,7 +21,7 @@ const assignmentSubmissionSchema = new Schema<TAssignmentSubmission>(
     grade: {
       type: Number,
       required: true,
-      default: 0
+      default: 0,
     },
     submittedFile: {
       type: String,

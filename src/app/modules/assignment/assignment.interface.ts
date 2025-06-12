@@ -11,3 +11,8 @@ export type TAssignment = {
   fileUrl?: string;
   status: 'on-going' | 'completed' | 'expired';
 };
+
+export type TMarkComplete = {
+  studentId: string;
+  grade: number;
+};
