@@ -6,6 +6,7 @@ import AppError from '../../utils/AppError';
 import School from '../school/school.model';
 import { createUserWithProfile } from '../user/user.helper';
 import { TTeacher } from './teacher.interface';
+import Teacher from './teacher.model';
 
 const createTeacher = async (
   payload: Partial<TTeacher> & { phoneNumber: string; name?: string },
@@ -28,6 +29,14 @@ const createTeacher = async (
   return teacher;
 };
 
+const findTeacher = async (user: TAuthUser) => {
+  const findTeacher = await Teacher.findById(user.teacherId);
+  if (!findTeacher)
+    throw new AppError(httpStatus.NOT_FOUND, 'Teacher not found');
+  return findTeacher;
+};
+
 export const TeacherService = {
   createTeacher,
+  findTeacher,
 };

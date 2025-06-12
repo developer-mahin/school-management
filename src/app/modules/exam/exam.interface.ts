@@ -2,15 +2,17 @@ import { ObjectId } from 'mongoose';
 
 export type TExam = {
   termsId: ObjectId;
-  subjectName: string;
+  teacherId: ObjectId;
+  schoolId: ObjectId;
+  subjectId: ObjectId;
+  classId: ObjectId;
+
   details: string;
   passGrade: number;
-  className: string;
   date: Date;
   startTime: string;
   classRoom: string;
-  duration: number;
-  assignedTeacher: string;
-  teacherId: ObjectId;
-  schoolId: ObjectId;
+  duration: string;
+  isSubmitted: boolean;
+  instruction: string;
 };
