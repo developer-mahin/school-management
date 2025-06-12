@@ -1,11 +1,12 @@
 import httpStatus from 'http-status';
-import { TAuthUser } from '../../interface/authUser';
-import AppError from '../../utils/AppError';
-import Teacher from '../teacher/teacher.model';
-import { TAssignment } from './assignment.interface';
-import Assignment from './assignment.model';
 import mongoose from 'mongoose';
+import { TAuthUser } from '../../interface/authUser';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
+import AppError from '../../utils/AppError';
+import AssignmentSubmission from '../assignmentSubmission/assignmentSubmission.model';
+import Teacher from '../teacher/teacher.model';
+import { TAssignment, TMarkComplete } from './assignment.interface';
+import Assignment from './assignment.model';
 
 const createAssignment = async (
   user: TAuthUser,
@@ -130,76 +131,225 @@ const getActiveAssignment = async (
         },
       },
     ])
-    .paginate()
     .sort()
+    .paginate()
     .execute(Assignment);
 
   const meta = await assignmentQuery.countTotal(Assignment);
   return { meta, result };
 };
 
-const getAssignmentDetails = async (assignmentId: string) => {
+const getAssignmentDetails = async (
+  assignmentId: string,
+  query: Record<string, unknown>,
+) => {
+  const { className: nameOfClass, section: classSection } = query;
 
   const result = await Assignment.aggregate([
     {
       $match: {
-        _id: new mongoose.Types.ObjectId(assignmentId) // match specific assignment
-      }
+        _id: new mongoose.Types.ObjectId(assignmentId),
+      },
     },
     {
       $lookup: {
-        from: "assignmentsubmissions",
-        localField: "_id",
-        foreignField: "assignmentId",
-        as: "submissions"
-      }
+        from: 'subjects',
+        localField: 'subjectId',
+        foreignField: '_id',
+        as: 'subject',
+      },
     },
     {
-      $unwind: "$submissions"
+      $unwind: {
+        path: '$subject',
+        preserveNullAndEmptyArrays: true,
+      },
     },
     {
       $lookup: {
-        from: "users", // or "students", depending on your schema
-        localField: "submissions.userId",
-        foreignField: "_id",
-        as: "user"
-      }
+        from: 'classes',
+        localField: 'classId',
+        foreignField: '_id',
+        as: 'class',
+      },
     },
     {
-      $unwind: "$user"
+      $unwind: {
+        path: '$class',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+    {
+      $lookup: {
+        from: 'students',
+        pipeline: [
+          {
+            $match: {
+              className: nameOfClass,
+              section: classSection,
+            },
+          },
+          {
+            $lookup: {
+              from: 'users',
+              localField: 'userId',
+              foreignField: '_id',
+              as: 'userInfo',
+            },
+          },
+          {
+            $unwind: '$userInfo',
+          },
+          {
+            $addFields: {
+              studentName: '$userInfo.name',
+            },
+          },
+          {
+            $project: {
+              studentId: '$_id',
+              userId: 1,
+              studentName: 1,
+            },
+          },
+        ],
+        as: 'students',
+      },
+    },
+    {
+      $lookup: {
+        from: 'assignmentsubmissions',
+        localField: '_id',
+        foreignField: 'assignmentId',
+        as: 'submissions',
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        title: 1,
+        className: '$class.className',
+        section: 1,
+        dueDate: 1,
+        marks: 1,
+        fileUrl: 1,
+        status: 1,
+        students: 1,
+        submissions: {
+          userId: 1,
+        },
+      },
     },
     {
       $addFields: {
-        "submissions.studentName": "$user.name" // or any other field like email
-      }
+        students: {
+          $map: {
+            input: '$students',
+            as: 'student',
+            in: {
+              $mergeObjects: [
+                '$$student',
+                {
+                  isSubmit: {
+                    $in: ['$$student.userId', '$submissions.userId'],
+                  },
+                },
+              ],
+            },
+          },
+        },
+      },
     },
     {
-      $group: {
-        _id: "$_id",
-        section: { $first: "$section" },
-        title: { $first: "$title" },
-        dueDate: { $first: "$dueDate" },
-        marks: { $first: "$marks" },
-        fileUrl: { $first: "$fileUrl" },
-        status: { $first: "$status" },
-        submissions: {
-          $push: {
-            grade: "$submissions.grade",
-            studentName: "$submissions.studentName",
-            studentId: "$submissions.studentId",
-            userId: "$submissions.userId"
-          }
-        }
-      }
-    }
+      $project: {
+        title: 1,
+        className: 1,
+        section: 1,
+        dueDate: 1,
+        marks: 1,
+        fileUrl: 1,
+        status: 1,
+        students: 1,
+      },
+    },
   ]);
 
+  return result;
+};
 
-  return result
+const markAssignmentAsCompleted = async (
+  assignmentId: string,
+  payload: TMarkComplete[],
+  user: TAuthUser,
+) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Step 1: Validate teacher
+    const teacher = await Teacher.findById(user.teacherId).session(session);
+    if (!teacher) {
+      throw new AppError(httpStatus.NOT_FOUND, 'Teacher not found');
+    }
+
+    // Step 2: Update the assignment status
+    const updatedAssignment = await Assignment.findOneAndUpdate(
+      {
+        _id: assignmentId,
+        schoolId: teacher.schoolId,
+      },
+      {
+        $set: {
+          status: 'completed',
+        },
+      },
+      {
+        new: true,
+        session,
+      },
+    );
+
+    if (!updatedAssignment) {
+      throw new AppError(httpStatus.NOT_FOUND, 'Assignment not found');
+    }
+
+    // Step 3: Update each student's assignment submission in parallel
+    await Promise.all(
+      payload.map((item) =>
+        AssignmentSubmission.findOneAndUpdate(
+          {
+            studentId: item.studentId,
+            assignmentId, // make sure assignmentId matches to avoid wrong updates
+          },
+          {
+            $set: {
+              grade: item.grade,
+            },
+          },
+          {
+            new: true,
+            session,
+          },
+        ),
+      ),
+    );
+
+    // Step 4: Commit transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    return updatedAssignment;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error; // bubble up error to be handled elsewhere
+  }
 };
 
 export const AssignmentService = {
   createAssignment,
   getActiveAssignment,
-  getAssignmentDetails
+  getAssignmentDetails,
+  markAssignmentAsCompleted,
 };

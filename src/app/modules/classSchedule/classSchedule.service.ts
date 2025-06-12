@@ -120,8 +120,8 @@ const getAllClassSchedule = async (
       },
     ])
     .search(['days', 'period', 'section'])
-    .paginate()
     .sort()
+    .paginate()
     .execute(ClassSchedule);
 
   const meta = await classQuery.countTotal(ClassSchedule);
@@ -212,8 +212,8 @@ const getClassScheduleByDays = async (
         },
       },
     ])
-    .paginate()
     .sort()
+    .paginate()
     .execute(ClassSchedule);
 
   const meta = await scheduleAggregation.countTotal(ClassSchedule);
@@ -279,8 +279,8 @@ const getUpcomingClasses = async (
         },
       },
     ])
-    .paginate()
     .sort()
+    .paginate()
     .execute(ClassSchedule);
 
   const meta = await upcomingQuery.countTotal(ClassSchedule);

@@ -17,8 +17,8 @@ const getTermsExams = async (
     Exam.find({ schoolId: user.schoolId, termsId: termsId }),
     query,
   )
-    .paginate()
-    .sort();
+    .sort()
+    .paginate();
 
   const result = await examQuery.queryModel;
 

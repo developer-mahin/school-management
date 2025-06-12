@@ -91,8 +91,8 @@ const getStudentsOfClasses = async (
         },
       },
     ])
-    .paginate()
     .sort()
+    .paginate()
     .execute(Student);
 
   const meta = await studentQuery.countTotal(Student);

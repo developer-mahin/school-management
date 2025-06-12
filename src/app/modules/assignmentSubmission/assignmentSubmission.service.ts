@@ -8,12 +8,11 @@ const submitAssignment = async (
   payload: Partial<TAssignmentSubmission>,
   user: TAuthUser,
 ) => {
-
   const findSubmission = await AssignmentSubmission.findOne({
     assignmentId: payload.assignmentId,
     studentId: user.studentId,
     userId: user.userId,
-  })
+  });
 
   if (findSubmission) {
     throw new AppError(httpStatus.BAD_REQUEST, 'Assignment already submitted');
