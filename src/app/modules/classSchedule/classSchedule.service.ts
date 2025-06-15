@@ -246,11 +246,24 @@ const getUpcomingClasses = async (
 
   const upcomingQuery = new AggregationQueryBuilder(query);
 
+  let matchStage = {}
+  if (user.role === USER_ROLE.teacher) {
+    matchStage = {
+      teacherId: new mongoose.Types.ObjectId(String(user.teacherId)),
+    };
+  } else if (user.role === USER_ROLE.student) {
+    const findStudent = await StudentService.findStudent(user.studentId);
+    matchStage = {
+      classId: new mongoose.Types.ObjectId(String(findStudent.classId)),
+      section: findStudent.section,
+    };
+  }
+
   const result = await upcomingQuery
     .customPipeline([
       {
         $match: {
-          teacherId: new mongoose.Types.ObjectId(String(user.teacherId)),
+          ...matchStage,
           days,
           $expr: {
             $gt: ['$selectTime', nowTime],
@@ -290,6 +303,7 @@ const getUpcomingClasses = async (
           selectTime: 1,
           endTime: 1,
           section: 1,
+          teacherName: '$teacher.name',
           className: '$class.className',
           levelName: '$class.levelName',
           subjectName: '$subject.subjectName',
