@@ -1,8 +1,10 @@
+import mongoose from 'mongoose';
 import { USER_ROLE } from '../../constant';
 import { TAuthUser } from '../../interface/authUser';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 import Level from '../level/level.model';
 import Student from '../student/student.model';
+import { TeacherService } from '../teacher/teacher.service';
 import { TClass } from './class.interface';
 import Class from './class.model';
 
@@ -66,6 +68,7 @@ const getStudentsOfClasses = async (
   query: Record<string, unknown>,
 ) => {
   const { className, section } = query;
+  const findTeacher = await TeacherService.findTeacher(user);
 
   const studentQuery = new AggregationQueryBuilder(query);
 
@@ -73,7 +76,15 @@ const getStudentsOfClasses = async (
     .customPipeline([
       {
         $match: {
-          $and: [{ className }, { section }],
+          $and: [
+            {
+              schoolId: new mongoose.Types.ObjectId(
+                String(findTeacher.schoolId),
+              ),
+            },
+            { className },
+            { section },
+          ],
         },
       },
       {
@@ -88,6 +99,13 @@ const getStudentsOfClasses = async (
         $unwind: {
           path: '$user',
           preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          studentId: '$_id',
+          studentName: '$user.name',
+          userId: '$user._id',
         },
       },
     ])

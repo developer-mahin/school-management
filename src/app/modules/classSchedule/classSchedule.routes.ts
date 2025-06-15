@@ -17,7 +17,7 @@ router
   .get('/', auth(USER_ROLE.school), ClassScheduleController.getAllClassSchedule)
   .get(
     '/schedule_by_days',
-    auth(USER_ROLE.school, USER_ROLE.teacher),
+    auth(USER_ROLE.school, USER_ROLE.teacher, USER_ROLE.student),
     ClassScheduleController.getClassScheduleByDays,
   )
   .get(
@@ -27,7 +27,7 @@ router
   )
   .get(
     '/weekly_schedule',
-    auth(USER_ROLE.teacher),
+    auth(USER_ROLE.teacher, USER_ROLE.student),
     ClassScheduleController.getWeeklySchedule,
   )
   .get(
