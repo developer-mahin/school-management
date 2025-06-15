@@ -7,22 +7,32 @@ const createGradeSystem = async (
   payload: Partial<TGraderSystem>,
   user: TAuthUser,
 ) => {
+  let gpa = 0.0;
+  if (payload.grade === 'A+') gpa = 5.0;
+  if (payload.grade === 'A') gpa = 4.0;
+  if (payload.grade === 'A-') gpa = 3.5;
+  if (payload.grade === 'B') gpa = 3.0;
+  if (payload.grade === 'C') gpa = 2.0;
+  if (payload.grade === 'D') gpa = 1.0;
+
   const result = await GradeSystem.create({
     ...payload,
     schoolId: user.schoolId,
+    gpa: gpa,
   });
   return result;
 };
 
-const getAllGradeSystem = async (user: TAuthUser, query: Record<string, unknown>) => {
+const getAllGradeSystem = async (
+  user: TAuthUser,
+  query: Record<string, unknown>,
+) => {
   const gradeSystemQuery = new QueryBuilder(
-    GradeSystem.find({ schoolId: user.schoolId }), query
+    GradeSystem.find({ schoolId: user.schoolId }),
+    query,
   );
 
-  const result = await gradeSystemQuery
-    .sort()
-    .paginate()
-    .queryModel;
+  const result = await gradeSystemQuery.sort().paginate().queryModel;
 
   const meta = await gradeSystemQuery.countTotal();
 
@@ -34,7 +44,6 @@ const updateGradeSystem = async (
   payload: Partial<TGraderSystem>,
   user: TAuthUser,
 ) => {
-
   const result = await GradeSystem.findOneAndUpdate(
     { _id: gradeSystemId, schoolId: user.schoolId },
     payload,
