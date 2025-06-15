@@ -4,6 +4,7 @@ import { TAuthUser } from '../../interface/authUser';
 import School from '../school/school.model';
 import { createUserWithProfile } from '../user/user.helper';
 import { TStudent } from './student.interface';
+import Student from './student.model';
 
 const createStudent = async (
   payload: Partial<TStudent> & { phoneNumber: string; name?: string },
@@ -45,6 +46,13 @@ const createStudent = async (
   return student;
 };
 
+const findStudent = async (id: string) => {
+  const student = await Student.findById(id);
+  if (!student) throw new Error('Student not found');
+  return student;
+};
+
 export const StudentService = {
   createStudent,
+  findStudent,
 };
