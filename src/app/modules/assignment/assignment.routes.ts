@@ -24,7 +24,7 @@ router
     '/active',
     auth(USER_ROLE.teacher),
     AssignmentController.getActiveAssignment,
-  )
+  ).get("/pending_and_submitted_assignment", auth(USER_ROLE.student), AssignmentController.pendingAssignment)
   .get(
     '/assignment_details/:assignmentId',
     auth(USER_ROLE.teacher),

@@ -4,10 +4,11 @@ import { TAuthUser } from '../../interface/authUser';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 import AppError from '../../utils/AppError';
 import AssignmentSubmission from '../assignmentSubmission/assignmentSubmission.model';
+import { StudentService } from '../student/student.service';
 import Teacher from '../teacher/teacher.model';
+import { TeacherService } from '../teacher/teacher.service';
 import { TAssignment, TMarkComplete } from './assignment.interface';
 import Assignment from './assignment.model';
-import { TeacherService } from '../teacher/teacher.service';
 
 const createAssignment = async (
   user: TAuthUser,
@@ -33,22 +34,31 @@ const getActiveAssignment = async (
 ) => {
   const { graded } = query;
 
-  const findTeacher = await TeacherService.findTeacher(user);
 
   const date = new Date();
   date.setUTCHours(0, 0, 0, 0);
 
-  let dueDate;
+  let matchStage = {};
   if (graded) {
-    dueDate = {
-      $lte: date,
-    };
+    matchStage = {
+      dueDate: {
+        $lte: date,
+      },
+      status: {
+        $ne: 'on-going'
+      }
+    }
+
   } else {
-    dueDate = {
-      $gte: date,
-    };
+    matchStage = {
+      dueDate: {
+        $gte: date,
+      },
+      status: 'on-going'
+    }
   }
 
+  const findTeacher = await TeacherService.findTeacher(user);
   const assignmentQuery = new AggregationQueryBuilder(query);
 
   const result = await assignmentQuery
@@ -56,8 +66,7 @@ const getActiveAssignment = async (
       {
         $match: {
           schoolId: new mongoose.Types.ObjectId(String(findTeacher.schoolId)),
-          status: 'on-going',
-          dueDate,
+          ...matchStage
         },
       },
       {
@@ -123,6 +132,7 @@ const getActiveAssignment = async (
           className: '$class.className',
           title: 1,
           dueDate: 1,
+          status: 1,
           totalStudent: { $size: '$student' },
           totalSubmission: { $size: '$assignmentSubmissions' },
         },
@@ -344,9 +354,74 @@ const markAssignmentAsCompleted = async (
   }
 };
 
+const pendingAssignment = async (user: TAuthUser, query: Record<string, unknown>) => {
+
+  const { submitted } = query
+
+  const date = new Date();
+  date.setUTCHours(0, 0, 0, 0);
+
+  const findStudent = await StudentService.findStudent(user.studentId);
+  const myStudentId = new mongoose.Types.ObjectId(String(user.studentId))
+  const pendingAssignmentQuery = new AggregationQueryBuilder(query)
+
+
+  let matchStage = {}
+  if (submitted === 'true') {
+    matchStage = {
+      "assignmentSubmissions.studentId": { $eq: myStudentId }
+    }
+  } else {
+    matchStage = {
+      "assignmentSubmissions.studentId": { $ne: myStudentId }
+    }
+  }
+
+
+  const result = await pendingAssignmentQuery
+    .customPipeline([
+      {
+        $match: {
+          $and: [
+            { classId: new mongoose.Types.ObjectId(String(findStudent.classId)) },
+            { schoolId: new mongoose.Types.ObjectId(String(findStudent.schoolId)) },
+            { dueDate: { $gte: date } },
+            { status: 'on-going' }
+          ]
+        }
+      },
+
+      {
+        $lookup: {
+          from: "assignmentsubmissions",
+          localField: "_id",
+          foreignField: "assignmentId",
+          as: "assignmentSubmissions",
+        }
+      },
+      {
+        $match: {
+          ...matchStage
+        }
+      },
+      {
+        $project: {
+          assignmentSubmissions: 0
+        }
+      }
+    ])
+    .sort()
+    .paginate()
+    .execute(Assignment)
+
+  const meta = await pendingAssignmentQuery.countTotal(Assignment)
+  return { meta, result };
+};
+
 export const AssignmentService = {
   createAssignment,
   getActiveAssignment,
   getAssignmentDetails,
   markAssignmentAsCompleted,
+  pendingAssignment
 };
