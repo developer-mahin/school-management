@@ -18,6 +18,10 @@ const gradeSystemSchema = new Schema<TGraderSystem>(
       required: true,
       trim: true,
     },
+    gpa: {
+      type: Number,
+      required: true,
+    },
   },
   {
     timestamps: true,
