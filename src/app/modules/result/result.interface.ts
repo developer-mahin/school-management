@@ -1,11 +1,15 @@
 import { ObjectId } from 'mongoose';
 
+export type TStudentsGrader = {
+  studentId: ObjectId;
+  mark: number;
+  grade: string;
+  gpa: number;
+};
+
 export type TResult = {
   examId: ObjectId;
   schoolId: ObjectId;
   teacherId: ObjectId;
-  students: {
-    studentId: ObjectId;
-    mark: number;
-  };
+  students: TStudentsGrader[];
 };

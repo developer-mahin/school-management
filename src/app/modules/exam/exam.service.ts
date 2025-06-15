@@ -1,11 +1,13 @@
 import mongoose from 'mongoose';
 import { TAuthUser } from '../../interface/authUser';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
+import GradeSystem from '../gradeSystem/gradeSystem.model';
+import { TStudentsGrader } from '../result/result.interface';
+import Result from '../result/result.model';
 import { TeacherService } from '../teacher/teacher.service';
+import { commonPipeline } from './exam.helper';
 import { TExam } from './exam.interface';
 import Exam from './exam.model';
-import { commonPipeline } from './exam.helper';
-import Result from '../result/result.model';
 
 const createExam = async (payload: Partial<TExam>, user: TAuthUser) => {
   const examDate = payload.date?.setUTCHours(0, 0, 0, 0);
@@ -103,17 +105,47 @@ const getExamsOfTeacher = async (
 };
 
 const updateGrade = async (
-  id: string,
-  payload: Partial<TExam>,
+  payload: Partial<TExam> & { students: TStudentsGrader[] },
   user: TAuthUser,
 ) => {
   const findTeacher = await TeacherService.findTeacher(user);
+  const findSchoolGrade = await GradeSystem.find({
+    schoolId: findTeacher.schoolId,
+  }).select('grade mark gpa');
+
+  const students = payload.students;
+  const gradeSystem = findSchoolGrade;
+
+  // Step 1: Convert grade ranges to numbers
+  const parsedGradeSystem = gradeSystem.map((g) => {
+    const [min, max] = g.mark.split('-').map(Number);
+
+    return {
+      grade: g.grade,
+      gpa: g.gpa,
+      min,
+      max,
+    };
+  });
+
+  // Step 2: Assign grade to each student
+  const studentsWithGrades = students.map((student) => {
+    const foundGrade = parsedGradeSystem.find((g) => {
+      return student.mark >= g.min && student.mark <= g.max;
+    });
+
+    return {
+      ...student,
+      grade: foundGrade ? foundGrade.grade : 'F',
+      gpa: foundGrade ? foundGrade.gpa : 0.0,
+    };
+  });
 
   const result = await Result.create({
-    examId: id,
     schoolId: findTeacher.schoolId,
     teacherId: user.teacherId,
     ...payload,
+    students: studentsWithGrades,
   });
 
   return result;

@@ -1,13 +1,21 @@
 import { model, Schema } from 'mongoose';
-import { TResult } from './result.interface';
+import { TResult, TStudentsGrader } from './result.interface';
 
-const studentsSchema = new Schema({
+const studentsSchema = new Schema<TStudentsGrader>({
   studentId: {
     type: Schema.Types.ObjectId,
     required: true,
     ref: 'Student',
   },
   mark: {
+    type: Number,
+    required: true,
+  },
+  grade: {
+    type: String,
+    required: true,
+  },
+  gpa: {
     type: Number,
     required: true,
   },

@@ -20,7 +20,7 @@ const createGradeSystem = catchAsync(async (req, res) => {
 const getAllGradeSystem = catchAsync(async (req, res) => {
   const result = await GradeSystemService.getAllGradeSystem(
     req.user as TAuthUser,
-    req.query
+    req.query,
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,

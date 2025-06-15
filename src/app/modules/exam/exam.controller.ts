@@ -69,11 +69,7 @@ const getExamsOfTeacher = catchAsync(async (req, res) => {
 });
 
 const updateGrade = catchAsync(async (req, res) => {
-  const result = await ExamService.updateGrade(
-    req.params.examId,
-    req.body,
-    req.user as TAuthUser,
-  );
+  const result = await ExamService.updateGrade(req.body, req.user as TAuthUser);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
