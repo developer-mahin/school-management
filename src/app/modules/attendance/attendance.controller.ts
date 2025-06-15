@@ -30,7 +30,36 @@ const getAttendanceHistory = catchAsync(async (req, res) => {
   });
 });
 
+const getMyAttendance = catchAsync(async (req, res) => {
+  const result = await AttendanceService.getMyAttendance(
+    req.user as TAuthUser,
+    req.query,
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Attendance history fetched successfully',
+    data: result,
+  });
+});
+
+
+const getMyAttendanceDetails = catchAsync(async (req, res) => {
+  const result = await AttendanceService.getMyAttendanceDetails(
+    req.user as TAuthUser,
+    req.query,
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Attendance history fetched successfully',
+    data: result,
+  });
+})
+
 export const AttendanceController = {
   createAttendance,
   getAttendanceHistory,
+  getMyAttendance,
+  getMyAttendanceDetails
 };

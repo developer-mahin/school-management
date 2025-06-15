@@ -27,4 +27,18 @@ export const commonPipeline = [
       preserveNullAndEmptyArrays: true,
     },
   },
+  {
+    $lookup: {
+      from: 'users',
+      localField: 'teacherId',
+      foreignField: 'teacherId',
+      as: 'teacher',
+    },
+  },
+  {
+    $unwind: {
+      path: '$teacher',
+      preserveNullAndEmptyArrays: true,
+    },
+  },
 ];

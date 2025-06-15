@@ -22,7 +22,7 @@ router
   )
   .get(
     '/upcoming_classes',
-    auth(USER_ROLE.school, USER_ROLE.teacher),
+    auth(USER_ROLE.school, USER_ROLE.teacher, USER_ROLE.student),
     ClassScheduleController.getUpcomingClasses,
   )
   .get(
