@@ -6,6 +6,9 @@ import AppError from '../../utils/AppError';
 import { TClassSchedule } from './classSchedule.interface';
 import ClassSchedule from './classSchedule.model';
 import { commonPipeline } from './classSchedule.helper';
+import { TeacherService } from '../teacher/teacher.service';
+import { USER_ROLE } from '../../constant';
+import { StudentService } from '../student/student.service';
 
 const createClassSchedule = async (
   payload: Partial<TClassSchedule>,
@@ -161,14 +164,29 @@ const getClassScheduleByDays = async (
 ) => {
   const scheduleAggregation = new AggregationQueryBuilder(query);
 
+  const andCondition = [];
+
+  if (user.role === USER_ROLE.teacher) {
+    const findTeacher = await TeacherService.findTeacher(user);
+    andCondition.push(
+      { teacherId: new mongoose.Types.ObjectId(String(user.teacherId)) },
+      { schoolId: new mongoose.Types.ObjectId(String(findTeacher?.schoolId)) },
+    );
+  } else if (user.role === USER_ROLE.student) {
+    const findStudent = await StudentService.findStudent(user.studentId);
+
+    andCondition.push(
+      { schoolId: new mongoose.Types.ObjectId(String(findStudent.schoolId)) },
+      { classId: new mongoose.Types.ObjectId(String(findStudent.classId)) },
+      { section: findStudent.section },
+    );
+  }
+
   const result = await scheduleAggregation
     .customPipeline([
       {
         $match: {
-          $and: [
-            { teacherId: new mongoose.Types.ObjectId(String(user.teacherId)) },
-            { days: query.days },
-          ],
+          $and: [...andCondition, { days: query.days }],
         },
       },
       {
@@ -362,10 +380,25 @@ const getUpcomingClassesByClassScheduleId = async (
 };
 
 const getWeeklySchedule = async (user: TAuthUser) => {
+  let matchStage = {};
+
+  if (user.role === USER_ROLE.teacher) {
+    matchStage = {
+      teacherId: new mongoose.Types.ObjectId(String(user.teacherId)),
+    };
+  } else if (user.role === USER_ROLE.student) {
+    const findStudent = await StudentService.findStudent(user.studentId);
+
+    matchStage = {
+      classId: new mongoose.Types.ObjectId(String(findStudent.classId)),
+      section: findStudent.section,
+    };
+  }
+
   const result = await ClassSchedule.aggregate([
     {
       $match: {
-        teacherId: new mongoose.Types.ObjectId(String(user.teacherId)),
+        ...matchStage,
       },
     },
     {

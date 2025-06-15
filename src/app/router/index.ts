@@ -7,6 +7,7 @@ import { ClassRoutes } from '../modules/class/class.routes';
 import { ClassScheduleRoutes } from '../modules/classSchedule/classSchedule.routes';
 import { ConversationRoutes } from '../modules/conversation/conversation.routes';
 import { ExamRoutes } from '../modules/exam/exam.routes';
+import { GradeSystemRoutes } from '../modules/gradeSystem/gradeSystem.routes';
 import { LevelRoutes } from '../modules/level/level.routes';
 import { NotificationRoutes } from '../modules/notification/notification.routes';
 import { PaymentRoutes } from '../modules/payment/payment.routes';
@@ -82,6 +83,10 @@ const routes: TRoutes[] = [
   {
     path: '/exam',
     route: ExamRoutes,
+  },
+  {
+    path: '/grade_system',
+    route: GradeSystemRoutes,
   },
   {
     path: '/payment',
