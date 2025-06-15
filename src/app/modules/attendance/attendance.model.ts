@@ -11,16 +11,17 @@ const studentSchema = new Schema<TAttendanceStudent>({
 
 const attendanceSchema = new Schema<TAttendance>(
   {
-    classId: {
+    classScheduleId: {
       type: Schema.Types.ObjectId,
       required: true,
-      ref: 'Class',
+      ref: 'ClassSchedule',
     },
     schoolId: {
       type: Schema.Types.ObjectId,
       required: true,
       ref: 'School',
     },
+
     className: {
       type: String,
       required: true,
