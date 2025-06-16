@@ -35,6 +35,11 @@ router
     auth(USER_ROLE.teacher),
     AssignmentController.getAssignmentDetails,
   )
+  .get(
+    '/my_assignment_details/:assignmentId',
+    auth(USER_ROLE.student),
+    AssignmentController.myAssignmentDetails,
+  )
   .patch(
     '/mark_as_completed/:assignmentId',
     auth(USER_ROLE.teacher),

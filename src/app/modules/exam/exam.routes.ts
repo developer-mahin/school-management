@@ -26,7 +26,6 @@ router
   )
   .get('/:termsId', auth(USER_ROLE.school), ExamController.getTermsExams)
   .patch('/:examId', auth(USER_ROLE.school), ExamController.updateExams)
-
   .delete('/:examId', auth(USER_ROLE.school), ExamController.deleteExams);
 
 export const ExamRoutes = router;

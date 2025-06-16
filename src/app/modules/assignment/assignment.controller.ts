@@ -74,10 +74,24 @@ const pendingAndSubmittedAssignment = catchAsync(async (req, res) => {
   });
 });
 
+const myAssignmentDetails = catchAsync(async (req, res) => {
+  const result = await AssignmentService.myAssignmentDetails(
+    req.params.assignmentId,
+    req.user as TAuthUser,
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Assignment fetched successfully',
+    data: result,
+  });
+});
+
 export const AssignmentController = {
   createAssignment,
   getActiveAssignment,
   getAssignmentDetails,
   markAssignmentAsCompleted,
   pendingAndSubmittedAssignment,
+  myAssignmentDetails,
 };
