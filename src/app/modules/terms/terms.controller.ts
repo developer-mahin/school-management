@@ -54,24 +54,9 @@ const deleteTerms = catchAsync(async (req, res) => {
   });
 });
 
-
-const getResultBasedOnTerms = catchAsync(async (req, res) => {
-  const result = await TermsService.getResultBasedOnTerms(
-    req.params.termsId,
-    req.user as TAuthUser,
-  );
-  sendResponse(res, {
-    success: true,
-    statusCode: httpStatus.OK,
-    message: 'Result fetched successfully',
-    data: result,
-  });
-})
-
 export const TermsController = {
   createTerms,
   getAllTerms,
   updateTerms,
   deleteTerms,
-  getResultBasedOnTerms
 };
