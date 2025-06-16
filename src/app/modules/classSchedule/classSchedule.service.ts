@@ -246,7 +246,7 @@ const getUpcomingClasses = async (
 
   const upcomingQuery = new AggregationQueryBuilder(query);
 
-  let matchStage = {}
+  let matchStage = {};
   if (user.role === USER_ROLE.teacher) {
     matchStage = {
       teacherId: new mongoose.Types.ObjectId(String(user.teacherId)),
