@@ -67,3 +67,4 @@ env/
 .vercel
 .vercel
 public/
+test.js

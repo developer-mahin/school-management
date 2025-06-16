@@ -19,7 +19,15 @@ router
     auth(USER_ROLE.teacher),
     AttendanceController.getAttendanceHistory,
   )
-  .get("/my_attendance", auth(USER_ROLE.student), AttendanceController.getMyAttendance)
-  .get("/my_attendance/details", auth(USER_ROLE.student), AttendanceController.getMyAttendanceDetails);
+  .get(
+    '/my_attendance',
+    auth(USER_ROLE.student),
+    AttendanceController.getMyAttendance,
+  )
+  .get(
+    '/my_attendance/details',
+    auth(USER_ROLE.student),
+    AttendanceController.getMyAttendanceDetails,
+  );
 
 export const AttendanceRoutes = router;

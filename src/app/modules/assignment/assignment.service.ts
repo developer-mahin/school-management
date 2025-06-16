@@ -34,7 +34,6 @@ const getActiveAssignment = async (
 ) => {
   const { graded } = query;
 
-
   const date = new Date();
   date.setUTCHours(0, 0, 0, 0);
 
@@ -45,17 +44,35 @@ const getActiveAssignment = async (
         $lte: date,
       },
       status: {
-        $ne: 'on-going'
-      }
-    }
-
+        $ne: 'on-going',
+      },
+    };
   } else {
     matchStage = {
       dueDate: {
         $gte: date,
       },
-      status: 'on-going'
-    }
+      status: 'on-going',
+    };
+  }
+
+  const findExpired = await Assignment.find({
+    dueDate: {
+      $lt: date,
+    },
+  });
+
+  if (findExpired) {
+    await Assignment.updateMany(
+      {
+        dueDate: {
+          $lt: date,
+        },
+      },
+      {
+        status: 'expired',
+      },
+    );
   }
 
   const findTeacher = await TeacherService.findTeacher(user);
@@ -66,7 +83,7 @@ const getActiveAssignment = async (
       {
         $match: {
           schoolId: new mongoose.Types.ObjectId(String(findTeacher.schoolId)),
-          ...matchStage
+          ...matchStage,
         },
       },
       {
@@ -354,68 +371,155 @@ const markAssignmentAsCompleted = async (
   }
 };
 
-const pendingAssignment = async (user: TAuthUser, query: Record<string, unknown>) => {
-
-  const { submitted } = query
+const pendingAndSubmittedAssignment = async (
+  user: TAuthUser,
+  query: Record<string, unknown>,
+) => {
+  const { submitted } = query;
 
   const date = new Date();
   date.setUTCHours(0, 0, 0, 0);
 
   const findStudent = await StudentService.findStudent(user.studentId);
-  const myStudentId = new mongoose.Types.ObjectId(String(user.studentId))
-  const pendingAssignmentQuery = new AggregationQueryBuilder(query)
+  const myStudentId = new mongoose.Types.ObjectId(String(user.studentId));
+  const pendingAssignmentQuery = new AggregationQueryBuilder(query);
 
-
-  let matchStage = {}
+  let matchStage = {};
   if (submitted === 'true') {
     matchStage = {
-      "assignmentSubmissions.studentId": { $eq: myStudentId }
-    }
+      'assignmentSubmissions.studentId': { $eq: myStudentId },
+    };
   } else {
     matchStage = {
-      "assignmentSubmissions.studentId": { $ne: myStudentId }
-    }
+      'assignmentSubmissions.studentId': { $ne: myStudentId },
+    };
   }
-
 
   const result = await pendingAssignmentQuery
     .customPipeline([
       {
         $match: {
           $and: [
-            { classId: new mongoose.Types.ObjectId(String(findStudent.classId)) },
-            { schoolId: new mongoose.Types.ObjectId(String(findStudent.schoolId)) },
+            {
+              classId: new mongoose.Types.ObjectId(String(findStudent.classId)),
+            },
+            {
+              schoolId: new mongoose.Types.ObjectId(
+                String(findStudent.schoolId),
+              ),
+            },
             { dueDate: { $gte: date } },
-            { status: 'on-going' }
-          ]
-        }
+            { status: 'on-going' },
+          ],
+        },
       },
 
       {
         $lookup: {
-          from: "assignmentsubmissions",
-          localField: "_id",
-          foreignField: "assignmentId",
-          as: "assignmentSubmissions",
-        }
+          from: 'assignmentsubmissions',
+          localField: '_id',
+          foreignField: 'assignmentId',
+          as: 'assignmentSubmissions',
+        },
       },
       {
         $match: {
-          ...matchStage
-        }
+          ...matchStage,
+        },
       },
       {
         $project: {
-          assignmentSubmissions: 0
-        }
-      }
+          assignmentSubmissions: 0,
+        },
+      },
     ])
     .sort()
     .paginate()
-    .execute(Assignment)
+    .execute(Assignment);
 
-  const meta = await pendingAssignmentQuery.countTotal(Assignment)
+  const meta = await pendingAssignmentQuery.countTotal(Assignment);
   return { meta, result };
+};
+
+const myAssignmentDetails = async (assignmentId: string, user: TAuthUser) => {
+
+
+  const findStudent = await StudentService.findStudent(user.studentId);
+
+  const result = await Assignment.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(String(assignmentId)),
+        schoolId: new mongoose.Types.ObjectId(String(findStudent?.schoolId)),
+      }
+    },
+    {
+      $lookup: {
+        from: 'assignmentsubmissions',
+        pipeline: [
+          {
+            $match: {
+              studentId: new mongoose.Types.ObjectId(String(user.studentId)),
+              assignmentId: new mongoose.Types.ObjectId(String(assignmentId)),
+            }
+          }
+        ],
+        as: 'assignmentSubmissions',
+      }
+    },
+    {
+      $unwind: {
+        path: '$assignmentSubmissions',
+        preserveNullAndEmptyArrays: true
+      }
+    },
+    {
+      $lookup: {
+        from: 'subjects',
+        localField: 'subjectId',
+        foreignField: '_id',
+        as: 'subject',
+      }
+    },
+    {
+      $unwind: {
+        path: '$subject',
+        preserveNullAndEmptyArrays: true
+      }
+    },
+    {
+      $lookup: {
+        from: 'classes',
+        localField: 'classId',
+        foreignField: '_id',
+        as: 'class',
+      }
+    },
+    {
+      $unwind: {
+        path: '$class',
+        preserveNullAndEmptyArrays: true
+      }
+    }, 
+    {
+      $project: {
+        className: "$class.className",
+        section: 1,
+        subject: "$subject.subjectName",
+        title: 1,
+        dueDate: 1, 
+        marks: 1,
+        status: 1,
+        submittedFile: "$assignmentSubmissions.submittedFile",
+        assignementGrade: "$assignmentSubmissions.grade",
+        assignmentFile: "$fileUrl",
+
+      }
+    }
+  ])
+
+  return result[0] || {}
+
 };
 
 export const AssignmentService = {
@@ -423,5 +527,6 @@ export const AssignmentService = {
   getActiveAssignment,
   getAssignmentDetails,
   markAssignmentAsCompleted,
-  pendingAssignment
+  pendingAndSubmittedAssignment,
+  myAssignmentDetails,
 };
