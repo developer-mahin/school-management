@@ -1,9 +1,6 @@
-import mongoose from 'mongoose';
 import { TAuthUser } from '../../interface/authUser';
-import Exam from '../exam/exam.model';
 import { TTerms } from './terms.interface';
 import Terms from './terms.model';
-import { StudentService } from '../student/student.service';
 
 export const TermsService = {
   createTerms: async (payload: Partial<TTerms>, user: TAuthUser) => {
@@ -12,9 +9,7 @@ export const TermsService = {
   },
 
   getAllTerms: async (user: TAuthUser) => {
-    const result = await Terms.find({ schoolId: user.schoolId }).sort({
-      createdAt: -1,
-    }).lean();
+    const result = await Terms.find({ schoolId: user.schoolId });
     return result;
   },
 
@@ -37,70 +32,5 @@ export const TermsService = {
       schoolId: user.schoolId,
     });
     return result;
-  },
-
-
-  getResultBasedOnTerms: async (id: string, user: TAuthUser) => {
-    const findStudent = await StudentService.findStudent(user.studentId);
-    const studentObjectId = new mongoose.Types.ObjectId(String(user.studentId));
-
-    const result = await Exam.aggregate([
-      {
-        $match: {
-          termsId: new mongoose.Types.ObjectId(String(id)),
-          schoolId: new mongoose.Types.ObjectId(String(findStudent?.schoolId)),
-        }
-      },
-      {
-        $lookup: {
-          from: "results",
-          localField: "_id",
-          foreignField: "examId",
-          as: "result",
-        }
-      },
-      {
-        $unwind: {
-          path: "$result",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $unwind: {
-          path: "$result.students",
-          preserveNullAndEmptyArrays: true,
-        }
-      },
-      {
-        $match: {
-          "result.students.studentId": studentObjectId,
-        }
-      },
-      {
-        $lookup: {
-          from: "subjects",
-          localField: "subjectId",
-          foreignField: "_id",
-          as: "subject",
-        }
-      },
-      {
-        $unwind: {
-          path: "$subject",
-          preserveNullAndEmptyArrays: true,
-        }
-      },
-      {
-        $project: {
-          subjectName: "$subject.subjectName",
-          mark: "$result.students.mark",
-          grade: "$result.students.grade",
-          gpa: "$result.students.gpa",
-        }
-      }
-
-    ])
-
-    return result
   },
 };

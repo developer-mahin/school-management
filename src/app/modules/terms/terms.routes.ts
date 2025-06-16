@@ -8,7 +8,6 @@ const router = Router();
 router
   .post('/create', auth(USER_ROLE.school), TermsController.createTerms)
   .get('/', auth(USER_ROLE.school), TermsController.getAllTerms)
-  .get("/result/get_result_based_on_terms/:termsId", auth(USER_ROLE.student), TermsController.getResultBasedOnTerms)
   .patch('/:termsId', auth(USER_ROLE.school), TermsController.updateTerms)
   .delete('/:termsId', auth(USER_ROLE.school), TermsController.deleteTerms);
 

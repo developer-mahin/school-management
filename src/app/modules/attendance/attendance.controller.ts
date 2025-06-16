@@ -43,6 +43,7 @@ const getMyAttendance = catchAsync(async (req, res) => {
   });
 });
 
+
 const getMyAttendanceDetails = catchAsync(async (req, res) => {
   const result = await AttendanceService.getMyAttendanceDetails(
     req.user as TAuthUser,
@@ -54,11 +55,11 @@ const getMyAttendanceDetails = catchAsync(async (req, res) => {
     message: 'Attendance history fetched successfully',
     data: result,
   });
-});
+})
 
 export const AttendanceController = {
   createAttendance,
   getAttendanceHistory,
   getMyAttendance,
-  getMyAttendanceDetails,
+  getMyAttendanceDetails
 };
