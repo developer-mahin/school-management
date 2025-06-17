@@ -98,9 +98,12 @@ export const TermsService = {
           gpa: "$result.students.gpa",
         }
       }
-
     ])
 
-    return result
+    const totalCgpa = result.reduce((acc, curr) => acc + curr.gpa, 0)
+    const gpa = totalCgpa / result.length
+
+
+    return { result, thisTermGpa: gpa }
   },
 };

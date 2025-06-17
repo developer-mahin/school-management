@@ -9,6 +9,7 @@ import Teacher from '../teacher/teacher.model';
 import { TeacherService } from '../teacher/teacher.service';
 import { TAssignment, TMarkComplete } from './assignment.interface';
 import Assignment from './assignment.model';
+import { classAndSubjectQuery } from '../../helper/aggregationPipline';
 
 const createAssignment = async (
   user: TAuthUser,
@@ -86,34 +87,7 @@ const getActiveAssignment = async (
           ...matchStage,
         },
       },
-      {
-        $lookup: {
-          from: 'classes',
-          localField: 'classId',
-          foreignField: '_id',
-          as: 'class',
-        },
-      },
-      {
-        $unwind: {
-          path: '$class',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: 'subjects',
-          localField: 'subjectId',
-          foreignField: '_id',
-          as: 'subject',
-        },
-      },
-      {
-        $unwind: {
-          path: '$subject',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
+      ...classAndSubjectQuery,
       {
         $lookup: {
           from: 'assignmentsubmissions',
@@ -175,34 +149,7 @@ const getAssignmentDetails = async (
         _id: new mongoose.Types.ObjectId(assignmentId),
       },
     },
-    {
-      $lookup: {
-        from: 'subjects',
-        localField: 'subjectId',
-        foreignField: '_id',
-        as: 'subject',
-      },
-    },
-    {
-      $unwind: {
-        path: '$subject',
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: 'classes',
-        localField: 'classId',
-        foreignField: '_id',
-        as: 'class',
-      },
-    },
-    {
-      $unwind: {
-        path: '$class',
-        preserveNullAndEmptyArrays: true,
-      },
-    },
+    ...classAndSubjectQuery,
 
     {
       $lookup: {
@@ -473,41 +420,14 @@ const myAssignmentDetails = async (assignmentId: string, user: TAuthUser) => {
         preserveNullAndEmptyArrays: true
       }
     },
-    {
-      $lookup: {
-        from: 'subjects',
-        localField: 'subjectId',
-        foreignField: '_id',
-        as: 'subject',
-      }
-    },
-    {
-      $unwind: {
-        path: '$subject',
-        preserveNullAndEmptyArrays: true
-      }
-    },
-    {
-      $lookup: {
-        from: 'classes',
-        localField: 'classId',
-        foreignField: '_id',
-        as: 'class',
-      }
-    },
-    {
-      $unwind: {
-        path: '$class',
-        preserveNullAndEmptyArrays: true
-      }
-    }, 
+    ...classAndSubjectQuery,
     {
       $project: {
         className: "$class.className",
         section: 1,
         subject: "$subject.subjectName",
         title: 1,
-        dueDate: 1, 
+        dueDate: 1,
         marks: 1,
         status: 1,
         submittedFile: "$assignmentSubmissions.submittedFile",

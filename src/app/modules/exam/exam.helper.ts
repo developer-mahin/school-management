@@ -1,32 +1,7 @@
+import { classAndSubjectQuery } from "../../helper/aggregationPipline";
+
 export const commonPipeline = [
-  {
-    $lookup: {
-      from: 'subjects',
-      localField: 'subjectId',
-      foreignField: '_id',
-      as: 'subject',
-    },
-  },
-  {
-    $unwind: {
-      path: '$subject',
-      preserveNullAndEmptyArrays: true,
-    },
-  },
-  {
-    $lookup: {
-      from: 'classes',
-      localField: 'classId',
-      foreignField: '_id',
-      as: 'class',
-    },
-  },
-  {
-    $unwind: {
-      path: '$class',
-      preserveNullAndEmptyArrays: true,
-    },
-  },
+  ...classAndSubjectQuery,
   {
     $lookup: {
       from: 'users',
