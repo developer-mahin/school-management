@@ -2,6 +2,7 @@ import httpStatus from 'http-status';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { UserService } from './user.service';
+import { TAuthUser } from '../../interface/authUser';
 
 const updateUserActions = catchAsync(async (req, res) => {
   const { id } = req.params;
@@ -46,9 +47,31 @@ const getAllAdmin = catchAsync(async (req, res) => {
   });
 });
 
+const countTotal = catchAsync(async (req, res) => {
+  const result = await UserService.countTotal(req.user as TAuthUser);
+  sendResponse(res, {
+    data: result,
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Total  fetched successfully',
+  });
+});
+
+const userOverView = catchAsync(async (req, res) => {
+  const result = await UserService.userOverView(req.user as TAuthUser, req.query);
+  sendResponse(res, {
+    data: result,
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'user overview fetched successfully',
+  });
+});
+
 export const UserController = {
   updateUserActions,
   createAdmin,
   getAllCustomers,
   getAllAdmin,
+  countTotal,
+  userOverView
 };

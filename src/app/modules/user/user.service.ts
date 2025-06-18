@@ -1,9 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
+import mongoose from 'mongoose';
 import QueryBuilder from '../../QueryBuilder/queryBuilder';
 import { USER_ROLE } from '../../constant';
+import { months, StatisticHelper } from '../../helper/staticsHelper';
+import { TAuthUser } from '../../interface/authUser';
 import AppError from '../../utils/AppError';
 import generateUID from '../../utils/generateUID';
+import Attendance from '../attendance/attendance.model';
+import Payment from '../payment/payment.model';
+import Student from '../student/student.model';
+import Teacher from '../teacher/teacher.model';
 import User from './user.model';
 
 const updateUserActions = async (id: string, action: string): Promise<any> => {
@@ -85,10 +92,138 @@ const uniquePhoneNumber = async (phoneNumber: string) => {
   return result;
 };
 
+const countTotal = async (user: TAuthUser) => {
+
+  let returnValue: Record<string, any> = {}
+
+  if (user.role === USER_ROLE.supperAdmin) {
+    const [totalSchool, totalStudent, totalTeacher, totalParents, totalEarning] = await Promise.all([
+      User.countDocuments({ role: USER_ROLE.school }),
+      User.countDocuments({ role: USER_ROLE.student }),
+      User.countDocuments({ role: USER_ROLE.teacher }),
+      User.countDocuments({ role: USER_ROLE.parents }),
+      Payment.find({})
+        .then((payments) => payments.reduce((total, payment) => total + payment.amount, 0)),
+    ]);
+
+    returnValue = { totalSchool, totalStudent, totalTeacher, totalParents, totalEarning }
+  }
+
+  if (user.role === USER_ROLE.school) {
+    const [totalStudent, totalTeacher, attendanceRate] = await Promise.all([
+      Student.countDocuments({ schoolId: user.schoolId }),
+      Teacher.countDocuments({ schoolId: user.schoolId }),
+      Attendance.aggregate([
+        { $match: { schoolId: new mongoose.Types.ObjectId(String(user.schoolId)) } },
+        {
+          $project: {
+            presentCount: { $size: "$presentStudents" },
+            absentCount: { $size: "$absentStudents" }
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            totalPresent: { $sum: "$presentCount" },
+            totalAbsent: { $sum: "$absentCount" }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            attendanceRate: {
+              $cond: [
+                { $eq: [{ $add: ["$totalPresent", "$totalAbsent"] }, 0] },
+                0,
+                {
+                  $multiply: [
+                    { $divide: ["$totalPresent", { $add: ["$totalPresent", "$totalAbsent"] }] },
+                    100
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ])
+    ]);
+
+    returnValue = { totalStudent, totalTeacher, attendanceRate: attendanceRate[0] || 0 }
+  }
+
+  return returnValue
+
+};
+
+const userOverView = async (user: TAuthUser, query: Record<string, unknown>) => {
+  const year = new Date().getFullYear();
+  const { startDate, endDate } = StatisticHelper.statisticHelper(
+    year.toString(),
+  );
+
+  const result = await User.aggregate([
+    {
+      $match: {
+        role: query.role,
+        createdAt: {
+          $gte: startDate,
+          $lte: endDate
+        }
+      }
+    },
+    {
+      $group: {
+        _id: {
+          month: { $month: '$createdAt' },
+          role: '$role',
+        },
+        count: { $sum: 1 }
+      }
+    },
+    {
+      $group: {
+        _id: "$_id.month",
+        roles: {
+          $push: {
+            role: "$_id.role",
+            count: "$count"
+          }
+        }
+      }
+    },
+    {
+      $project: {
+        _id: 0,
+        month: "$_id",
+        roles: 1
+      }
+    },
+    {
+      $sort: {
+        month: 1
+      }
+    }
+  ])
+
+  const formatted = months.map((month, index) => {
+    const monthData = result.find(item => item.month === index + 1);
+
+    return {
+      month,
+      total: monthData ?
+        monthData.roles.reduce((total: number, role: any) => total + role.count, 0) : 0
+    };
+  });
+
+  return formatted
+};
+
 export const UserService = {
   updateUserActions,
   createAdmin,
   getAllCustomers,
   getAllAdmin,
   uniquePhoneNumber,
+  countTotal,
+  userOverView
 };
