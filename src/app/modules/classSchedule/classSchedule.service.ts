@@ -9,6 +9,7 @@ import { commonPipeline } from './classSchedule.helper';
 import { TeacherService } from '../teacher/teacher.service';
 import { USER_ROLE } from '../../constant';
 import { StudentService } from '../student/student.service';
+import { classAndSubjectQuery } from '../../helper/aggregationPipline';
 
 const createClassSchedule = async (
   payload: Partial<TClassSchedule>,
@@ -48,34 +49,7 @@ const getAllClassSchedule = async (
           schoolId: new mongoose.Types.ObjectId(String(user.schoolId)),
         },
       },
-      {
-        $lookup: {
-          from: 'classes',
-          localField: 'classId',
-          foreignField: '_id',
-          as: 'class',
-        },
-      },
-      {
-        $unwind: {
-          path: '$class',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: 'subjects',
-          localField: 'subjectId',
-          foreignField: '_id',
-          as: 'subject',
-        },
-      },
-      {
-        $unwind: {
-          path: '$subject',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
+      ...classAndSubjectQuery,
       {
         $lookup: {
           from: 'teachers',
@@ -189,34 +163,7 @@ const getClassScheduleByDays = async (
           $and: [...andCondition, { days: query.days }],
         },
       },
-      {
-        $lookup: {
-          from: 'classes',
-          localField: 'classId',
-          foreignField: '_id',
-          as: 'class',
-        },
-      },
-      {
-        $unwind: {
-          path: '$class',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: 'subjects',
-          localField: 'subjectId',
-          foreignField: '_id',
-          as: 'subject',
-        },
-      },
-      {
-        $unwind: {
-          path: '$subject',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
+      ...classAndSubjectQuery,
       {
         $project: {
           _id: 1,
@@ -415,34 +362,7 @@ const getWeeklySchedule = async (user: TAuthUser) => {
         ...matchStage,
       },
     },
-    {
-      $lookup: {
-        from: 'subjects',
-        localField: 'subjectId',
-        foreignField: '_id',
-        as: 'subject',
-      },
-    },
-    {
-      $unwind: {
-        path: '$subject',
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: 'classes',
-        localField: 'classId',
-        foreignField: '_id',
-        as: 'class',
-      },
-    },
-    {
-      $unwind: {
-        path: '$class',
-        preserveNullAndEmptyArrays: true,
-      },
-    },
+    ...classAndSubjectQuery,
     {
       $group: {
         _id: '$days',

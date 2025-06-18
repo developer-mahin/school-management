@@ -33,9 +33,14 @@ interface CreateUserPayload<T> {
 export async function createUserWithProfile<T>(
   payload: CreateUserPayload<T & { name?: string }>,
 ): Promise<mongoose.Document> {
-  const uniquePhoneNumber = await UserService.uniquePhoneNumber(
-    payload.phoneNumber,
-  );
+  let uniquePhoneNumber;
+
+  if (payload.phoneNumber) {
+    uniquePhoneNumber = await UserService.uniquePhoneNumber(
+      payload.phoneNumber,
+    )
+  }
+
   if (uniquePhoneNumber) throw new Error('Phone number already exists');
 
   const session = await mongoose.startSession();

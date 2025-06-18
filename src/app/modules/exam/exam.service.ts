@@ -4,10 +4,12 @@ import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 import GradeSystem from '../gradeSystem/gradeSystem.model';
 import { TStudentsGrader } from '../result/result.interface';
 import Result from '../result/result.model';
+import { StudentService } from '../student/student.service';
 import { TeacherService } from '../teacher/teacher.service';
 import { commonPipeline } from './exam.helper';
 import { TExam } from './exam.interface';
 import Exam from './exam.model';
+import { classAndSubjectQuery } from '../../helper/aggregationPipline';
 
 const createExam = async (payload: Partial<TExam>, user: TAuthUser) => {
   const examDate = payload.date?.setUTCHours(0, 0, 0, 0);
@@ -151,6 +153,63 @@ const updateGrade = async (
   return result;
 };
 
+const getExamSchedule = async (user: TAuthUser, query: Record<string, unknown>) => {
+  const examQuery = new AggregationQueryBuilder(query);
+
+  const findStudent = await StudentService.findStudent(user.studentId);
+  const nowDate = new Date();
+  nowDate.setUTCHours(0, 0, 0, 0);
+
+  const result = await examQuery
+    .customPipeline([
+      {
+        $match: {
+          schoolId: new mongoose.Types.ObjectId(String(findStudent.schoolId)),
+          classId: new mongoose.Types.ObjectId(String(findStudent.classId)),
+          date: { $gte: nowDate }
+        },
+      },
+
+      {
+        $addFields: {
+          dateOnly: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$date',
+            },
+          }
+        }
+      },
+      ...classAndSubjectQuery,
+
+      {
+        $group: {
+          _id: "$dateOnly",
+          exams: { $push: "$$ROOT" },
+        }
+      },
+
+      {
+        $project: {
+          _id: 0,
+          date: "$_id",
+          exams: 1
+        }
+      },
+
+      {
+        $sort: {
+          date: 1
+        }
+      }
+    ])
+    // .sort()
+    .paginate()
+    .execute(Exam);
+  const meta = await examQuery.countTotal(Exam);
+  return { meta, result };
+};
+
 export const ExamService = {
   createExam,
   getTermsExams,
@@ -158,4 +217,5 @@ export const ExamService = {
   deleteExams,
   getExamsOfTeacher,
   updateGrade,
+  getExamSchedule
 };

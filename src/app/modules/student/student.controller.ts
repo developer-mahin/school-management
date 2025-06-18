@@ -3,6 +3,7 @@ import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { StudentService } from './student.service';
 import { TAuthUser } from '../../interface/authUser';
+import generateUID from '../../utils/generateUID';
 
 const createStudent = catchAsync(async (req, res) => {
   const result = await StudentService.createStudent(
@@ -27,7 +28,41 @@ const createStudent = catchAsync(async (req, res) => {
 //     });
 // });
 
+const getMyChildren = catchAsync(async (req, res) => {
+  const result = await StudentService.getMyChildren(req.user as TAuthUser);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Students fetched successfully',
+    data: result,
+  });
+});
+
+const uniqueId = catchAsync(async (req, res) => {
+  const result = await generateUID();
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Students fetched successfully',
+    data: result,
+  });
+});
+
+
+const selectChild = catchAsync(async (req, res) => {
+  const result = await StudentService.selectChild(req.params.userId);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Students fetched successfully',
+    data: result,
+  });
+});
+
 export const StudentController = {
   createStudent,
+  getMyChildren,
+  uniqueId,
+  selectChild
   // getAllStudents
 };
