@@ -1,9 +1,6 @@
-import mongoose from 'mongoose';
 import { TAuthUser } from '../../interface/authUser';
-import Exam from '../exam/exam.model';
 import { TTerms } from './terms.interface';
 import Terms from './terms.model';
-import { StudentService } from '../student/student.service';
 
 export const TermsService = {
   createTerms: async (payload: Partial<TTerms>, user: TAuthUser) => {
@@ -12,9 +9,7 @@ export const TermsService = {
   },
 
   getAllTerms: async (user: TAuthUser) => {
-    const result = await Terms.find({ schoolId: user.schoolId }).sort({
-      createdAt: -1,
-    }).lean();
+    const result = await Terms.find({ schoolId: user.schoolId });
     return result;
   },
 
@@ -38,6 +33,7 @@ export const TermsService = {
     });
     return result;
   },
+
 
 
   getResultBasedOnTerms: async (id: string, user: TAuthUser) => {
@@ -106,4 +102,5 @@ export const TermsService = {
 
     return { result, thisTermGpa: gpa }
   },
+
 };

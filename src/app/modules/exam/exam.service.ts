@@ -107,22 +107,13 @@ const getExamsOfTeacher = async (
 };
 
 const updateGrade = async (
-  payload: Partial<TExam> & { examId: string, students: TStudentsGrader[] },
+  payload: Partial<TExam> & { students: TStudentsGrader[] },
   user: TAuthUser,
 ) => {
   const findTeacher = await TeacherService.findTeacher(user);
   const findSchoolGrade = await GradeSystem.find({
     schoolId: findTeacher.schoolId,
   }).select('grade mark gpa');
-
-
-  const findExistingResult = await Result.findOne({
-    examId: payload?.examId,
-  });
-
-  if (findExistingResult) {
-    throw new Error('Result already exists');
-  }
 
   const students = payload.students;
   const gradeSystem = findSchoolGrade;
