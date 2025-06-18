@@ -12,7 +12,6 @@ async function generateUID() {
     if (latestUser && latestUser.uid) {
       // Extract the last number from the userId and increment it
       const lastNumber = parseInt(latestUser.uid.split('-')[1]);
-      // console.log({ lastNumber });
       const newNumber = (lastNumber + 1).toString().padStart(5, '0');
       newUserId = newNumber;
     } else {
@@ -23,9 +22,7 @@ async function generateUID() {
     const yearLastDigits = year.slice(0, 2);
 
     // Generate the custom ID
-    const customID = `SM-${yearLastDigits + newUserId}`;
-
-    console.log(customID, 'customID');
+    const customID = `${yearLastDigits}-${newUserId}`;
     return customID;
   } catch (err) {
     console.error('Error generating custom ID:', err);
