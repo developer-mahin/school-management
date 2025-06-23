@@ -66,23 +66,10 @@ const paymentList = catchAsync(async (req, res) => {
   });
 });
 
-const paymentAction = catchAsync(async (req, res) => {
-  const result = await PaymentService.paymentAction(
-    req.user as TAuthUser,
-    req.body,
-  );
-  sendResponse(res, {
-    data: result,
-    success: true,
-    statusCode: httpStatus.OK,
-    message: 'payment action dispatch successfully',
-  });
-});
 
 export const PaymentController = {
   makePayment,
   paymentList,
   confirmPayment,
-  earningStatistic,
-  paymentAction,
+  earningStatistic
 };

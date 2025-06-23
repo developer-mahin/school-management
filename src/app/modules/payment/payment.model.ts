@@ -3,10 +3,7 @@ import { TPayment } from './payment.interface';
 
 const paymentSchema = new Schema<TPayment>(
   {
-    jobRequestId: {
-      type: Schema.Types.ObjectId,
-      ref: 'JobRequest',
-    },
+
     subscriptionId: {
       type: Schema.Types.ObjectId,
       ref: 'Subscription',
@@ -15,27 +12,15 @@ const paymentSchema = new Schema<TPayment>(
       type: Schema.Types.ObjectId,
       ref: 'User',
     },
-    driverId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Driver',
-    },
-    companyId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Company',
-    },
+
     paymentType: {
       type: String,
       required: [true, 'Payment type is required'],
       enum: ['card', 'cash', 'bank', 'paypal'],
+      default: 'card',
       trim: true,
     },
-    paymentStatus: {
-      type: String,
-      required: [true, 'Payment status is required'],
-      enum: ['pending', 'completed', 'failed'],
-      default: 'pending',
-      trim: true,
-    },
+
     amount: {
       type: Number,
       required: [true, 'Amount is required'],
@@ -48,13 +33,6 @@ const paymentSchema = new Schema<TPayment>(
       type: String,
       required: [true, 'Payment id is required'],
       trim: true,
-    },
-    earnFrom: {
-      type: String,
-      required: [true, 'Earn from is required'],
-      enum: ['job', 'subscription'],
-      trim: true,
-      default: 'job',
     },
   },
   {

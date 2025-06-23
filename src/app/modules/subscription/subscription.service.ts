@@ -6,7 +6,18 @@ import { TAuthUser } from '../../interface/authUser';
 import MySubscription from '../mySubscription/mySubscription.model';
 
 const createSubscription = async (payload: TSubscription) => {
-  const subscription = await Subscription.create(payload);
+
+  let numberOfChildren = 0;
+
+  if (payload.planName.toLowerCase().includes('plus')) {
+    numberOfChildren = 1;
+  } else if (payload.planName.toLowerCase().includes('silver')) {
+    numberOfChildren = 100;
+  } else if (payload.planName.toLowerCase().includes('gold')) {
+    numberOfChildren = 100;
+  }
+
+  const subscription = await Subscription.create({ ...payload, numberOfChildren });
   return subscription;
 };
 
@@ -45,9 +56,8 @@ const updateSubscription = async (
 
 const getMySubscription = async (user: TAuthUser) => {
   const subscription = await MySubscription.findOne({ userId: user.userId });
-  if (!subscription)
-    throw new AppError(httpStatus.NOT_FOUND, 'Subscription not found');
-  return subscription;
+
+  return subscription || {};
 };
 
 export const SubscriptionService = {
