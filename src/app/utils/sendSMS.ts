@@ -21,27 +21,40 @@
 // };
 
 // export default sendSms;
-
+import axios from 'axios';
 import https from 'https';
+import AppError from './AppError';
+import httpStatus from 'http-status';
+const agent = new https.Agent({ rejectUnauthorized: false });
 
-const options = {
-  hostname: 'www.example.com',
-  port: 443,
-  path: '/api/balance/',
-  method: 'POST',
-  headers: {
-    'Content-Type': 'text/html',
-  },
-};
-const req = https.request(options, (res) => {
-  console.log(`statusCode: ${res.statusCode}`);
-  res.on('data', (d) => {
-    process.stdout.write(d);
+const sendSMS = async (data: {
+  phoneNumber: string;
+  message: string;
+}) => {
+  const url = 'https://api.kwtsms.com/send/';
+  const payload = new URLSearchParams({
+    username: 'petroliapp',
+    password: 'Kuwt@95189518',
+    sender: 'Classaty',
+    to: data.phoneNumber,
+    message: data.message,
   });
-});
-req.on('error', (error) => {
-  console.error(error);
-});
-const postData = 'username=petroliapp&password=Likuwt@95189518';
-req.write(postData);
-req.end();
+
+  try {
+    const response = await axios.post(url, payload.toString(), {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: '*/*',
+      },
+      httpsAgent: agent,
+    });
+
+    console.log('Response:', response);
+  } catch (error: any) {
+    console.error('SMS sending failed:', error.response?.data || error.message);
+    throw new AppError(httpStatus.BAD_REQUEST, error);
+  }
+};
+
+
+export default sendSMS;

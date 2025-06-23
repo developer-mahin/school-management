@@ -10,21 +10,20 @@ const router = Router();
 router
   .post(
     '/webhook',
-    auth(USER_ROLE.customer, USER_ROLE.company),
+    auth(USER_ROLE.parents),
     validateRequest(PaymentValidation.paymentValidation),
     PaymentController.makePayment,
   )
   .get('/confirm-payment', PaymentController.confirmPayment)
   .get(
     '/earning_statistic',
-    auth(USER_ROLE.company, USER_ROLE.hopperCompany, USER_ROLE.admin),
+    auth(USER_ROLE.supperAdmin),
     PaymentController.earningStatistic,
   )
   .get(
     '/payment_list',
-    auth(USER_ROLE.company, USER_ROLE.hopperCompany),
+    auth(USER_ROLE.supperAdmin),
     PaymentController.paymentList,
   )
-  .patch('/action', auth(USER_ROLE.driver), PaymentController.paymentAction);
 
 export const PaymentRoutes = router;

@@ -5,9 +5,9 @@ const subscriptionSchema = new Schema<TSubscription>(
   {
     planName: { type: String, required: [true, 'Plan name is required'] },
     price: { type: Number, required: [true, 'Price is required'] },
-    numberOfDriver: {
+    numberOfChildren: {
       type: Number,
-      required: [true, 'Number of driver is required'],
+      required: [true, 'Number of children is required'],
     },
     timeline: { type: Number, required: [true, 'Timeline is required'] },
     features: { type: [String], required: [true, 'Features is required'] },
