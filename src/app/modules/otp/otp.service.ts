@@ -3,6 +3,7 @@ import httpStatus from 'http-status';
 import mongoose from 'mongoose';
 import AppError from '../../utils/AppError';
 import OTP from './otp.model';
+import sendSMS from '../../utils/sendSMS';
 
 const sendOTP = async (
   phoneNumber: string,
@@ -18,14 +19,14 @@ const sendOTP = async (
   It will expire in ${otpExpiryTime} minute${otpExpiryTime! > 1 ? 's' : ''}. 
 Please do not share this code with anyone.`;
 
-  // if (receiverType === 'phone') {
-  //   const emailBody = {
-  //     phoneNumber,
-  //     message
-  //   };
+  if (receiverType === 'phone') {
+    const emailBody = {
+      phoneNumber,
+      message
+    };
 
-  //   await sendSms(emailBody);
-  // }
+    await sendSMS(emailBody);
+  }
 
   const findExistingOtp = await OTP.findOne({
     sendTo: phoneNumber,

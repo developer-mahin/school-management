@@ -1,37 +1,34 @@
+import axios from 'axios';
 import https from 'https';
+const agent = new https.Agent({ rejectUnauthorized: false });
 
-const sendSMS = () => {
-  const options = {
-    hostname: 'www.kwtsms.com', // Update with actual hostname if different
-    port: 443,
-    path: '/API/send/', // SMS sending endpoint (you may need to confirm from kwtSMS documentation)
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-  };
+const sendSMS = async (toPhone, messageText) => {
+  const url = 'https://api.kwtsms.com/send/';
+  const payload = new URLSearchParams({
+    username: 'petroliapp',
+    password: 'Likuwt@95189518',
+    sender: 'Classaty',
+    to: toPhone,
+    message: messageText,
+  });
 
-  // Update the postData with your actual credentials and message
-  const postData =
-    'username=petroliapp' +
-    '&password=Likuwt@95189518' +
-    '&sender=Classaty' + // Sender ID approved by kwtSMS
-    '&mobile=+8801342084045' + // e.g., 965XXXXXXXX
-    '&message=Your%20message%20here'; // URL-encoded message
-
-  const req = https.request(options, (res) => {
-    console.log(`statusCode: ${res.statusCode}`);
-    res.on('data', (d) => {
-      process.stdout.write(d);
+  try {
+    const response = await axios.post(url, payload.toString(), {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: '*/*',
+      },
+      httpsAgent: agent,
     });
-  });
 
-  req.on('error', (error) => {
-    console.error(error);
-  });
-
-  req.write(postData);
-  req.end();
+    console.log('Response:', response.data);
+  } catch (error) {
+    console.error('SMS sending failed:', error.response?.data || error.message);
+  }
 };
 
-sendSMS();
+// Test call
+sendSMS(
+  '+19787231530',
+  'Hello! This is a test message from kwtSMS using Node.js',
+);

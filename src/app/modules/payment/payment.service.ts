@@ -264,31 +264,10 @@ const paymentList = async (user: TAuthUser, query: Record<string, unknown>) => {
   return { meta, result };
 };
 
-const paymentAction = async (
-  user: TAuthUser,
-  payload: {
-    paymentId: string;
-    action: 'completed' | 'failed';
-  },
-) => {
-  const result = await Payment.updateOne(
-    { _id: payload.paymentId },
-    {
-      $set: {
-        paymentStatus: payload.action,
-      },
-    },
-    {
-      new: true,
-    },
-  );
-  return result;
-};
-
 export const PaymentService = {
   paymentList,
   makePayment,
   confirmPayment,
   earningStatistic,
-  paymentAction,
+
 };
