@@ -93,20 +93,32 @@ const uniquePhoneNumber = async (phoneNumber: string) => {
 };
 
 const countTotal = async (user: TAuthUser) => {
-
-  let returnValue: Record<string, any> = {}
+  let returnValue: Record<string, any> = {};
 
   if (user.role === USER_ROLE.supperAdmin) {
-    const [totalSchool, totalStudent, totalTeacher, totalParents, totalEarning] = await Promise.all([
+    const [
+      totalSchool,
+      totalStudent,
+      totalTeacher,
+      totalParents,
+      totalEarning,
+    ] = await Promise.all([
       User.countDocuments({ role: USER_ROLE.school }),
       User.countDocuments({ role: USER_ROLE.student }),
       User.countDocuments({ role: USER_ROLE.teacher }),
       User.countDocuments({ role: USER_ROLE.parents }),
-      Payment.find({})
-        .then((payments) => payments.reduce((total, payment) => total + payment.amount, 0)),
+      Payment.find({}).then((payments) =>
+        payments.reduce((total, payment) => total + payment.amount, 0),
+      ),
     ]);
 
-    returnValue = { totalSchool, totalStudent, totalTeacher, totalParents, totalEarning }
+    returnValue = {
+      totalSchool,
+      totalStudent,
+      totalTeacher,
+      totalParents,
+      totalEarning,
+    };
   }
 
   if (user.role === USER_ROLE.school) {
@@ -114,48 +126,63 @@ const countTotal = async (user: TAuthUser) => {
       Student.countDocuments({ schoolId: user.schoolId }),
       Teacher.countDocuments({ schoolId: user.schoolId }),
       Attendance.aggregate([
-        { $match: { schoolId: new mongoose.Types.ObjectId(String(user.schoolId)) } },
+        {
+          $match: {
+            schoolId: new mongoose.Types.ObjectId(String(user.schoolId)),
+          },
+        },
         {
           $project: {
-            presentCount: { $size: "$presentStudents" },
-            absentCount: { $size: "$absentStudents" }
-          }
+            presentCount: { $size: '$presentStudents' },
+            absentCount: { $size: '$absentStudents' },
+          },
         },
         {
           $group: {
             _id: null,
-            totalPresent: { $sum: "$presentCount" },
-            totalAbsent: { $sum: "$absentCount" }
-          }
+            totalPresent: { $sum: '$presentCount' },
+            totalAbsent: { $sum: '$absentCount' },
+          },
         },
         {
           $project: {
             _id: 0,
             attendanceRate: {
               $cond: [
-                { $eq: [{ $add: ["$totalPresent", "$totalAbsent"] }, 0] },
+                { $eq: [{ $add: ['$totalPresent', '$totalAbsent'] }, 0] },
                 0,
                 {
                   $multiply: [
-                    { $divide: ["$totalPresent", { $add: ["$totalPresent", "$totalAbsent"] }] },
-                    100
-                  ]
-                }
-              ]
-            }
-          }
-        }
-      ])
+                    {
+                      $divide: [
+                        '$totalPresent',
+                        { $add: ['$totalPresent', '$totalAbsent'] },
+                      ],
+                    },
+                    100,
+                  ],
+                },
+              ],
+            },
+          },
+        },
+      ]),
     ]);
 
-    returnValue = { totalStudent, totalTeacher, attendanceRate: attendanceRate[0] || 0 }
+    returnValue = {
+      totalStudent,
+      totalTeacher,
+      attendanceRate: attendanceRate[0] || 0,
+    };
   }
 
-  return returnValue
-
+  return returnValue;
 };
 
-const userOverView = async (user: TAuthUser, query: Record<string, unknown>) => {
+const userOverView = async (
+  user: TAuthUser,
+  query: Record<string, unknown>,
+) => {
   const year = new Date().getFullYear();
   const { startDate, endDate } = StatisticHelper.statisticHelper(
     year.toString(),
@@ -167,9 +194,9 @@ const userOverView = async (user: TAuthUser, query: Record<string, unknown>) => 
         role: query.role,
         createdAt: {
           $gte: startDate,
-          $lte: endDate
-        }
-      }
+          $lte: endDate,
+        },
+      },
     },
     {
       $group: {
@@ -177,48 +204,50 @@ const userOverView = async (user: TAuthUser, query: Record<string, unknown>) => 
           month: { $month: '$createdAt' },
           role: '$role',
         },
-        count: { $sum: 1 }
-      }
+        count: { $sum: 1 },
+      },
     },
     {
       $group: {
-        _id: "$_id.month",
+        _id: '$_id.month',
         roles: {
           $push: {
-            role: "$_id.role",
-            count: "$count"
-          }
-        }
-      }
+            role: '$_id.role',
+            count: '$count',
+          },
+        },
+      },
     },
     {
       $project: {
         _id: 0,
-        month: "$_id",
-        roles: 1
-      }
+        month: '$_id',
+        roles: 1,
+      },
     },
     {
       $sort: {
-        month: 1
-      }
-    }
-  ])
+        month: 1,
+      },
+    },
+  ]);
 
   const formatted = months.map((month, index) => {
-    const monthData = result.find(item => item.month === index + 1);
+    const monthData = result.find((item) => item.month === index + 1);
 
     return {
       month,
-      total: monthData ?
-        monthData.roles.reduce((total: number, role: any) => total + role.count, 0) : 0
+      total: monthData
+        ? monthData.roles.reduce(
+            (total: number, role: any) => total + role.count,
+            0,
+          )
+        : 0,
     };
   });
 
-  return formatted
+  return formatted;
 };
-
-
 
 export const UserService = {
   updateUserActions,
@@ -227,5 +256,5 @@ export const UserService = {
   getAllAdmin,
   uniquePhoneNumber,
   countTotal,
-  userOverView
+  userOverView,
 };

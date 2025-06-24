@@ -6,7 +6,6 @@ import { TAuthUser } from '../../interface/authUser';
 import MySubscription from '../mySubscription/mySubscription.model';
 
 const createSubscription = async (payload: TSubscription) => {
-
   let numberOfChildren = 0;
 
   if (payload.planName.toLowerCase().includes('plus')) {
@@ -17,7 +16,10 @@ const createSubscription = async (payload: TSubscription) => {
     numberOfChildren = 100;
   }
 
-  const subscription = await Subscription.create({ ...payload, numberOfChildren });
+  const subscription = await Subscription.create({
+    ...payload,
+    numberOfChildren,
+  });
   return subscription;
 };
 

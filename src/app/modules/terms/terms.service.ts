@@ -12,9 +12,11 @@ export const TermsService = {
   },
 
   getAllTerms: async (user: TAuthUser) => {
-    const result = await Terms.find({ schoolId: user.schoolId }).sort({
-      createdAt: -1,
-    }).lean();
+    const result = await Terms.find({ schoolId: user.schoolId })
+      .sort({
+        createdAt: -1,
+      })
+      .lean();
     return result;
   },
 
@@ -39,7 +41,6 @@ export const TermsService = {
     return result;
   },
 
-
   getResultBasedOnTerms: async (id: string, user: TAuthUser) => {
     const findStudent = await StudentService.findStudent(user.studentId);
     const studentObjectId = new mongoose.Types.ObjectId(String(user.studentId));
@@ -49,61 +50,60 @@ export const TermsService = {
         $match: {
           termsId: new mongoose.Types.ObjectId(String(id)),
           schoolId: new mongoose.Types.ObjectId(String(findStudent?.schoolId)),
-        }
+        },
       },
       {
         $lookup: {
-          from: "results",
-          localField: "_id",
-          foreignField: "examId",
-          as: "result",
-        }
+          from: 'results',
+          localField: '_id',
+          foreignField: 'examId',
+          as: 'result',
+        },
       },
       {
         $unwind: {
-          path: "$result",
+          path: '$result',
           preserveNullAndEmptyArrays: true,
         },
       },
       {
         $unwind: {
-          path: "$result.students",
+          path: '$result.students',
           preserveNullAndEmptyArrays: true,
-        }
+        },
       },
       {
         $match: {
-          "result.students.studentId": studentObjectId,
-        }
+          'result.students.studentId': studentObjectId,
+        },
       },
       {
         $lookup: {
-          from: "subjects",
-          localField: "subjectId",
-          foreignField: "_id",
-          as: "subject",
-        }
+          from: 'subjects',
+          localField: 'subjectId',
+          foreignField: '_id',
+          as: 'subject',
+        },
       },
       {
         $unwind: {
-          path: "$subject",
+          path: '$subject',
           preserveNullAndEmptyArrays: true,
-        }
+        },
       },
       {
         $project: {
-          subjectName: "$subject.subjectName",
-          mark: "$result.students.mark",
-          grade: "$result.students.grade",
-          gpa: "$result.students.gpa",
-        }
-      }
-    ])
+          subjectName: '$subject.subjectName',
+          mark: '$result.students.mark',
+          grade: '$result.students.grade',
+          gpa: '$result.students.gpa',
+        },
+      },
+    ]);
 
-    const totalCgpa = result.reduce((acc, curr) => acc + curr.gpa, 0)
-    const gpa = totalCgpa / result.length
+    const totalCgpa = result.reduce((acc, curr) => acc + curr.gpa, 0);
+    const gpa = totalCgpa / result.length;
 
-
-    return { result, thisTermGpa: gpa }
+    return { result, thisTermGpa: gpa };
   },
 };

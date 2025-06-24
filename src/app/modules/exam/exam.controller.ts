@@ -78,9 +78,11 @@ const updateGrade = catchAsync(async (req, res) => {
   });
 });
 
-
 const getExamSchedule = catchAsync(async (req, res) => {
-  const result = await ExamService.getExamSchedule(req.user as TAuthUser, req.query);
+  const result = await ExamService.getExamSchedule(
+    req.user as TAuthUser,
+    req.query,
+  );
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -89,7 +91,6 @@ const getExamSchedule = catchAsync(async (req, res) => {
   });
 });
 
-
 export const ExamController = {
   createExam,
   getTermsExams,
@@ -97,5 +98,5 @@ export const ExamController = {
   deleteExams,
   getExamsOfTeacher,
   updateGrade,
-  getExamSchedule
+  getExamSchedule,
 };

@@ -18,7 +18,12 @@ router
     '/exam_of_teachers',
     auth(USER_ROLE.teacher),
     ExamController.getExamsOfTeacher,
-  ).get("/exam_schedule", auth(USER_ROLE.student), ExamController.getExamSchedule)
+  )
+  .get(
+    '/exam_schedule',
+    auth(USER_ROLE.student),
+    ExamController.getExamSchedule,
+  )
   .patch(
     '/grade_update',
     auth(USER_ROLE.teacher, USER_ROLE.school),

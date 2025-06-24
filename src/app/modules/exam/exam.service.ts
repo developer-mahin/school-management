@@ -107,14 +107,13 @@ const getExamsOfTeacher = async (
 };
 
 const updateGrade = async (
-  payload: Partial<TExam> & { examId: string, students: TStudentsGrader[] },
+  payload: Partial<TExam> & { examId: string; students: TStudentsGrader[] },
   user: TAuthUser,
 ) => {
   const findTeacher = await TeacherService.findTeacher(user);
   const findSchoolGrade = await GradeSystem.find({
     schoolId: findTeacher.schoolId,
   }).select('grade mark gpa');
-
 
   const findExistingResult = await Result.findOne({
     examId: payload?.examId,
@@ -162,7 +161,10 @@ const updateGrade = async (
   return result;
 };
 
-const getExamSchedule = async (user: TAuthUser, query: Record<string, unknown>) => {
+const getExamSchedule = async (
+  user: TAuthUser,
+  query: Record<string, unknown>,
+) => {
   const examQuery = new AggregationQueryBuilder(query);
 
   const findStudent = await StudentService.findStudent(user.studentId);
@@ -175,7 +177,7 @@ const getExamSchedule = async (user: TAuthUser, query: Record<string, unknown>) 
         $match: {
           schoolId: new mongoose.Types.ObjectId(String(findStudent.schoolId)),
           classId: new mongoose.Types.ObjectId(String(findStudent.classId)),
-          date: { $gte: nowDate }
+          date: { $gte: nowDate },
         },
       },
 
@@ -186,31 +188,31 @@ const getExamSchedule = async (user: TAuthUser, query: Record<string, unknown>) 
               format: '%Y-%m-%d',
               date: '$date',
             },
-          }
-        }
+          },
+        },
       },
       ...classAndSubjectQuery,
 
       {
         $group: {
-          _id: "$dateOnly",
-          exams: { $push: "$$ROOT" },
-        }
+          _id: '$dateOnly',
+          exams: { $push: '$$ROOT' },
+        },
       },
 
       {
         $project: {
           _id: 0,
-          date: "$_id",
-          exams: 1
-        }
+          date: '$_id',
+          exams: 1,
+        },
       },
 
       {
         $sort: {
-          date: 1
-        }
-      }
+          date: 1,
+        },
+      },
     ])
     // .sort()
     .paginate()
@@ -226,5 +228,5 @@ export const ExamService = {
   deleteExams,
   getExamsOfTeacher,
   updateGrade,
-  getExamSchedule
+  getExamSchedule,
 };

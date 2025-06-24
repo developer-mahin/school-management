@@ -27,10 +27,7 @@ import AppError from './AppError';
 import httpStatus from 'http-status';
 const agent = new https.Agent({ rejectUnauthorized: false });
 
-const sendSMS = async (data: {
-  phoneNumber: string;
-  message: string;
-}) => {
+const sendSMS = async (data: { phoneNumber: string; message: string }) => {
   const url = 'https://api.kwtsms.com/send/';
   const payload = new URLSearchParams({
     username: 'petroliapp',
@@ -55,6 +52,5 @@ const sendSMS = async (data: {
     throw new AppError(httpStatus.BAD_REQUEST, error);
   }
 };
-
 
 export default sendSMS;

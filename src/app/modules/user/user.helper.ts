@@ -38,7 +38,7 @@ export async function createUserWithProfile<T>(
   if (payload.phoneNumber) {
     uniquePhoneNumber = await UserService.uniquePhoneNumber(
       payload.phoneNumber,
-    )
+    );
   }
 
   if (uniquePhoneNumber) throw new Error('Phone number already exists');

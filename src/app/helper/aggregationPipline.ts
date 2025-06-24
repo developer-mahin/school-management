@@ -46,8 +46,8 @@ export const classAndSubjectQuery = [
       path: '$subject',
       preserveNullAndEmptyArrays: true,
     },
-  }
-]
+  },
+];
 
 export const aggregationPipelineHelper = {
   userProfile,

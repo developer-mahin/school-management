@@ -19,6 +19,7 @@ import { SubscriptionRoutes } from '../modules/subscription/subscription.routes'
 import { TeacherRoutes } from '../modules/teacher/teacher.routes';
 import { TermsRoutes } from '../modules/terms/terms.routes';
 import { UserRoutes } from '../modules/user/user.routes';
+import { OverviewRoutes } from '../modules/overview/overview.routes';
 
 const router = Router();
 
@@ -87,6 +88,10 @@ const routes: TRoutes[] = [
   {
     path: '/grade_system',
     route: GradeSystemRoutes,
+  },
+  {
+    path: '/overview',
+    route: OverviewRoutes,
   },
   {
     path: '/payment',

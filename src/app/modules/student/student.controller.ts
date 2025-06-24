@@ -48,7 +48,6 @@ const uniqueId = catchAsync(async (req, res) => {
   });
 });
 
-
 const selectChild = catchAsync(async (req, res) => {
   const result = await StudentService.selectChild(req.params.userId);
   sendResponse(res, {
@@ -63,6 +62,6 @@ export const StudentController = {
   createStudent,
   getMyChildren,
   uniqueId,
-  selectChild
+  selectChild,
   // getAllStudents
 };

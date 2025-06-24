@@ -66,10 +66,9 @@ const paymentList = catchAsync(async (req, res) => {
   });
 });
 
-
 export const PaymentController = {
   makePayment,
   paymentList,
   confirmPayment,
-  earningStatistic
+  earningStatistic,
 };
