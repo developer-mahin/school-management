@@ -38,9 +38,10 @@ export default {
   logger_password: process.env.LOGGER_PASSWORD,
   admin_password: process.env.ADMIN_PASSWORD,
 
-  twilio: {
-    account_sid: process.env.TWILIO_ACCOUNT_SID,
-    auth_token: process.env.TWILIO_AUTH_TOKEN,
-    phone_number: process.env.TWILIO_PHONE_NUMBER,
+  kwt_sms: {
+    username: process.env.KWT_USERNAME,
+    password: process.env.KWT_PASSWORD,
+    sender: process.env.KWT_SENDER_ID,
+    kwt_sms_url: process.env.KWT_SMS_SEND_URL,
   },
 };
