@@ -24,6 +24,6 @@ router
     '/payment_list',
     auth(USER_ROLE.supperAdmin),
     PaymentController.paymentList,
-  )
+  );
 
 export const PaymentRoutes = router;

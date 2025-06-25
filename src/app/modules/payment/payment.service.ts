@@ -269,5 +269,4 @@ export const PaymentService = {
   makePayment,
   confirmPayment,
   earningStatistic,
-
 };

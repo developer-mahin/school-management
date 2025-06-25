@@ -1,4 +1,4 @@
-import { classAndSubjectQuery } from "../../helper/aggregationPipline";
+import { classAndSubjectQuery } from '../../helper/aggregationPipline';
 
 export const commonPipeline = [
   ...classAndSubjectQuery,

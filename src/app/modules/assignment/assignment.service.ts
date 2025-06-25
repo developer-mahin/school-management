@@ -366,8 +366,6 @@ const pendingAssignment = async (user: TAuthUser, query: Record<string, unknown>
 };
 
 const myAssignmentDetails = async (assignmentId: string, user: TAuthUser) => {
-
-
   const findStudent = await StudentService.findStudent(user.studentId);
 
   const result = await Assignment.aggregate([
@@ -375,7 +373,7 @@ const myAssignmentDetails = async (assignmentId: string, user: TAuthUser) => {
       $match: {
         _id: new mongoose.Types.ObjectId(String(assignmentId)),
         schoolId: new mongoose.Types.ObjectId(String(findStudent?.schoolId)),
-      }
+      },
     },
     {
       $lookup: {
@@ -385,38 +383,36 @@ const myAssignmentDetails = async (assignmentId: string, user: TAuthUser) => {
             $match: {
               studentId: new mongoose.Types.ObjectId(String(user.studentId)),
               assignmentId: new mongoose.Types.ObjectId(String(assignmentId)),
-            }
-          }
+            },
+          },
         ],
         as: 'assignmentSubmissions',
-      }
+      },
     },
     {
       $unwind: {
         path: '$assignmentSubmissions',
-        preserveNullAndEmptyArrays: true
-      }
+        preserveNullAndEmptyArrays: true,
+      },
     },
     ...classAndSubjectQuery,
     {
       $project: {
-        className: "$class.className",
+        className: '$class.className',
         section: 1,
-        subject: "$subject.subjectName",
+        subject: '$subject.subjectName',
         title: 1,
         dueDate: 1,
         marks: 1,
         status: 1,
-        submittedFile: "$assignmentSubmissions.submittedFile",
-        assignementGrade: "$assignmentSubmissions.grade",
-        assignmentFile: "$fileUrl",
+        submittedFile: '$assignmentSubmissions.submittedFile',
+        assignementGrade: '$assignmentSubmissions.grade',
+        assignmentFile: '$fileUrl',
+      },
+    },
+  ]);
 
-      }
-    }
-  ])
-
-  return result[0] || {}
-
+  return result[0] || {};
 };
 
 export const AssignmentService = {

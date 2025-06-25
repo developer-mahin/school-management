@@ -3,7 +3,6 @@ import { TPayment } from './payment.interface';
 
 const paymentSchema = new Schema<TPayment>(
   {
-
     subscriptionId: {
       type: Schema.Types.ObjectId,
       ref: 'Subscription',

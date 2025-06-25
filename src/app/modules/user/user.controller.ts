@@ -58,7 +58,10 @@ const countTotal = catchAsync(async (req, res) => {
 });
 
 const userOverView = catchAsync(async (req, res) => {
-  const result = await UserService.userOverView(req.user as TAuthUser, req.query);
+  const result = await UserService.userOverView(
+    req.user as TAuthUser,
+    req.query,
+  );
   sendResponse(res, {
     data: result,
     success: true,
@@ -73,5 +76,5 @@ export const UserController = {
   getAllCustomers,
   getAllAdmin,
   countTotal,
-  userOverView
+  userOverView,
 };

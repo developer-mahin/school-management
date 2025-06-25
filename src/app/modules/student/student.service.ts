@@ -17,7 +17,6 @@ const createStudent = async (
   payload: Partial<TStudent> & { phoneNumber: string; name?: string },
   user: TAuthUser,
 ) => {
-
   if (user.role === USER_ROLE.school) {
     const findSchool = await School.findById(user.schoolId);
     payload.schoolId = user.schoolId as any;
@@ -40,14 +39,12 @@ const findStudent = async (id: string) => {
   return student;
 };
 
-
 const getMyChildren = async (user: TAuthUser) => {
   const result = await Parents.aggregate([
     {
       $match: {
         userId: new mongoose.Types.ObjectId(String(user.userId)),
       },
-
     },
 
     {
@@ -56,7 +53,7 @@ const getMyChildren = async (user: TAuthUser) => {
         localField: 'childId',
         foreignField: '_id',
         as: 'student',
-      }
+      },
     },
 
     {
@@ -72,7 +69,7 @@ const getMyChildren = async (user: TAuthUser) => {
         localField: 'student.userId',
         foreignField: '_id',
         as: 'children',
-      }
+      },
     },
 
     {
@@ -84,16 +81,14 @@ const getMyChildren = async (user: TAuthUser) => {
 
     {
       $project: {
-        children: 1
-      }
-    }
-
+        children: 1,
+      },
+    },
   ]);
   return result;
 };
 
 const selectChild = async (id: string) => {
-
   const findUser = await User.findById(id);
 
   if (!findUser) {
@@ -123,11 +118,11 @@ const selectChild = async (id: string) => {
   );
 
   return { accessToken: tokenGenerate, refreshToken, user: findUser };
-}
+};
 
 export const StudentService = {
   createStudent,
   findStudent,
   getMyChildren,
-  selectChild
+  selectChild,
 };
