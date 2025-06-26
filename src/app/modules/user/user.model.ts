@@ -7,8 +7,8 @@ export const userSchema = new mongoose.Schema<TUser, UserModel>(
   {
     uid: {
       type: String,
-      required: [true, 'UID is required'],
-      unique: true,
+      // required: [true, 'UID is required'],
+      // unique: true,
       trim: true,
     },
     name: {
@@ -65,6 +65,7 @@ export const userSchema = new mongoose.Schema<TUser, UserModel>(
   },
 );
 
+
 // query middlewares
 userSchema.pre('find', async function (next) {
   const query = this as any;
@@ -87,15 +88,17 @@ userSchema.pre('findOne', async function (next) {
 });
 
 userSchema.statics.findLastUser = async function (
-  session?: mongoose.ClientSession,
+  className: string,
+  section: string,
 ) {
-  const query = this.findOne({}, null, { bypassMiddleware: true })
+  return await this.findOne({
+    uid: { $regex: `^${className}${section}-\\d{5}$` }
+  }, null, { bypassMiddleware: true })
     .select('uid')
     .sort({ createdAt: -1 })
     .limit(1)
     .lean();
 
-  return session ? await query.session(session) : await query;
 };
 
 userSchema.statics.isUserExist = async function (id: string) {

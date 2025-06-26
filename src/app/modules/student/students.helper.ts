@@ -1,13 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose from 'mongoose';
 import { USER_ROLE } from '../../constant';
 import Parents from '../parents/parents.model';
 import User from '../user/user.model';
 import { UserService } from '../user/user.service';
 import Student from './student.model';
-import generateUID from '../../utils/generateUID';
 
 async function createStudentWithProfile(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload: any,
   session: mongoose.ClientSession,
 ): Promise<mongoose.Document> {
@@ -24,7 +23,7 @@ async function createStudentWithProfile(
         phoneNumber: payload.phoneNumber,
         role: USER_ROLE.student,
         name: payload.data.name,
-        uid: payload.uid,
+        uid: payload.uid, // Use pre-generated UID
       },
     ],
     { session },
@@ -40,9 +39,9 @@ async function createStudentWithProfile(
     { session },
   );
 
-  const userIdField = `${payload.role}Id`;
+  const userIdField = `${USER_ROLE.student}Id`; // Fixed: use actual role value
   await User.findOneAndUpdate(
-    { _id: newUser._id },
+    { _id: newUser._id }, // Fixed: proper _id reference
     { [userIdField]: newProfile._id },
     { new: true, session },
   );
@@ -50,7 +49,6 @@ async function createStudentWithProfile(
   return newProfile;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleParentUserCreation(
   payload: any,
   student: any,
@@ -59,65 +57,59 @@ async function handleParentUserCreation(
   if (!student || !student._id) return;
 
   const parentPhoneNumbers = [
-    { phoneNumber: payload.fatherPhoneNumber, role: USER_ROLE.parents },
-    { phoneNumber: payload.motherPhoneNumber, role: USER_ROLE.parents },
+    {
+      phoneNumber: payload.fatherPhoneNumber,
+      role: USER_ROLE.parents,
+    },
+    {
+      phoneNumber: payload.motherPhoneNumber,
+      role: USER_ROLE.parents,
+    },
   ];
 
   delete payload.fatherPhoneNumber;
   delete payload.motherPhoneNumber;
-  const userPromises = parentPhoneNumbers
-    .filter((p) => p.phoneNumber)
-    .map(async ({ phoneNumber, role }) => {
-      const existingUser = await User.findOne({ phoneNumber }).session(session);
-      let user = existingUser;
-      // console.log(user, "last user");
-      // console.log(phoneNumber, "phone number");
-      // console.log(role, "role");
-      const uid = await generateUID();
 
-      console.log(uid, 'uid');
+  for (const { phoneNumber, role} of parentPhoneNumbers) {
+    if (!phoneNumber) continue;
 
-      return;
-      if (!user) {
-        const [newUser] = await User.create(
-          [
-            {
-              phoneNumber,
-              role,
-              uid: await generateUID(),
-            },
-          ],
-          { session },
-        );
-        user = newUser;
-      }
+    const existingUser = await User.findOne({ phoneNumber }).session(session);
+    let user = existingUser;
 
-      const [newProfile] = await Parents.create(
+    if (!user) {
+      const [newUser] = await User.create(
         [
           {
-            userId: user._id,
-            ...payload.data,
-            childId: student._id,
-            schoolId: payload.schoolId,
+            phoneNumber,
+            role,
           },
         ],
         { session },
       );
+      user = newUser;
+    }
 
-      if (!existingUser) {
-        const userIdField = `${role}Id`;
-        await User.findOneAndUpdate(
-          { _id: user._id },
-          { [userIdField]: newProfile._id },
-          { new: true, session },
-        );
-      }
+    const [newProfile] = await Parents.create(
+      [
+        {
+          userId: user._id,
+          ...payload.data,
+          childId: student._id,
+          schoolId: payload.schoolId,
+        },
+      ],
+      { session },
+    );
 
-      return { user, profile: newProfile };
-    });
-
-  // Wait for all operations to complete
-  await Promise.all(userPromises);
+    if (!existingUser) {
+      const userIdField = `${role}Id`;
+      await User.findOneAndUpdate(
+        { _id: user._id }, // Fixed: proper _id reference
+        { [userIdField]: newProfile._id },
+        { new: true, session },
+      );
+    }
+  }
 }
 
 export { createStudentWithProfile, handleParentUserCreation };

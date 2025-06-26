@@ -50,20 +50,32 @@ const createStudent = async (
       payload.schoolName = findSchool?.schoolName;
     }
 
+    const generateData = {
+      className: payload?.className,
+      section: payload?.section,
+    } as any
+    // Pre-generate all UIDs that might be needed
+    const studentUID = await generateUID(generateData);
+
+
     const student = (await createStudentWithProfile(
       {
         phoneNumber: payload.phoneNumber,
         data: payload,
-        uid: await generateUID(),
+        uid: studentUID,
       },
-      session, // 👈 Pass session
+      session,
     )) as any;
 
-    await handleParentUserCreation(payload, student, session); // 👈 Pass session
+    await handleParentUserCreation(
+      payload,
+      student,
+      session,
+      // { fatherUID, motherUID } // Pass pre-generated UIDs
+    );
 
     await session.commitTransaction();
     session.endSession();
-
     return student;
   } catch (error) {
     await session.abortTransaction();

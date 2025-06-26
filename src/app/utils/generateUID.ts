@@ -1,28 +1,43 @@
 import User from '../modules/user/user.model';
 
-async function generateUID() {
+async function generateUID(payload: { className: string; section: string }) {
   try {
-    const date = new Date();
-    const year = date.getFullYear().toString().slice(-2);
+    const className = payload?.className;
+    const section = payload?.section;
+
     let newUserId = '';
+    let customID = '';
+    let isUnique = false;
 
-    // Find the most recent non-deleted and non-blocked user
-    const latestUser = await User.findLastUser();
+    while (!isUnique) {
+      // Get the latest user for this class + section
+      const latestUser = await User.findLastUser(className, section);
 
-    if (latestUser && latestUser.uid) {
-      // Extract the last number from the userId and increment it
-      const lastNumber = parseInt(latestUser.uid.split('-')[1]);
-      const newNumber = (lastNumber + 1).toString().padStart(5, '0');
-      newUserId = newNumber;
-    } else {
-      // If no valid users found, start from '00001'
-      newUserId = '00001';
+      if (latestUser?.uid) {
+        const lastUid = latestUser.uid.split('-')[1]; // e.g. "00003"
+        const lastNumber = parseInt(lastUid, 10);
+        const newNumber = (lastNumber + 1).toString().padStart(5, '0');
+        newUserId = newNumber;
+      } else {
+        newUserId = '00001';
+      }
+
+      // Generate full UID
+      customID = `${className}${section}-${newUserId}`;
+
+      console.log(customID, "custome id");
+      // Check if this UID already exists
+      const existingUser = await User.findOne({ uid: customID }).lean();
+
+      if (!existingUser) {
+        isUnique = true;
+      } else {
+        // If it exists, try next number
+        const retryNumber = parseInt(newUserId, 10) + 1;
+        newUserId = retryNumber.toString().padStart(5, '0');
+      }
     }
 
-    const yearLastDigits = year.slice(0, 2);
-
-    // Generate the custom ID
-    const customID = `${yearLastDigits}-${newUserId}`;
     return customID;
   } catch (err) {
     console.error('Error generating custom ID:', err);

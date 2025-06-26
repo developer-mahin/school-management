@@ -13,14 +13,14 @@ route
     ClassController.getStudentsOfClasses,
   )
   .get(
+    '/school',
+    auth(USER_ROLE.supperAdmin, USER_ROLE.admin, USER_ROLE.school, USER_ROLE.teacher),
+    ClassController.getClassBySchoolId,
+  )
+  .get(
     '/:levelId',
     auth(USER_ROLE.school, USER_ROLE.supperAdmin, USER_ROLE.school),
     ClassController.getAllClasses,
-  )
-  .get(
-    '/school/:schoolId',
-    auth(USER_ROLE.supperAdmin, USER_ROLE.admin, USER_ROLE.school),
-    ClassController.getClassBySchoolId,
   )
   .get(
     '/school/section/:classId',
