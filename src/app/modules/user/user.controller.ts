@@ -17,6 +17,16 @@ const updateUserActions = catchAsync(async (req, res) => {
   });
 });
 
+const addParentsMessage = catchAsync(async (req, res) => {
+  const result = await UserService.addParentsMessage(req.body);
+  sendResponse(res, {
+    data: result,
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'message added successfully',
+  });
+});
+
 const getAllCustomers = catchAsync(async (req, res) => {
   const result = await UserService.getAllCustomers(req.query);
   sendResponse(res, {
@@ -58,7 +68,34 @@ const countTotal = catchAsync(async (req, res) => {
 });
 
 const userOverView = catchAsync(async (req, res) => {
-  const result = await UserService.userOverView(req.user as TAuthUser, req.query);
+  const result = await UserService.userOverView(
+    req.user as TAuthUser,
+    req.query,
+  );
+  sendResponse(res, {
+    data: result,
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'user overview fetched successfully',
+  });
+});
+
+const getParentsMessage = catchAsync(async (req, res) => {
+  const result = await UserService.getParentsMessage(req.params.studentId);
+  sendResponse(res, {
+    data: result,
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'user overview fetched successfully',
+  });
+});
+
+const editProfile = catchAsync(async (req, res) => {
+  if (req.file) {
+    req.body.image = req.file.path;
+  }
+
+  const result = await UserService.editProfile(req.user as TAuthUser, req.body);
   sendResponse(res, {
     data: result,
     success: true,
@@ -73,5 +110,8 @@ export const UserController = {
   getAllCustomers,
   getAllAdmin,
   countTotal,
-  userOverView
+  userOverView,
+  addParentsMessage,
+  getParentsMessage,
+  editProfile,
 };

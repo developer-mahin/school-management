@@ -7,6 +7,7 @@ import Attendance from './attendance.model';
 import Class from '../class/class.model';
 import { StudentService } from '../student/student.service';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
+import { commonStageInAttendance } from './attendance.helper';
 
 const createAttendance = async (
   payload: Partial<TAttendance>,
@@ -16,7 +17,7 @@ const createAttendance = async (
 
   const findClass = await Class.findOne({
     className: payload.className,
-  })
+  });
 
   const totalStudents = await Student.find({
     schoolId: findTeacher.schoolId,
@@ -76,9 +77,10 @@ const getAttendanceHistory = async (
         },
       },
     },
+    ...commonStageInAttendance,
     {
       $project: {
-        _id: 0,
+        _id: 1,
         classId: 1,
         className: 1,
         section: 1,
@@ -89,6 +91,8 @@ const getAttendanceHistory = async (
         absentStudents: {
           $size: '$absentStudents',
         },
+        startTime: '$classSchedule.selectTime',
+        endTime: '$classSchedule.endTime',
         date: 1,
       },
     },
@@ -97,8 +101,10 @@ const getAttendanceHistory = async (
   return result;
 };
 
-const getMyAttendance = async (user: TAuthUser, query: Record<string, unknown>) => {
-
+const getMyAttendance = async (
+  user: TAuthUser,
+  query: Record<string, unknown>,
+) => {
   const findStudent = await StudentService.findStudent(user.studentId);
 
   const studentObjectId = new mongoose.Types.ObjectId(String(user.studentId));
@@ -112,104 +118,110 @@ const getMyAttendance = async (user: TAuthUser, query: Record<string, unknown>) 
           className: findStudent.className,
           section: findStudent.section,
           schoolId: new mongoose.Types.ObjectId(String(findStudent.schoolId)),
-        }
+        },
       },
       {
         $addFields: {
           status: {
             $cond: {
               if: {
-                $in: [studentObjectId, {
-                  $map: {
-                    input: "$presentStudents",
-                    as: "student",
-                    in: "$$student.studentId"
-                  }
-                }]
+                $in: [
+                  studentObjectId,
+                  {
+                    $map: {
+                      input: '$presentStudents',
+                      as: 'student',
+                      in: '$$student.studentId',
+                    },
+                  },
+                ],
               },
-              then: "present",
-              else: "absent"
-            }
+              then: 'present',
+              else: 'absent',
+            },
           },
           dateOnly: {
-            $dateToString: { format: "%Y-%m-%d", date: "$date" }
-          }
-        }
+            $dateToString: { format: '%Y-%m-%d', date: '$date' },
+          },
+        },
       },
       {
         $group: {
-          _id: "$dateOnly",
+          _id: '$dateOnly',
           classInfo: {
             $push: {
-              _id: "$_id",
-              classScheduleId: "$classScheduleId",
-              status: "$status",
-              date: "$date"
-            }
-          }
-        }
+              _id: '$_id',
+              classScheduleId: '$classScheduleId',
+              status: '$status',
+              date: '$date',
+            },
+          },
+        },
       },
       {
         $project: {
           _id: 0,
-          date: "$_id",
+          date: '$_id',
           classInfo: 1,
           totalClass: {
-            $size: "$classInfo"
+            $size: '$classInfo',
           },
           presentClass: {
             $size: {
               $filter: {
-                input: "$classInfo",
-                as: "ci",
-                cond: { $eq: ["$$ci.status", "present"] }
-              }
-            }
-          }
-        }
+                input: '$classInfo',
+                as: 'ci',
+                cond: { $eq: ['$$ci.status', 'present'] },
+              },
+            },
+          },
+        },
       },
     ])
     .sort()
     .paginate()
-    .execute(Attendance)
-
+    .execute(Attendance);
 
   const meta = await attendanceQuery.countTotal(Attendance);
-  return { meta, result }
+  return { meta, result };
 };
 
-
-const getMyAttendanceDetails = async (user: TAuthUser, query: Record<string, unknown>) => {
+const getMyAttendanceDetails = async (
+  user: TAuthUser,
+  query: Record<string, unknown>,
+) => {
   const findStudent = await StudentService.findStudent(user.studentId);
   const dateConvert = new Date(query.date as string);
   const studentObjectId = new mongoose.Types.ObjectId(String(user.studentId));
-
 
   const result = await Attendance.aggregate([
     {
       $match: {
         date: dateConvert,
         schoolId: new mongoose.Types.ObjectId(String(findStudent.schoolId)),
-      }
+      },
     },
     {
       $addFields: {
         status: {
           $cond: {
             if: {
-              $in: [studentObjectId, {
-                $map: {
-                  input: "$presentStudents",
-                  as: "student",
-                  in: "$$student.studentId"
-                }
-              }]
+              $in: [
+                studentObjectId,
+                {
+                  $map: {
+                    input: '$presentStudents',
+                    as: 'student',
+                    in: '$$student.studentId',
+                  },
+                },
+              ],
             },
-            then: "present",
-            else: "absent"
-          }
+            then: 'present',
+            else: 'absent',
+          },
         },
-      }
+      },
     },
 
     {
@@ -218,14 +230,14 @@ const getMyAttendanceDetails = async (user: TAuthUser, query: Record<string, unk
         localField: 'classScheduleId',
         foreignField: '_id',
         as: 'classSchedule',
-      }
+      },
     },
 
     {
       $unwind: {
         path: '$classSchedule',
         preserveNullAndEmptyArrays: true,
-      }
+      },
     },
 
     {
@@ -234,15 +246,14 @@ const getMyAttendanceDetails = async (user: TAuthUser, query: Record<string, unk
         localField: 'classSchedule.subjectId',
         foreignField: '_id',
         as: 'subject',
-      }
+      },
     },
 
     {
       $unwind: {
         path: '$subject',
         preserveNullAndEmptyArrays: true,
-      }
-
+      },
     },
 
     {
@@ -253,18 +264,80 @@ const getMyAttendanceDetails = async (user: TAuthUser, query: Record<string, unk
         subjectName: '$subject.subjectName',
         status: 1,
         date: 1,
-      }
-    }
+      },
+    },
+  ]);
 
-  ])
+  return result;
+};
 
+const getAttendanceDetails = async (attendanceId: string) => {
+  const result = await Attendance.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(String(attendanceId)),
+      },
+    },
+    ...commonStageInAttendance,
+    {
+      $project: {
+        _id: 1,
+        classId: 1,
+        className: 1,
+        section: 1,
+        totalStudents: 1,
+        presentStudents: {
+          $size: '$presentStudents',
+        },
+        absentStudents: {
+          $size: '$absentStudents',
+        },
+        startTime: '$classSchedule.selectTime',
+        endTime: '$classSchedule.endTime',
+        date: 1,
+        student: {
+          $map: {
+            input: '$student',
+            as: 'stu',
+            in: {
+              $mergeObjects: [
+                '$$stu',
+                {
+                  studentId: '$$stu._id',
+                  status: {
+                    $cond: [
+                      {
+                        $in: [
+                          '$$stu._id',
+                          {
+                            $map: {
+                              input: '$presentStudents',
+                              as: 'p',
+                              in: '$$p.studentId',
+                            },
+                          },
+                        ],
+                      },
+                      'present',
+                      'absent',
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        },
+      },
+    },
+  ]);
 
-  return result
-}
+  return result;
+};
 
 export const AttendanceService = {
   createAttendance,
   getAttendanceHistory,
   getMyAttendance,
-  getMyAttendanceDetails
+  getMyAttendanceDetails,
+  getAttendanceDetails,
 };

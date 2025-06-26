@@ -7,8 +7,8 @@ export const userSchema = new mongoose.Schema<TUser, UserModel>(
   {
     uid: {
       type: String,
-      required: [true, 'UID is required'],
-      unique: true,
+      // required: [true, 'UID is required'],
+      // unique: true,
       trim: true,
     },
     name: {
@@ -18,13 +18,6 @@ export const userSchema = new mongoose.Schema<TUser, UserModel>(
     phoneNumber: {
       type: String,
       trim: true,
-      validate: {
-        validator: function (v) {
-          return /^\+\d{1,4}\d{6,14}$/.test(v);
-        },
-        message: (props) =>
-          `${props.value} is not a valid phone number with country code! It should start with '+' followed by country code and number.`,
-      },
     },
     studentId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -72,6 +65,7 @@ export const userSchema = new mongoose.Schema<TUser, UserModel>(
   },
 );
 
+
 // query middlewares
 userSchema.pre('find', async function (next) {
   const query = this as any;
@@ -93,12 +87,18 @@ userSchema.pre('findOne', async function (next) {
   next();
 });
 
-userSchema.statics.findLastUser = async function () {
-  return await this.findOne({}, null, { bypassMiddleware: true })
+userSchema.statics.findLastUser = async function (
+  className: string,
+  section: string,
+) {
+  return await this.findOne({
+    uid: { $regex: `^${className}${section}-\\d{5}$` }
+  }, null, { bypassMiddleware: true })
     .select('uid')
     .sort({ createdAt: -1 })
     .limit(1)
     .lean();
+
 };
 
 userSchema.statics.isUserExist = async function (id: string) {

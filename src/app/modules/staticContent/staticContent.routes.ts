@@ -10,7 +10,7 @@ const router = Router();
 router
   .post(
     '/create',
-    auth(USER_ROLE.admin),
+    auth(USER_ROLE.admin, USER_ROLE.supperAdmin),
     validateRequest(StaticContentValidation.staticContentValidation),
     StaticContentController.createStaticContent,
   )
@@ -18,11 +18,11 @@ router
     '/',
     auth(
       USER_ROLE.admin,
-      USER_ROLE.company,
-      USER_ROLE.customer,
-      USER_ROLE.driver,
-      USER_ROLE.dispatcher,
-      USER_ROLE.hopperCompany,
+      USER_ROLE.parents,
+      USER_ROLE.school,
+      USER_ROLE.student,
+      USER_ROLE.supperAdmin,
+      USER_ROLE.teacher,
     ),
     StaticContentController.getStaticContent,
   );

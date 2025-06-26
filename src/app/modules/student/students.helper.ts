@@ -1,91 +1,115 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose from 'mongoose';
 import { USER_ROLE } from '../../constant';
-import generateUID from '../../utils/generateUID';
 import Parents from '../parents/parents.model';
 import User from '../user/user.model';
+import { UserService } from '../user/user.service';
+import Student from './student.model';
 
-async function handleParentUserCreation(payload: any, student: any) {
-    const parentsNumbers = [
-        { phoneNumber: payload.fatherPhoneNumber, role: USER_ROLE.parents },
-        { phoneNumber: payload.motherPhoneNumber, role: USER_ROLE.parents },
-    ];
+async function createStudentWithProfile(
+  payload: any,
+  session: mongoose.ClientSession,
+): Promise<mongoose.Document> {
+  if (payload.phoneNumber) {
+    const uniquePhoneNumber = await UserService.uniquePhoneNumber(
+      payload.phoneNumber,
+    );
+    if (uniquePhoneNumber) throw new Error('Phone number already exists');
+  }
 
-    if (Object.keys(student).length > 0) {
-        delete payload.fatherPhoneNumber;
-        delete payload.motherPhoneNumber;
+  const [newUser] = await User.create(
+    [
+      {
+        phoneNumber: payload.phoneNumber,
+        role: USER_ROLE.student,
+        name: payload.data.name,
+        uid: payload.uid, // Use pre-generated UID
+      },
+    ],
+    { session },
+  );
 
-        const creationPromises = parentsNumbers
-            .filter(
-                (item): item is { phoneNumber: string; role: typeof USER_ROLE.parents } =>
-                    !!item.phoneNumber
-            )
-            .map(async (item) => {
-                const existingUser = await User.findOne({ phoneNumber: item.phoneNumber });
+  const [newProfile] = await Student.create(
+    [
+      {
+        userId: newUser._id,
+        ...payload.data,
+      },
+    ],
+    { session },
+  );
 
-                const session = await mongoose.startSession();
-                session.startTransaction();
+  const userIdField = `${USER_ROLE.student}Id`; // Fixed: use actual role value
+  await User.findOneAndUpdate(
+    { _id: newUser._id }, // Fixed: proper _id reference
+    { [userIdField]: newProfile._id },
+    { new: true, session },
+  );
 
-                try {
-                    let user = existingUser;
-
-                    // If user does not exist, create it
-                    if (!user) {
-                        const [newUser] = await User.create(
-                            [
-                                {
-                                    uid: await generateUID(),
-                                    phoneNumber: item.phoneNumber,
-                                    role: item.role,
-                                },
-                            ],
-                            { session }
-                        );
-
-                        if (!newUser) throw new Error('User not created');
-                        user = newUser;
-                    }
-
-                    // Always create the Parents profile
-                    const [newProfile] = await Parents.create(
-                        [
-                            {
-                                userId: user._id,
-                                ...payload.data,
-                                childId: student._id,
-                            },
-                        ],
-                        { session }
-                    );
-
-                    if (!newProfile) throw new Error(`${item.role} profile not created`);
-
-                    // Only update the user if it was newly created (not already existing)
-                    if (!existingUser) {
-                        const userIdField = `${item.role}Id`;
-
-                        const updatedUser = await User.findOneAndUpdate(
-                            { _id: user._id },
-                            { [userIdField]: newProfile._id },
-                            { new: true, session }
-                        );
-
-                        if (!updatedUser) throw new Error('User update failed');
-                    }
-
-                    await session.commitTransaction();
-                    session.endSession();
-
-                    return newProfile;
-                } catch (error) {
-                    await session.abortTransaction();
-                    session.endSession();
-                    throw error;
-                }
-            });
-
-        await Promise.all(creationPromises);
-    }
+  return newProfile;
 }
 
-export { handleParentUserCreation };
+async function handleParentUserCreation(
+  payload: any,
+  student: any,
+  session: mongoose.ClientSession,
+) {
+  if (!student || !student._id) return;
+
+  const parentPhoneNumbers = [
+    {
+      phoneNumber: payload.fatherPhoneNumber,
+      role: USER_ROLE.parents,
+    },
+    {
+      phoneNumber: payload.motherPhoneNumber,
+      role: USER_ROLE.parents,
+    },
+  ];
+
+  delete payload.fatherPhoneNumber;
+  delete payload.motherPhoneNumber;
+
+  for (const { phoneNumber, role} of parentPhoneNumbers) {
+    if (!phoneNumber) continue;
+
+    const existingUser = await User.findOne({ phoneNumber }).session(session);
+    let user = existingUser;
+
+    if (!user) {
+      const [newUser] = await User.create(
+        [
+          {
+            phoneNumber,
+            role,
+          },
+        ],
+        { session },
+      );
+      user = newUser;
+    }
+
+    const [newProfile] = await Parents.create(
+      [
+        {
+          userId: user._id,
+          ...payload.data,
+          childId: student._id,
+          schoolId: payload.schoolId,
+        },
+      ],
+      { session },
+    );
+
+    if (!existingUser) {
+      const userIdField = `${role}Id`;
+      await User.findOneAndUpdate(
+        { _id: user._id }, // Fixed: proper _id reference
+        { [userIdField]: newProfile._id },
+        { new: true, session },
+      );
+    }
+  }
+}
+
+export { createStudentWithProfile, handleParentUserCreation };

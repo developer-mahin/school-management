@@ -9,4 +9,5 @@ export type TStudent = {
   className: string;
   fatherPhoneNumber: string;
   motherPhoneNumber: string;
+  parentsMessage: string;
 };

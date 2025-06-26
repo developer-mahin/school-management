@@ -43,6 +43,10 @@ const studentSchema = new Schema<TStudent>(
       required: true,
       trim: true,
     },
+    parentsMessage: {
+      type: String,
+      trim: true,
+    },
   },
   {
     timestamps: true,

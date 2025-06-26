@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose from 'mongoose';
 import { USER_ROLE } from '../../constant';
 import { TAuthUser } from '../../interface/authUser';
@@ -47,6 +48,9 @@ const deleteClass = async (id: string) => {
 const getClassBySchoolId = async (id: string, user: TAuthUser) => {
   if (user.role === USER_ROLE.school) {
     id = user.schoolId;
+  } else if (user.role === USER_ROLE.teacher) {
+    const findTeacher = await TeacherService.findTeacher(user);
+    id = findTeacher?.schoolId as any;
   }
 
   const result = await Class.find({ schoolId: id });
@@ -106,6 +110,7 @@ const getStudentsOfClasses = async (
           studentId: '$_id',
           studentName: '$user.name',
           userId: '$user._id',
+          parentsMessage: 1,
         },
       },
     ])

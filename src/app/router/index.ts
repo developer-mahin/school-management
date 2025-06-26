@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { AnnouncementRoutes } from '../modules/announcment/announcement.routes';
 import { AssignmentRoutes } from '../modules/assignment/assignment.routes';
 import { AssignmentSubmissionRoutes } from '../modules/assignmentSubmission/assignmentSubmission.routes';
 import { AttendanceRoutes } from '../modules/attendance/attendance.routes';
@@ -10,6 +11,7 @@ import { ExamRoutes } from '../modules/exam/exam.routes';
 import { GradeSystemRoutes } from '../modules/gradeSystem/gradeSystem.routes';
 import { LevelRoutes } from '../modules/level/level.routes';
 import { NotificationRoutes } from '../modules/notification/notification.routes';
+import { OverviewRoutes } from '../modules/overview/overview.routes';
 import { PaymentRoutes } from '../modules/payment/payment.routes';
 import { SchoolRoutes } from '../modules/school/school.routes';
 import { StaticContentRoutes } from '../modules/staticContent/staticContent.routes';
@@ -87,6 +89,14 @@ const routes: TRoutes[] = [
   {
     path: '/grade_system',
     route: GradeSystemRoutes,
+  },
+  {
+    path: '/overview',
+    route: OverviewRoutes,
+  },
+  {
+    path: '/announcement',
+    route: AnnouncementRoutes,
   },
   {
     path: '/payment',
