@@ -11,6 +11,22 @@ router
     auth(USER_ROLE.supperAdmin),
     UserController.createAdmin,
   )
+  .post(
+    '/add_parents_message',
+    auth(USER_ROLE.parents),
+    UserController.addParentsMessage,
+  )
+  .get(
+    '/get_parents_message/:studentId',
+    auth(
+      USER_ROLE.parents,
+      USER_ROLE.admin,
+      USER_ROLE.supperAdmin,
+      USER_ROLE.school,
+      USER_ROLE.teacher,
+    ),
+    UserController.getParentsMessage,
+  )
   .get('/', auth(USER_ROLE.admin), UserController.getAllCustomers)
   .get('/all_admin', auth(USER_ROLE.admin), UserController.getAllAdmin)
   .get(

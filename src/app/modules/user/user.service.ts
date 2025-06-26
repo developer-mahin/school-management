@@ -249,6 +249,32 @@ const userOverView = async (
   return formatted;
 };
 
+const addParentsMessage = async (payload: {
+  studentId: string;
+  message: string;
+}) => {
+  const result = await Student.findOneAndUpdate(
+    {
+      _id: payload.studentId,
+    },
+    {
+      $set: {
+        parentsMessage: payload.message,
+      },
+    },
+    { new: true },
+  );
+
+  return result;
+};
+
+const getParentsMessage = async (studentId: string) => {
+  const result = await Student.findOne({
+    _id: studentId,
+  }).select('parentsMessage');
+  return result;
+};
+
 export const UserService = {
   updateUserActions,
   createAdmin,
@@ -257,4 +283,6 @@ export const UserService = {
   uniquePhoneNumber,
   countTotal,
   userOverView,
+  addParentsMessage,
+  getParentsMessage,
 };

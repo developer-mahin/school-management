@@ -6,11 +6,9 @@ import AppError from './AppError';
 import httpStatus from 'http-status';
 import config from '../../config';
 
-
 const agent = new https.Agent({ rejectUnauthorized: false });
 
 const sendSMS = async (payload: { phoneNumber: string; message: string }) => {
-
   const data = {
     username: config.kwt_sms.username,
     password: config.kwt_sms.password,

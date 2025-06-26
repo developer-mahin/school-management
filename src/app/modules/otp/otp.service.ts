@@ -22,7 +22,7 @@ Please do not share this code with anyone.`;
   if (receiverType === 'phone') {
     const emailBody = {
       phoneNumber,
-      message
+      message,
     };
 
     await sendSMS(emailBody);

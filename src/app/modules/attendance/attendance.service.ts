@@ -77,6 +77,20 @@ const getAttendanceHistory = async (
       },
     },
     {
+      $lookup: {
+        from: 'classschedules',
+        localField: 'classScheduleId',
+        foreignField: '_id',
+        as: 'classSchedule',
+      },
+    },
+    {
+      $unwind: {
+        path: '$classSchedule',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
       $project: {
         _id: 0,
         classId: 1,
@@ -89,6 +103,8 @@ const getAttendanceHistory = async (
         absentStudents: {
           $size: '$absentStudents',
         },
+        startTime: '$classSchedule.selectTime',
+        endTime: '$classSchedule.endTime',
         date: 1,
       },
     },
