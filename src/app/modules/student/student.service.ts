@@ -1,36 +1,75 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { Secret } from 'jsonwebtoken';
 import mongoose from 'mongoose';
+import config from '../../../config';
 import { USER_ROLE } from '../../constant';
 import { TAuthUser } from '../../interface/authUser';
+import generateToken from '../../utils/generateToken';
 import Parents from '../parents/parents.model';
 import School from '../school/school.model';
-import { createUserWithProfile } from '../user/user.helper';
+import User from '../user/user.model';
 import { TStudent } from './student.interface';
 import Student from './student.model';
-import { handleParentUserCreation } from './students.helper';
-import User from '../user/user.model';
-import generateToken from '../../utils/generateToken';
-import { Secret } from 'jsonwebtoken';
-import config from '../../../config';
+import {
+  createStudentWithProfile,
+  handleParentUserCreation,
+} from './students.helper';
+import generateUID from '../../utils/generateUID';
+
+// const createStudent = async (
+//   payload: Partial<TStudent> & { phoneNumber: string; name?: string },
+//   user: TAuthUser,
+// ) => {
+//   if (user.role === USER_ROLE.school) {
+//     const findSchool = await School.findById(user.schoolId);
+//     payload.schoolId = user.schoolId as any;
+//     payload.schoolName = findSchool?.schoolName;
+//   }
+
+//   const student = (await createUserWithProfile({
+//     phoneNumber: payload.phoneNumber,
+//     role: USER_ROLE.student,
+//     data: payload,
+//   })) as any;
+
+//   handleParentUserCreation(payload, student);
+//   return student;
+// };
 
 const createStudent = async (
   payload: Partial<TStudent> & { phoneNumber: string; name?: string },
   user: TAuthUser,
 ) => {
-  if (user.role === USER_ROLE.school) {
-    const findSchool = await School.findById(user.schoolId);
-    payload.schoolId = user.schoolId as any;
-    payload.schoolName = findSchool?.schoolName;
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    if (user.role === USER_ROLE.school) {
+      const findSchool = await School.findById(user.schoolId);
+      payload.schoolId = user.schoolId as any;
+      payload.schoolName = findSchool?.schoolName;
+    }
+
+    const student = (await createStudentWithProfile(
+      {
+        phoneNumber: payload.phoneNumber,
+        data: payload,
+        uid: await generateUID(),
+      },
+      session, // 👈 Pass session
+    )) as any;
+
+    await handleParentUserCreation(payload, student, session); // 👈 Pass session
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return student;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
   }
-
-  const student = (await createUserWithProfile({
-    phoneNumber: payload.phoneNumber,
-    role: USER_ROLE.student,
-    data: payload,
-  })) as any;
-
-  handleParentUserCreation(payload, student);
-  return student;
 };
 
 const findStudent = async (id: string) => {

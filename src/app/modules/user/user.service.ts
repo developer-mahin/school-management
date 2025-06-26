@@ -275,6 +275,15 @@ const getParentsMessage = async (studentId: string) => {
   return result;
 };
 
+const editProfile = async (user: TAuthUser, payload: any) => {
+  const result = await User.findOneAndUpdate(
+    { _id: user.userId },
+    { $set: payload },
+    { new: true },
+  );
+  return result;
+};
+
 export const UserService = {
   updateUserActions,
   createAdmin,
@@ -285,4 +294,5 @@ export const UserService = {
   userOverView,
   addParentsMessage,
   getParentsMessage,
+  editProfile,
 };

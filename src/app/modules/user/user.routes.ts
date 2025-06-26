@@ -2,6 +2,10 @@ import { Router } from 'express';
 import { auth } from '../../middleware/auth';
 import { USER_ROLE } from '../../constant';
 import { UserController } from './user.controller';
+import fileUpload from '../../utils/uploadImage';
+import parseFormData from '../../middleware/parsedData';
+
+const upload = fileUpload('./public/uploads/images/');
 
 const router = Router();
 
@@ -38,6 +42,19 @@ router
     '/user_overview',
     auth(USER_ROLE.admin, USER_ROLE.supperAdmin, USER_ROLE.school),
     UserController.userOverView,
+  )
+  .patch(
+    '/edit_profile',
+    auth(
+      USER_ROLE.parents,
+      USER_ROLE.admin,
+      USER_ROLE.supperAdmin,
+      USER_ROLE.school,
+      USER_ROLE.teacher,
+    ),
+    upload.single('image'),
+    parseFormData,
+    UserController.editProfile,
   );
 
 export const UserRoutes = router;

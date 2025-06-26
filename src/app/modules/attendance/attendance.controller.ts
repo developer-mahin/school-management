@@ -56,9 +56,22 @@ const getMyAttendanceDetails = catchAsync(async (req, res) => {
   });
 });
 
+const getAttendanceDetails = catchAsync(async (req, res) => {
+  const result = await AttendanceService.getAttendanceDetails(
+    req.params.attendanceId,
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Attendance history fetched successfully',
+    data: result,
+  });
+});
+
 export const AttendanceController = {
   createAttendance,
   getAttendanceHistory,
   getMyAttendance,
   getMyAttendanceDetails,
+  getAttendanceDetails,
 };

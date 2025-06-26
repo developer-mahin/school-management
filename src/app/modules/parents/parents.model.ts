@@ -13,6 +13,11 @@ const parentsSchema = new Schema<TParents>(
       ref: 'Student',
       required: true,
     },
+    schoolId: {
+      type: Schema.Types.ObjectId,
+      ref: 'School',
+      required: true,
+    },
   },
   {
     timestamps: true,

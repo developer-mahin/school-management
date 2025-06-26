@@ -7,6 +7,7 @@ import Attendance from './attendance.model';
 import Class from '../class/class.model';
 import { StudentService } from '../student/student.service';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
+import { commonStageInAttendance } from './attendance.helper';
 
 const createAttendance = async (
   payload: Partial<TAttendance>,
@@ -76,23 +77,10 @@ const getAttendanceHistory = async (
         },
       },
     },
-    {
-      $lookup: {
-        from: 'classschedules',
-        localField: 'classScheduleId',
-        foreignField: '_id',
-        as: 'classSchedule',
-      },
-    },
-    {
-      $unwind: {
-        path: '$classSchedule',
-        preserveNullAndEmptyArrays: true,
-      },
-    },
+    ...commonStageInAttendance,
     {
       $project: {
-        _id: 0,
+        _id: 1,
         classId: 1,
         className: 1,
         section: 1,
@@ -283,9 +271,73 @@ const getMyAttendanceDetails = async (
   return result;
 };
 
+const getAttendanceDetails = async (attendanceId: string) => {
+  const result = await Attendance.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(String(attendanceId)),
+      },
+    },
+    ...commonStageInAttendance,
+    {
+      $project: {
+        _id: 1,
+        classId: 1,
+        className: 1,
+        section: 1,
+        totalStudents: 1,
+        presentStudents: {
+          $size: '$presentStudents',
+        },
+        absentStudents: {
+          $size: '$absentStudents',
+        },
+        startTime: '$classSchedule.selectTime',
+        endTime: '$classSchedule.endTime',
+        date: 1,
+        student: {
+          $map: {
+            input: '$student',
+            as: 'stu',
+            in: {
+              $mergeObjects: [
+                '$$stu',
+                {
+                  studentId: '$$stu._id',
+                  status: {
+                    $cond: [
+                      {
+                        $in: [
+                          '$$stu._id',
+                          {
+                            $map: {
+                              input: '$presentStudents',
+                              as: 'p',
+                              in: '$$p.studentId',
+                            },
+                          },
+                        ],
+                      },
+                      'present',
+                      'absent',
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        },
+      },
+    },
+  ]);
+
+  return result;
+};
+
 export const AttendanceService = {
   createAttendance,
   getAttendanceHistory,
   getMyAttendance,
   getMyAttendanceDetails,
+  getAttendanceDetails,
 };
