@@ -9,6 +9,7 @@ const announcementSchema = new Schema<TAnnouncement>(
     announcementTo: {
       type: String,
       required: [true, 'Announcement to is required'],
+      enum: ['student', 'teacher', 'parents'],
     },
     schoolId: { type: Schema.Types.ObjectId, required: true, ref: 'School' },
     receiverId: { type: Schema.Types.ObjectId, required: true, ref: 'User' },

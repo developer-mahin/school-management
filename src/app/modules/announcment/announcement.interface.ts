@@ -4,7 +4,7 @@ export type TAnnouncement = {
   date: string;
   title: string;
   description: string;
-  announcementTo: string;
+  announcementTo: "student" | "teacher" | "parents";
   schoolId: ObjectId;
   receiverId: ObjectId;
 };
