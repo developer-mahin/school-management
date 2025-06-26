@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { AnnouncementRoutes } from '../modules/announcment/announcement.routes';
 import { AssignmentRoutes } from '../modules/assignment/assignment.routes';
 import { AssignmentSubmissionRoutes } from '../modules/assignmentSubmission/assignmentSubmission.routes';
 import { AttendanceRoutes } from '../modules/attendance/attendance.routes';
@@ -10,6 +11,7 @@ import { ExamRoutes } from '../modules/exam/exam.routes';
 import { GradeSystemRoutes } from '../modules/gradeSystem/gradeSystem.routes';
 import { LevelRoutes } from '../modules/level/level.routes';
 import { NotificationRoutes } from '../modules/notification/notification.routes';
+import { OverviewRoutes } from '../modules/overview/overview.routes';
 import { PaymentRoutes } from '../modules/payment/payment.routes';
 import { SchoolRoutes } from '../modules/school/school.routes';
 import { StaticContentRoutes } from '../modules/staticContent/staticContent.routes';
@@ -19,7 +21,6 @@ import { SubscriptionRoutes } from '../modules/subscription/subscription.routes'
 import { TeacherRoutes } from '../modules/teacher/teacher.routes';
 import { TermsRoutes } from '../modules/terms/terms.routes';
 import { UserRoutes } from '../modules/user/user.routes';
-import { OverviewRoutes } from '../modules/overview/overview.routes';
 
 const router = Router();
 
@@ -92,6 +93,10 @@ const routes: TRoutes[] = [
   {
     path: '/overview',
     route: OverviewRoutes,
+  },
+  {
+    path: '/announcement',
+    route: AnnouncementRoutes,
   },
   {
     path: '/payment',

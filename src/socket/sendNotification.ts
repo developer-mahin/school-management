@@ -17,8 +17,6 @@ const sendNotification = async (
       receiverId: receiverId,
     };
 
-    delete notificationData?.jobInfo;
-
     const connectUser: any = connectedUser.get(receiverId.toString());
     if (connectUser) {
       IO.to(connectUser.socketId).emit('notification', {

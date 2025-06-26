@@ -13,6 +13,7 @@ import User from '../user/user.model';
 const loginUser = async (payload: Pick<TUser, 'phoneNumber'>) => {
   const { phoneNumber } = payload;
 
+  console.log('phoneNumber', phoneNumber);
   const user = await User.findOne({ phoneNumber });
 
   if (!user) {
@@ -33,13 +34,17 @@ const loginUser = async (payload: Pick<TUser, 'phoneNumber'>) => {
 
   const otpExpiryTime = parseInt(config.otp_expire_in as string) || 3;
 
-  await OtpService.sendOTP(
-    phoneNumber,
-    otpExpiryTime,
-    'phone',
-    'login-verification',
-    otp,
-  );
+  try {
+    await OtpService.sendOTP(
+      phoneNumber,
+      otpExpiryTime,
+      'phone',
+      'login-verification',
+      otp,
+    );
+  } catch (error) {
+    console.log(error);
+  }
 
   const userData = {
     userId: user?._id,
