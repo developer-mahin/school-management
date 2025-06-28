@@ -14,7 +14,7 @@ const getTeacherHomePageOverview = async (user: TAuthUser) => {
       {
         $match: {
           teacherId: new mongoose.Types.ObjectId(String(user.teacherId)),
-          days: 'monday',
+          days: day,
         },
       },
       {
@@ -109,9 +109,13 @@ const getTeacherHomePageOverview = async (user: TAuthUser) => {
   return {
     todaysClass,
     overallAttendanceRate: todaysAttendanceRate[0]?.overallAttendanceRate || 0,
-    activeStudents: todaysAttendanceRate[0]?.totalPresentSum,
+    activeStudents: todaysAttendanceRate[0]?.totalPresentSum || 0,
     assignmentDue,
   };
+};
+
+const getDailyWeeklyMonthlyAttendanceRate = async (user: TAuthUser) => {
+  return user;
 };
 
 const getStudentHomePageOverview = async (user: TAuthUser) => {
@@ -128,6 +132,7 @@ const getAdminHomePageOverview = async (user: TAuthUser) => {
 
 export const OverviewService = {
   getTeacherHomePageOverview,
+  getDailyWeeklyMonthlyAttendanceRate,
   getStudentHomePageOverview,
   getParentHomePageOverview,
   getAdminHomePageOverview,

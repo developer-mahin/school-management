@@ -17,6 +17,20 @@ const createAnnouncement = catchAsync(async (req, res) => {
   });
 });
 
+const getAllAnnouncements = catchAsync(async (req, res) => {
+  const result = await AnnouncementService.getAllAnnouncements(
+    req.user as TAuthUser,
+    req.query,
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Announcements fetched successfully',
+    data: result,
+  });
+});
+
 export const AnnouncementController = {
   createAnnouncement,
+  getAllAnnouncements,
 };

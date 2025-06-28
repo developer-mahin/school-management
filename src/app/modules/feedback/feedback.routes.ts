@@ -10,25 +10,30 @@ const router = Router();
 router
   .post(
     '/create',
-    auth(USER_ROLE.STAFF),
+    auth(
+      USER_ROLE.parents,
+      USER_ROLE.school,
+      USER_ROLE.student,
+      USER_ROLE.teacher,
+    ),
     validateRequest(FeedbackValidation.feedbackValidation),
     FeedbackController.addFeedback,
   )
   .get(
     '/feedback_list',
-    auth(USER_ROLE.RESTAURANT_OWNER),
+    auth(USER_ROLE.supperAdmin),
     FeedbackController.getFeedbackList,
-  )
-  .get(
-    '/feedback_statistic',
-    auth(USER_ROLE.RESTAURANT_OWNER),
-    FeedbackController.getFeedbackStatistic,
-  )
-  .patch(
-    '/action/:id',
-    auth(USER_ROLE.RESTAURANT_OWNER),
-    validateRequest(FeedbackValidation.feedbackUpdateValidation),
-    FeedbackController.updateFeedbackAction,
   );
+// .get(
+//   '/feedback_statistic',
+//   auth(USER_ROLE.supperAdmin),
+//   FeedbackController.getFeedbackStatistic,
+// )
+// .patch(
+//   '/action/:id',
+//   auth(USER_ROLE.supperAdmin),
+//   validateRequest(FeedbackValidation.feedbackUpdateValidation),
+//   FeedbackController.updateFeedbackAction,
+// );
 
 export const FeedbackRoutes = router;

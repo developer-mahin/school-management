@@ -21,6 +21,7 @@ import { SubscriptionRoutes } from '../modules/subscription/subscription.routes'
 import { TeacherRoutes } from '../modules/teacher/teacher.routes';
 import { TermsRoutes } from '../modules/terms/terms.routes';
 import { UserRoutes } from '../modules/user/user.routes';
+import { FeedbackRoutes } from '../modules/feedback/feedback.routes';
 
 const router = Router();
 
@@ -117,6 +118,10 @@ const routes: TRoutes[] = [
   {
     path: '/static_content',
     route: StaticContentRoutes,
+  },
+  {
+    path: '/feedback',
+    route: FeedbackRoutes,
   },
 ];
 

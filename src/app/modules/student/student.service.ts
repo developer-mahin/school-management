@@ -53,10 +53,9 @@ const createStudent = async (
     const generateData = {
       className: payload?.className,
       section: payload?.section,
-    } as any
+    } as any;
     // Pre-generate all UIDs that might be needed
     const studentUID = await generateUID(generateData);
-
 
     const student = (await createStudentWithProfile(
       {

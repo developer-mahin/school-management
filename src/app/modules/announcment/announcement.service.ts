@@ -6,12 +6,12 @@ import Teacher from '../teacher/teacher.model';
 import { TAnnouncement } from './announcement.interface';
 import sendAnnouncement from '../../../socket/sendAnnouncement';
 import Announcement from './announcement.model';
+import QueryBuilder from '../../QueryBuilder/queryBuilder';
 
 const createAnnouncement = async (
   payload: Partial<TAnnouncement>,
   user: TAuthUser,
 ) => {
-
   const [allStudent, allTeacher, allParents] = await Promise.all([
     Student.find({ schoolId: user.schoolId }),
     Teacher.find({ schoolId: user.schoolId }),
@@ -19,38 +19,60 @@ const createAnnouncement = async (
       {
         $match: {
           schoolId: new mongoose.Types.ObjectId(String(user.schoolId)),
-        }
+        },
       },
       {
         $group: {
-          _id: "$userId",
-        }
+          _id: '$userId',
+        },
       },
       {
         $project: {
-          userId: "$_id"
-        }
-      }
-    ])
-  ])
+          userId: '$_id',
+        },
+      },
+    ]),
+  ]);
 
   const announcementData = {
     ...payload,
-    schoolId: user.schoolId
-  }
+    schoolId: user.schoolId,
+  };
 
-  const data = payload.announcementTo === "student" ? allStudent : payload.announcementTo === "teacher" ? allTeacher : allParents
+  const data =
+    payload.announcementTo === 'student'
+      ? allStudent
+      : payload.announcementTo === 'teacher'
+        ? allTeacher
+        : allParents;
 
   const sendAnnouncements = data.map((item) => {
-    announcementData.receiverId = item.userId
-    Announcement.create(announcementData)
-    return sendAnnouncement(announcementData)
-  })
+    announcementData.receiverId = item.userId;
+    Announcement.create(announcementData);
+    return sendAnnouncement(announcementData);
+  });
 
-  await Promise.all(sendAnnouncements)
+  await Promise.all(sendAnnouncements);
+};
 
+const getAllAnnouncements = async (
+  user: TAuthUser,
+  query: Record<string, unknown>,
+) => {
+  const announcementQuery = new QueryBuilder(
+    Announcement.find({ receiverId: user.userId }),
+    query,
+  );
+
+  const result = await announcementQuery.sort().search(['title']).paginate()
+    .queryModel;
+
+  const meta = await announcementQuery.countTotal();
+
+  return { meta, result };
 };
 
 export const AnnouncementService = {
   createAnnouncement,
+  getAllAnnouncements,
 };
