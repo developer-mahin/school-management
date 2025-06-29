@@ -18,6 +18,11 @@ const assignmentSchema = new Schema<TAssignment>(
       required: true,
       ref: 'Subject',
     },
+    teacherId: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: 'User',
+    },
     section: {
       type: String,
       required: true,

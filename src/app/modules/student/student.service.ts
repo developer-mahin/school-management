@@ -145,6 +145,10 @@ const selectChild = async (id: string) => {
     throw new Error('User not found');
   }
 
+
+  const student = await Student.findOne(findUser.studentId);
+  const school = await School.findById(student?.schoolId);
+
   const userData = {
     userId: findUser._id,
     studentId: findUser.studentId,
@@ -153,6 +157,9 @@ const selectChild = async (id: string) => {
     teacherId: findUser.teacherId,
     phoneNumber: findUser.phoneNumber,
     role: findUser.role,
+    name: findUser.name,
+    image: findUser.image,
+    mySchoolUserId: school?.userId,
   };
 
   const tokenGenerate = generateToken(
@@ -167,7 +174,7 @@ const selectChild = async (id: string) => {
     config.jwt.refresh_expires_in as string,
   );
 
-  return { accessToken: tokenGenerate, refreshToken, user: findUser };
+  return { accessToken: tokenGenerate, refreshToken, user: findUser, mySchoolUserId: school?.userId };
 };
 
 export const StudentService = {

@@ -12,6 +12,7 @@ router.post(
   auth(USER_ROLE.admin, USER_ROLE.school, USER_ROLE.supperAdmin),
   validateRequest(TeacherValidation.teacherSchema),
   TeacherController.createTeacher,
-);
+)
+  .get("/base_on_student", auth(USER_ROLE.student, USER_ROLE.parents), TeacherController.getBaseOnStudent)
 
 export const TeacherRoutes = router;

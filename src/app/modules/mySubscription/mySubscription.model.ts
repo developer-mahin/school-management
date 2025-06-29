@@ -12,7 +12,7 @@ const mySubscriptionModel = new Schema<TMySubscription>(
       required: [true, 'Subscription id is required'],
     },
     expiryIn: { type: Date, required: [true, 'Expiry date is required'] },
-    remainingDrivers: {
+    remainingChildren: {
       type: Number,
       default: 0,
     },

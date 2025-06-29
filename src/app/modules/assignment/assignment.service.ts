@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
 import mongoose from 'mongoose';
 import { TAuthUser } from '../../interface/authUser';
@@ -10,23 +11,69 @@ import { TeacherService } from '../teacher/teacher.service';
 import { TAssignment, TMarkComplete } from './assignment.interface';
 import Assignment from './assignment.model';
 import { classAndSubjectQuery } from '../../helper/aggregationPipline';
+import Student from '../student/student.model';
+import sendNotification from '../../../socket/sendNotification';
+import { NOTIFICATION_TYPE } from '../notification/notification.interface';
 
 const createAssignment = async (
   user: TAuthUser,
   payload: Partial<TAssignment>,
-) => {
-  const findTeacher = await TeacherService.findTeacher(user);
+): Promise<TAssignment> => {
+  // 1. Validate and fetch teacher data
+  const teacher = await TeacherService.findTeacher(user);
 
-  const date = new Date(payload.dueDate as Date);
-  date.setUTCHours(23, 59, 59, 999); // 23:59:59.999
-
-  payload.dueDate = date;
-  const createAssignment = await Assignment.create({
-    ...payload,
-    schoolId: findTeacher.schoolId,
+  // 2. Validate class and get students
+  const classStudents = await Student.find({
+    schoolId: teacher.schoolId,
+    classId: payload.classId,
+    section: payload.section,
   });
 
-  return createAssignment;
+  if (!classStudents || classStudents.length === 0) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'No students found in class');
+  }
+
+  // 3. Process and normalize due date
+  const dueDate = new Date(payload.dueDate as Date);
+  dueDate.setUTCHours(23, 59, 59, 999); // Set to end of day
+
+  // 4. Create assignment with normalized data
+  const assignmentData = {
+    ...payload,
+    dueDate,
+    schoolId: teacher.schoolId,
+    teacherId: user.userId,
+  };
+
+  const newAssignment = await Assignment.create(assignmentData);
+
+  // 5. Send notifications in parallel
+  const createNotification = async (receiverId: any, message: string) =>
+    await sendNotification(user, {
+      senderId: user.userId,
+      role: user.role,
+      receiverId,
+      message,
+      type: NOTIFICATION_TYPE.ASSIGNMENT,
+      linkId: newAssignment._id,
+    });
+
+  await Promise.all([
+    // Notify all students
+    ...classStudents.map((student) =>
+      createNotification(
+        student.userId,
+        `A new assignment has been created for your class: ${payload.title}`,
+      ),
+    ),
+    // Notify school admin
+    createNotification(
+      user.mySchoolUserId,
+      `A new assignment has been created: ${payload.title}`,
+    ),
+  ]);
+
+  return newAssignment;
 };
 
 const getActiveAssignment = async (
@@ -251,7 +298,7 @@ const getAssignmentDetails = async (
 
 const markAssignmentAsCompleted = async (
   assignmentId: string,
-  payload: TMarkComplete[],
+  payload: TMarkComplete[] | any,
   user: TAuthUser,
 ) => {
   const session = await mongoose.startSession();
@@ -286,9 +333,10 @@ const markAssignmentAsCompleted = async (
     }
 
     // Step 3: Update each student's assignment submission in parallel
-    await Promise.all(
-      payload.map((item) =>
-        AssignmentSubmission.findOneAndUpdate(
+    await Promise.all([
+      payload.map(async (item: any) => {
+        // Update the assignment submission
+        const updatedSubmission = await AssignmentSubmission.findOneAndUpdate(
           {
             studentId: item.studentId,
             assignmentId, // make sure assignmentId matches to avoid wrong updates
@@ -302,9 +350,32 @@ const markAssignmentAsCompleted = async (
             new: true,
             session,
           },
-        ),
-      ),
-    );
+        );
+
+        // If submission was updated successfully, send notification
+        if (updatedSubmission) {
+          await sendNotification(user, {
+            senderId: user.userId,
+            role: user.role,
+            receiverId: item.studentUserId,
+            message: `${updatedAssignment.title} is marked as completed you can now see the marks`,
+            type: NOTIFICATION_TYPE.ASSIGNMENT,
+            linkId: assignmentId,
+          });
+        }
+
+        return updatedSubmission;
+      }),
+
+      sendNotification(user, {
+        senderId: user.userId,
+        role: user.role,
+        receiverId: user.mySchoolUserId,
+        message: `${updatedAssignment.title} is marked as completed`,
+        type: NOTIFICATION_TYPE.ASSIGNMENT,
+        linkId: assignmentId,
+      }),
+    ]);
 
     // Step 4: Commit transaction
     await session.commitTransaction();

@@ -1,23 +1,50 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose from 'mongoose';
+import sendNotification from '../../../socket/sendNotification';
+import { classAndSubjectQuery } from '../../helper/aggregationPipline';
 import { TAuthUser } from '../../interface/authUser';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 import GradeSystem from '../gradeSystem/gradeSystem.model';
+import { NOTIFICATION_TYPE } from '../notification/notification.interface';
 import { TStudentsGrader } from '../result/result.interface';
 import Result from '../result/result.model';
+import Student from '../student/student.model';
 import { StudentService } from '../student/student.service';
 import { TeacherService } from '../teacher/teacher.service';
 import { commonPipeline } from './exam.helper';
 import { TExam } from './exam.interface';
 import Exam from './exam.model';
-import { classAndSubjectQuery } from '../../helper/aggregationPipline';
 
 const createExam = async (payload: Partial<TExam>, user: TAuthUser) => {
-  const examDate = payload.date?.setUTCHours(0, 0, 0, 0);
+  const examDate = new Date(payload?.date as Date);
+  examDate.setUTCHours(0, 0, 0, 0);
+
+
+
   const result = await Exam.create({
     ...payload,
     date: examDate,
     schoolId: user.schoolId,
   });
+
+
+  const findStudent = await Student.find({
+    classId: payload.classId,
+  })
+
+  await Promise.all(
+    findStudent.map((student) => {
+      sendNotification(user, {
+        senderId: user.userId,
+        role: user.role,
+        receiverId: student.userId,
+        message: `Exam scheduled for ${payload.date} at ${payload.startTime}`,
+        type: NOTIFICATION_TYPE.EXAM,
+        linkId: result._id,
+      })
+    })
+  )
+
   return result;
 };
 
@@ -54,6 +81,24 @@ const updateExams = async (
     payload,
     { new: true },
   );
+
+  const findStudent = await Student.find({
+    classId: payload.classId,
+  })
+
+  await Promise.all(
+    findStudent.map((student) => {
+      sendNotification(user, {
+        senderId: user.userId,
+        role: user.role,
+        receiverId: student.userId,
+        message: `Exam scheduled updated`,
+        type: NOTIFICATION_TYPE.EXAM,
+        linkId: result?._id,
+      })
+    })
+  )
+
   return result;
 };
 
@@ -110,53 +155,96 @@ const updateGrade = async (
   payload: Partial<TExam> & { examId: string; students: TStudentsGrader[] },
   user: TAuthUser,
 ) => {
-  const findTeacher = await TeacherService.findTeacher(user);
-  const findSchoolGrade = await GradeSystem.find({
-    schoolId: findTeacher.schoolId,
-  }).select('grade mark gpa');
+  const { examId, students } = payload;
 
-  const findExistingResult = await Result.findOne({
-    examId: payload?.examId,
-  });
+  // Validate required fields early
+  if (!examId || !students?.length) {
+    throw new Error('Exam ID and students are required');
+  }
+
+  // Execute all independent database queries in parallel
+  const [findTeacher, findSchoolGrade, findExistingResult, findExam] = await Promise.all([
+    TeacherService.findTeacher(user),
+    GradeSystem.find({ schoolId: user.schoolId }).select('grade mark gpa').lean(),
+    Result.findOne({ examId }).lean(),
+    Exam.findOne({ _id: examId }).populate('classId').lean() as any
+  ]);
+
+  // Early validation checks
+  if (!findTeacher) {
+    throw new Error('Teacher not found');
+  }
 
   if (findExistingResult) {
     throw new Error('Result already exists');
   }
 
-  const students = payload.students;
-  const gradeSystem = findSchoolGrade;
+  if (!findExam) {
+    throw new Error('Exam not found');
+  }
 
-  // Step 1: Convert grade ranges to numbers
-  const parsedGradeSystem = gradeSystem.map((g) => {
+  if (!findSchoolGrade?.length) {
+    throw new Error('Grade system not configured for this school');
+  }
+
+  // Optimize grade system parsing and create lookup map
+  const gradeSystemMap = new Map();
+  for (const g of findSchoolGrade) {
     const [min, max] = g.mark.split('-').map(Number);
 
-    return {
+    // Validate grade range format
+    if (isNaN(min) || isNaN(max)) {
+      console.warn(`Invalid grade range format: ${g.mark}`);
+      continue;
+    }
+
+    gradeSystemMap.set(`${min}-${max}`, {
       grade: g.grade,
       gpa: g.gpa,
       min,
       max,
-    };
-  });
-
-  // Step 2: Assign grade to each student
-  const studentsWithGrades = students.map((student) => {
-    const foundGrade = parsedGradeSystem.find((g) => {
-      return student.mark >= g.min && student.mark <= g.max;
     });
+  }
+
+  // Convert to sorted array for efficient lookup
+  const sortedGradeSystem = Array.from(gradeSystemMap.values())
+    .sort((a, b) => a.min - b.min);
+
+  // Assign grades to students (synchronous operation, no need for async map)
+  const studentsWithGrades = students.map((student) => {
+    // Use binary search or simple find for better performance
+    const foundGrade = sortedGradeSystem.find(
+      (g) => student.mark >= g.min && student.mark <= g.max
+    );
 
     return {
       ...student,
-      grade: foundGrade ? foundGrade.grade : 'F',
-      gpa: foundGrade ? foundGrade.gpa : 0.0,
+      grade: foundGrade?.grade ?? 'F',
+      gpa: foundGrade?.gpa ?? 0.0,
     };
   });
 
-  const result = await Result.create({
+  // Create result and send notification in parallel
+  const resultPromise = Result.create({
     schoolId: findTeacher.schoolId,
     teacherId: user.teacherId,
     ...payload,
     students: studentsWithGrades,
   });
+
+  const notificationPromise = sendNotification(user, {
+    senderId: user.userId,
+    role: user.role,
+    receiverId: user.mySchoolUserId,
+    message: `Grades updated for class ${findExam.classId?.className}`,
+    type: NOTIFICATION_TYPE.GRADE,
+    linkId: null, // Will be updated after result creation
+  });
+
+  const [result] = await Promise.all([resultPromise, notificationPromise]);
+
+  // Update notification with actual result ID if needed
+  // This depends on your notification system implementation
 
   return result;
 };

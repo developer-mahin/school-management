@@ -1,10 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import crypto from 'crypto';
 import httpStatus from 'http-status';
-import sendNotification from '../../../socket/sendNotification';
 import AppError from '../../utils/AppError';
 import MySubscription from '../mySubscription/mySubscription.model';
-import { NOTIFICATION_TYPE } from '../notification/notification.interface';
 import User from '../user/user.model';
 import Payment from './payment.model';
 
@@ -12,28 +10,28 @@ const handleMySubscriptionAndPayment = async ({
   session,
   mySubscriptionBody,
   subscriptionPaymentBody,
-  companyId,
+  userId,
   subscription,
 }: any) => {
-  const findMySubscription = await MySubscription.findOne({
-    userId: companyId,
-  });
 
+  const findMySubscription = await MySubscription.findOne({
+    userId,
+  });
   const findUser = await User.findOne({
-    _id: companyId,
+    _id: userId,
   });
 
   if (findMySubscription) {
     await MySubscription.findOneAndUpdate(
-      { userId: companyId },
+      { userId },
       {
         $set: {
           expiryIn: new Date(
             findMySubscription.expiryIn.getTime() +
-              subscription.timeline * 24 * 60 * 60 * 1000,
+            subscription.timeline * 24 * 60 * 60 * 1000,
           ),
-          remainingDrivers:
-            findMySubscription.remainingDrivers + subscription.numberOfDriver,
+          remainingChildren:
+            findMySubscription.remainingChildren + subscription.numberOfChildren,
         },
       },
       { new: true, session },
@@ -53,88 +51,40 @@ const handleMySubscriptionAndPayment = async ({
 
 // Helper function to create payment body
 const createPaymentBody = ({
-  companyId,
-  driverId,
-  jobRequestId,
-  paymentType,
   userId,
   amount,
-  price,
-  earnFrom,
   paymentIntentId,
   subscriptionId,
 }: any) => {
   return {
     userId,
-    driverId,
-    jobRequestId,
     subscriptionId,
-    companyId,
-    amount: earnFrom === 'subscription' ? Number(price) : Number(amount),
-    paymentType,
+    amount,
     paymentId:
       paymentIntentId || `pi_${crypto.randomBytes(16).toString('hex')}`,
     paymentDate: new Date(),
-    paymentStatus: earnFrom === 'subscription' ? 'completed' : 'pending',
-    earnFrom,
   };
 };
 
 // Helper function to create subscription body
 const createMySubscriptionBody = ({
-  companyId,
+  userId,
   subscription,
   subscriptionId,
 }: any) => {
   return {
-    userId: companyId,
+    userId,
     subscriptionId,
     expiryIn: new Date(
       Date.now() + subscription.timeline * 24 * 60 * 60 * 1000,
     ),
-    remainingDrivers: subscription.numberOfDriver,
+    remainingChildren: subscription.numberOfChildren,
   };
 };
 
-// Helper function to handle non-subscription payment
-const handleNonSubscriptionPayment = async ({
-  session,
-  paymentBody,
-  driverId,
-  userId,
-  amount,
-}: any) => {
-  const paymentData = {
-    userId: paymentBody.userId,
-    driverId: paymentBody.driverId,
-    jobRequestId: paymentBody.jobRequestId,
-    companyId: paymentBody.companyId,
-    amount: paymentBody.amount,
-    paymentType: paymentBody.paymentType,
-    paymentId: paymentBody.paymentId,
-    paymentDate: paymentBody.paymentDate,
-    paymentStatus: paymentBody.paymentStatus,
-    earnFrom: paymentBody.earnFrom,
-  };
-
-  const payment = await Payment.create([paymentData], { session });
-  if (!payment)
-    throw new AppError(httpStatus.BAD_REQUEST, 'Payment not created');
-
-  const notificationBody = {
-    senderId: userId,
-    role: 'role',
-    receiverId: driverId,
-    message: `Payment of $${amount} is received`,
-    type: NOTIFICATION_TYPE.payment,
-    linkId: payment[0]._id as any,
-  };
-  await sendNotification({ userId }, notificationBody);
-};
 
 export const PaymentHelper = {
   createPaymentBody,
   createMySubscriptionBody,
-  handleNonSubscriptionPayment,
   handleMySubscriptionAndPayment,
 };

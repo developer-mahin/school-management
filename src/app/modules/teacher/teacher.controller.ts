@@ -15,6 +15,17 @@ const createTeacher = catchAsync(async (req, res) => {
   });
 });
 
+const getBaseOnStudent = catchAsync(async (req, res) => {
+  const result = await TeacherService.getBaseOnStudent(req.user as TAuthUser);
+  res.status(200).json({
+    success: true,
+    statusCode: 200,
+    message: 'Teacher fetched successfully',
+    data: result,
+  });
+});
+
 export const TeacherController = {
   createTeacher,
+  getBaseOnStudent
 };

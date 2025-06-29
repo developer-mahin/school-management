@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { TAuthUser } from '../../interface/authUser';
 import ClassSchedule from '../classSchedule/classSchedule.model';
 import Assignment from '../assignment/assignment.model';
+import { calculateAttendanceRate, getAttendanceRate } from './overview.helper';
 
 const getTeacherHomePageOverview = async (user: TAuthUser) => {
   const day = new Date()
@@ -100,6 +101,7 @@ const getTeacherHomePageOverview = async (user: TAuthUser) => {
         },
       },
     ]),
+
     Assignment.countDocuments({
       teacherId: user.teacherId,
       status: { $ne: 'expired' },
@@ -115,7 +117,34 @@ const getTeacherHomePageOverview = async (user: TAuthUser) => {
 };
 
 const getDailyWeeklyMonthlyAttendanceRate = async (user: TAuthUser) => {
-  return user;
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0); // Start of today in UTC
+
+  const startOfWeek = new Date(today);
+  startOfWeek.setUTCDate(today.getUTCDate() - today.getUTCDay()); // Start from Sunday
+  startOfWeek.setUTCHours(0, 0, 0, 0);
+
+  const startOfMonth = new Date(
+    Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1),
+  ); // First of the month in UTC
+
+  const teacherId = new mongoose.Types.ObjectId(String(user.teacherId));
+
+  const [daily, weekly, monthly] = await Promise.all([
+    getAttendanceRate(teacherId, today),
+    getAttendanceRate(teacherId, startOfWeek),
+    getAttendanceRate(teacherId, startOfMonth),
+  ]);
+
+  const dailyAttendanceRate = calculateAttendanceRate(daily);
+  const weeklyAttendanceRate = calculateAttendanceRate(weekly);
+  const monthlyAttendanceRate = calculateAttendanceRate(monthly);
+
+  return {
+    dailyAttendanceRate: dailyAttendanceRate?.attendanceRate || 0,
+    weeklyAttendanceRate: weeklyAttendanceRate?.attendanceRate || 0,
+    monthlyAttendanceRate: monthlyAttendanceRate?.attendanceRate || 0,
+  };
 };
 
 const getStudentHomePageOverview = async (user: TAuthUser) => {
