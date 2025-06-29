@@ -1,11 +1,10 @@
 import mongoose from 'mongoose';
 import { USER_ROLE } from '../../constant';
-import School from '../school/school.model';
-import Teacher from '../teacher/teacher.model';
-import Student from '../student/student.model';
 import Parents from '../parents/parents.model';
+import School from '../school/school.model';
+import Student from '../student/student.model';
+import Teacher from '../teacher/teacher.model';
 import User from './user.model';
-import generateUID from '../../utils/generateUID';
 import { UserService } from './user.service';
 
 type RoleModelsMap = {
@@ -51,7 +50,6 @@ export async function createUserWithProfile<T>(
     const [newUser] = await User.create(
       [
         {
-          uid: await generateUID(),
           phoneNumber: payload.phoneNumber,
           role: payload.role,
           name: payload.data.name,

@@ -141,11 +141,16 @@ const verifyOtp = async (token: string, otp: { otp: number }) => {
     config.jwt.refresh_expires_in as string,
   );
 
+  const supperAdmin = await User.findOne({
+    role: USER_ROLE.supperAdmin,
+  });
+
   return {
     accessToken: tokenGenerate,
     refreshToken,
     user: findUser,
     mySchoolUserId: school?.userId,
+    supperAdminUserId: supperAdmin?._id,
   };
 };
 

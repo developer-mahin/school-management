@@ -7,7 +7,10 @@ type TType =
   | 'grade'
   | 'assignmentSubmission'
   | 'attendance'
-  | 'payment';
+  | 'payment'
+  | 'student'
+  | 'teacher'
+  | 'parent';
 
 export const NOTIFICATION_TYPE = {
   ASSIGNMENT: 'assignment',
@@ -17,6 +20,9 @@ export const NOTIFICATION_TYPE = {
   ASSIGNMENT_SUBMISSION: 'assignmentSubmission',
   ATTENDANCE: 'attendance',
   PAYMENT: 'payment',
+  STUDENT: 'student',
+  TEACHER: 'teacher',
+  PARENT: 'parent',
 } as const;
 
 export type TNotification = {
