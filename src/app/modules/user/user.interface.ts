@@ -23,6 +23,7 @@ export type TUser = {
   role: TRole;
   status: TStatus;
   isDeleted: boolean;
+  relation: 'father' | 'mother';
 };
 
 export interface UserModel extends Model<TUser> {

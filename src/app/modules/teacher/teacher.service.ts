@@ -10,6 +10,8 @@ import Teacher from './teacher.model';
 import { StudentService } from '../student/student.service';
 import ClassSchedule from '../classSchedule/classSchedule.model';
 import mongoose from 'mongoose';
+import sendNotification from '../../../socket/sendNotification';
+import { NOTIFICATION_TYPE } from '../notification/notification.interface';
 
 const createTeacher = async (
   payload: Partial<TTeacher> & { phoneNumber: string; name?: string },
@@ -27,6 +29,16 @@ const createTeacher = async (
     phoneNumber: payload.phoneNumber,
     role: USER_ROLE.teacher,
     data: payload,
+  });
+
+  const message = `New teacher ${payload.name} joined ${new Date().toLocaleTimeString()}`;
+  await sendNotification(user, {
+    senderId: teacher._id,
+    role: user.role,
+    receiverId: user.userId,
+    message,
+    type: NOTIFICATION_TYPE.TEACHER,
+    linkId: teacher._id,
   });
 
   return teacher;
