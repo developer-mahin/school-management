@@ -4,5 +4,5 @@ export type TMySubscription = {
   userId: ObjectId;
   subscriptionId: ObjectId;
   expiryIn: Date;
-  remainingDrivers: number;
+  remainingChildren: number;
 };

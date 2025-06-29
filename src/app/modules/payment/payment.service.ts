@@ -30,73 +30,38 @@ const makePayment = async (
 };
 
 const confirmPayment = async (query: Record<string, unknown>) => {
-  const {
-    companyId,
-    driverId,
-    jobRequestId,
-    paymentType,
-    subscriptionId,
-    userId,
-    amount,
-    price,
-    earnFrom,
-    paymentIntentId,
-  } = query;
+  const { userId, subscriptionId, amount } = query;
 
   const paymentId = `pi_${crypto.randomBytes(16).toString('hex')}`;
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
-    const paymentBody = PaymentHelper.createPaymentBody({
-      companyId,
-      driverId,
-      jobRequestId,
-      paymentType,
-      userId,
-      amount,
-      price,
-      earnFrom,
-      paymentIntentId,
-      subscriptionId,
-    });
 
     const subscriptionPaymentBody = {
-      paymentType,
-      userId: companyId,
+      userId,
       paymentId,
-      amount: price,
-      earnFrom,
+      amount,
       subscriptionId,
-      paymentStatus: 'completed',
       paymentDate: new Date(),
     };
 
-    if (earnFrom === 'subscription' && subscriptionId) {
-      const subscription = await SubscriptionService.getSubscription(
-        subscriptionId as string,
-      );
-      const mySubscriptionBody = PaymentHelper.createMySubscriptionBody({
-        companyId,
-        subscription,
-        subscriptionId,
-      });
+    const subscription = await SubscriptionService.getSubscription(
+      subscriptionId as string,
+    );
 
-      await PaymentHelper.handleMySubscriptionAndPayment({
-        session,
-        mySubscriptionBody,
-        subscriptionPaymentBody,
-        companyId,
-        subscription,
-      });
-    } else {
-      await PaymentHelper.handleNonSubscriptionPayment({
-        session,
-        paymentBody,
-        driverId,
-        userId,
-        amount,
-      });
-    }
+    const mySubscriptionBody = PaymentHelper.createMySubscriptionBody({
+      userId,
+      subscription,
+      subscriptionId,
+    });
+
+    await PaymentHelper.handleMySubscriptionAndPayment({
+      session,
+      mySubscriptionBody,
+      subscriptionPaymentBody,
+      userId,
+      subscription,
+    });
 
     await session.commitTransaction();
     await session.endSession();
@@ -190,66 +155,6 @@ const paymentList = async (user: TAuthUser, query: Record<string, unknown>) => {
         $unwind: {
           path: '$user',
           preserveNullAndEmptyArrays: true,
-        },
-      },
-
-      {
-        $lookup: {
-          from: 'profiles',
-          localField: 'user.profile',
-          foreignField: '_id',
-          as: 'profile',
-        },
-      },
-
-      {
-        $unwind: {
-          path: '$profile',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-
-      {
-        $lookup: {
-          from: 'jobrequests',
-          localField: 'jobRequestId',
-          foreignField: '_id',
-          as: 'jobRequest',
-        },
-      },
-      {
-        $unwind: {
-          path: '$jobRequest',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: 'jobs',
-          localField: 'jobRequest.jobId',
-          foreignField: '_id',
-          as: 'job',
-        },
-      },
-      {
-        $unwind: {
-          path: '$job',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $project: {
-          name: '$user.name',
-          email: '$user.email',
-          userId: '$user._id',
-          image: '$profile.image',
-          data: '$createdAt',
-          category: '$job.categoryName',
-          serviceName: '$job.serviceName',
-          amount: 1,
-          transactionId: '$paymentId',
-          paymentType: 1,
-          paymentStatus: 1,
         },
       },
     ])

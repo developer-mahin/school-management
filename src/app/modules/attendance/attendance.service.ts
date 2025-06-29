@@ -8,6 +8,8 @@ import Class from '../class/class.model';
 import { StudentService } from '../student/student.service';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 import { commonStageInAttendance } from './attendance.helper';
+import sendNotification from '../../../socket/sendNotification';
+import { NOTIFICATION_TYPE } from '../notification/notification.interface';
 
 const createAttendance = async (
   payload: Partial<TAttendance>,
@@ -48,6 +50,15 @@ const createAttendance = async (
     absentStudents,
     schoolId: findTeacher.schoolId,
     date: attendanceDate,
+  });
+
+  sendNotification(user, {
+    senderId: user.userId,
+    role: user.role,
+    receiverId: user.mySchoolUserId,
+    message: `${user.name} has marked attendance for ${payload.className} section ${payload.section}`,
+    type: NOTIFICATION_TYPE.ATTENDANCE,
+    linkId: attendance._id,
   });
 
   return attendance;

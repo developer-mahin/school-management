@@ -2,18 +2,21 @@
 import httpStatus from 'http-status';
 import { JwtPayload, Secret } from 'jsonwebtoken';
 import config from '../../../config';
-import { USER_STATUS } from '../../constant';
+import { USER_ROLE, USER_STATUS } from '../../constant';
 import AppError from '../../utils/AppError';
 import { decodeToken } from '../../utils/decodeToken';
 import generateToken from '../../utils/generateToken';
 import { OtpService } from '../otp/otp.service';
 import { TUser } from '../user/user.interface';
 import User from '../user/user.model';
+import Student from '../student/student.model';
+import School from '../school/school.model';
+import Teacher from '../teacher/teacher.model';
+import Parents from '../parents/parents.model';
 
 const loginUser = async (payload: Pick<TUser, 'phoneNumber'>) => {
   const { phoneNumber } = payload;
 
-  console.log('phoneNumber', phoneNumber);
   const user = await User.findOne({ phoneNumber });
 
   if (!user) {
@@ -73,6 +76,27 @@ const verifyOtp = async (token: string, otp: { otp: number }) => {
     throw new AppError(httpStatus.UNAUTHORIZED, 'Invalid token');
   }
 
+  const findUser = (await User.findOne({
+    phoneNumber: decodedUser.phoneNumber,
+  })) as any;
+
+  if (!findUser) throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+
+  let school: any;
+
+  if (findUser.role === USER_ROLE.student) {
+    const student = await Student.findOne(findUser.studentId);
+    school = await School.findById(student?.schoolId);
+  } else if (findUser.role === USER_ROLE.teacher) {
+    const teacher = await Teacher.findById(findUser.teacherId);
+    school = await School.findById(teacher?.schoolId);
+  } else if (findUser.role === USER_ROLE.parents) {
+    const parents = await Parents.findById(findUser.parentsId);
+    school = await School.findById(parents?.schoolId);
+  } else {
+    school = await School.findById(findUser.schoolId);
+  }
+
   const checkOtpExist = await OtpService.checkOtpByPhoneNumber(
     decodedUser.phoneNumber,
   );
@@ -92,12 +116,6 @@ const verifyOtp = async (token: string, otp: { otp: number }) => {
 
   await OtpService.deleteOtpById(checkOtpExist?._id.toString());
 
-  const findUser = await User.findOne({
-    phoneNumber: decodedUser.phoneNumber,
-  });
-
-  if (!findUser) throw new AppError(httpStatus.NOT_FOUND, 'User not found');
-
   const userData = {
     userId: findUser._id,
     studentId: findUser.studentId,
@@ -106,6 +124,9 @@ const verifyOtp = async (token: string, otp: { otp: number }) => {
     teacherId: findUser.teacherId,
     phoneNumber: findUser.phoneNumber,
     role: findUser.role,
+    name: findUser.name,
+    image: findUser.image,
+    mySchoolUserId: school?.userId,
   };
 
   const tokenGenerate = generateToken(
@@ -120,7 +141,12 @@ const verifyOtp = async (token: string, otp: { otp: number }) => {
     config.jwt.refresh_expires_in as string,
   );
 
-  return { accessToken: tokenGenerate, refreshToken, user: findUser };
+  return {
+    accessToken: tokenGenerate,
+    refreshToken,
+    user: findUser,
+    mySchoolUserId: school?.userId,
+  };
 };
 
 const resendOtp = async (token: string) => {

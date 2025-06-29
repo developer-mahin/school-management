@@ -2,7 +2,8 @@ import { z } from 'zod';
 
 const feedbackValidation = z.object({
   body: z.object({
-    comment: z.string({ required_error: 'Comment is required' }),
+    review: z.string({ required_error: 'Comment is required' }),
+    ratings: z.number({ required_error: 'Ratings is required' }),
   }),
 });
 

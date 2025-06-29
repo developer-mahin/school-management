@@ -14,7 +14,12 @@ route
   )
   .get(
     '/school',
-    auth(USER_ROLE.supperAdmin, USER_ROLE.admin, USER_ROLE.school, USER_ROLE.teacher),
+    auth(
+      USER_ROLE.supperAdmin,
+      USER_ROLE.admin,
+      USER_ROLE.school,
+      USER_ROLE.teacher,
+    ),
     ClassController.getClassBySchoolId,
   )
   .get(
@@ -24,7 +29,12 @@ route
   )
   .get(
     '/school/section/:classId',
-    auth(USER_ROLE.school, USER_ROLE.supperAdmin, USER_ROLE.admin, USER_ROLE.teacher),
+    auth(
+      USER_ROLE.school,
+      USER_ROLE.supperAdmin,
+      USER_ROLE.admin,
+      USER_ROLE.teacher,
+    ),
     ClassController.getSectionsByClassId,
   )
   .patch('/:classId', auth(USER_ROLE.school), ClassController.updateClass)

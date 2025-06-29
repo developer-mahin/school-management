@@ -14,6 +14,10 @@ router
     validateRequest(AnnouncementValidation.createAnnouncementValidation),
     AnnouncementController.createAnnouncement,
   )
-  .get('/');
+  .get(
+    '/',
+    auth(USER_ROLE.student, USER_ROLE.parents, USER_ROLE.teacher),
+    AnnouncementController.getAllAnnouncements,
+  );
 
 export const AnnouncementRoutes = router;

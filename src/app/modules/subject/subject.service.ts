@@ -12,7 +12,6 @@ const createSubject = async (payload: Partial<TSubject>, user: TAuthUser) => {
 };
 
 const getSubject = async (user: TAuthUser, query: Record<string, unknown>) => {
-
   let schoolId = user.schoolId;
   if (user.role === USER_ROLE.teacher) {
     const findTeacher = await TeacherService.findTeacher(user);

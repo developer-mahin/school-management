@@ -70,7 +70,7 @@ async function handleParentUserCreation(
   delete payload.fatherPhoneNumber;
   delete payload.motherPhoneNumber;
 
-  for (const { phoneNumber, role} of parentPhoneNumbers) {
+  for (const { phoneNumber, role } of parentPhoneNumbers) {
     if (!phoneNumber) continue;
 
     const existingUser = await User.findOne({ phoneNumber }).session(session);

@@ -7,6 +7,8 @@ export type TAuthUser = {
   teacherId: string;
   phoneNumber: string;
   name: string;
+  image: string;
+  mySchoolUserId: string;
   role: string;
   iat: number;
   exp: number;

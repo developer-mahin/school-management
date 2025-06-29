@@ -1,23 +1,53 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import User from '../user/user.model';
+import { TAuthUser } from '../../interface/authUser';
+import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 import { TFeedback } from './feedback.interface';
 import Feedback from './feedback.model';
 
-const addFeedback = async (payload: Partial<TFeedback>, userId: string) => {
-  const user = (await User.findById(userId).populate('profile')) as any;
-  user.profile.feedback = user.profile.feedback + 1;
-
+const addFeedback = async (payload: Partial<TFeedback>, user: TAuthUser) => {
   const feedbackBody = {
     ...payload,
-    staffId: userId,
-    restaurantId: user?.myRestaurant,
+    userId: user.userId,
   };
 
   const result = await Feedback.create(feedbackBody);
-  await user.profile.save();
   return result;
+};
+
+const getFeedbackList = async (query: Record<string, unknown>) => {
+  const feedbackQuery = new AggregationQueryBuilder(query);
+
+  const result = await feedbackQuery
+    .customPipeline([
+      {
+        $match: {},
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      {
+        $unwind: {
+          path: '$user',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+    ])
+    .sort()
+    .search(['user.name'])
+    .paginate()
+    .execute(Feedback);
+
+  const meta = await feedbackQuery.countTotal(Feedback);
+
+  return { meta, result };
 };
 
 export const FeedbackService = {
   addFeedback,
+  getFeedbackList,
 };
