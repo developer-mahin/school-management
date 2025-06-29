@@ -3,14 +3,18 @@ import { TFeedback } from './feedback.interface';
 
 const feedbackSchema = new Schema<TFeedback>(
   {
-    staffId: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
-    restaurantId: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
-    comment: { type: String, required: true },
-    status: {
-      type: String,
+    userId: {
+      type: Schema.Types.ObjectId,
       required: true,
-      enum: ['pending', 'resolved', 'rejected'],
-      default: 'pending',
+      ref: 'User',
+    },
+    ratings: {
+      type: Number,
+      required: [true, 'Rating is required'],
+    },
+    review: {
+      type: String,
+      required: [true, 'Review is required'],
     },
   },
   {

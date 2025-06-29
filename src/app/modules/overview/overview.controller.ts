@@ -16,6 +16,20 @@ const OverviewController = {
       data: result,
     });
   }),
+
+  getDailyWeeklyMonthlyAttendanceRate: catchAsync(async (req, res) => {
+    const result = await OverviewService.getDailyWeeklyMonthlyAttendanceRate(
+      req.user as TAuthUser,
+    );
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'Attendance rate retrieved successfully',
+      data: result,
+    });
+  }),
+
   getStudentHomePageOverview: catchAsync(async (req, res) => {
     const result = await OverviewService.getStudentHomePageOverview(
       req.user as TAuthUser,

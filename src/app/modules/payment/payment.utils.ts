@@ -18,20 +18,10 @@ export const createCheckoutSession = async (
   paymentData: Partial<TPayment | TSubscription | any>,
   user: TAuthUser,
 ) => {
-  const {
-    jobRequestId,
-    subscriptionId,
-    userId,
-    driverId,
-    companyId,
-    paymentType,
-    amount,
-    earnFrom,
-    price,
-  } = paymentData;
+  const { subscriptionId, userId, amount } = paymentData;
 
   let paymentGatewayData;
-  if ((jobRequestId || subscriptionId) && (price || amount)) {
+  if (subscriptionId && amount) {
     paymentGatewayData = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -39,21 +29,21 @@ export const createCheckoutSession = async (
           price_data: {
             currency: 'usd',
             product_data: {
-              name: `${earnFrom} payment for ${user.name}`,
-              description: `Payment from  ${earnFrom}`,
+              name: `Payment from  ${user.name}`,
+              description: `${user.name} purchased a subscription`,
             },
-            unit_amount: calculateAmount(amount || price),
+            unit_amount: calculateAmount(amount),
           },
           quantity: 1,
         },
       ],
 
-      success_url: `${config.base_url}/payment/confirm-payment?sessionId={CHECKOUT_SESSION_ID}&paymentType=${paymentType}&earnFrom=${earnFrom}&jobRequestId=${jobRequestId}&subscriptionId=${subscriptionId}&userId=${userId}&driverId=${driverId}&companyId=${companyId}&amount=${amount}&price=${price}`,
+      success_url: `${config.base_url}/payment/confirm-payment?sessionId={CHECKOUT_SESSION_ID}&subscriptionId=${subscriptionId}&userId=${user.userId}&amount=${amount}`,
 
       cancel_url: `${config.base_url}/payments/cancel?paymentId=${'paymentDummy'}`,
       mode: 'payment',
 
-      client_reference_id: `${earnFrom} payment`,
+      client_reference_id: `${subscriptionId}`,
       invoice_creation: {
         enabled: true,
       },

@@ -25,7 +25,7 @@ async function generateUID(payload: { className: string; section: string }) {
       // Generate full UID
       customID = `${className}${section}-${newUserId}`;
 
-      console.log(customID, "custome id");
+      console.log(customID, 'custome id');
       // Check if this UID already exists
       const existingUser = await User.findOne({ uid: customID }).lean();
 

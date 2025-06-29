@@ -13,6 +13,11 @@ const teacherSchema = new Schema<TTeacher>(
       ref: 'School',
       required: true,
     },
+    subjectId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Subject',
+      required: true,
+    },
     schoolName: {
       type: String,
       required: true,

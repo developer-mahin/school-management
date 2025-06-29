@@ -7,7 +7,11 @@ const router = Router();
 
 router
   .post('/create', auth(USER_ROLE.school), SubjectController.createSubject)
-  .get('/', auth(USER_ROLE.school, USER_ROLE.teacher), SubjectController.getSubject)
+  .get(
+    '/',
+    auth(USER_ROLE.school, USER_ROLE.teacher),
+    SubjectController.getSubject,
+  )
   .patch('/action', auth(USER_ROLE.school), SubjectController.updateSubject)
   .delete(
     '/:subjectId',

@@ -21,6 +21,7 @@ const createClass = async (payload: Partial<TClass>, user: TAuthUser) => {
     levelName: findLevel.levelName,
     section,
   });
+
   return result;
 };
 
