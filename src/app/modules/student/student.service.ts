@@ -16,26 +16,6 @@ import {
 } from './students.helper';
 import generateUID from '../../utils/generateUID';
 
-// const createStudent = async (
-//   payload: Partial<TStudent> & { phoneNumber: string; name?: string },
-//   user: TAuthUser,
-// ) => {
-//   if (user.role === USER_ROLE.school) {
-//     const findSchool = await School.findById(user.schoolId);
-//     payload.schoolId = user.schoolId as any;
-//     payload.schoolName = findSchool?.schoolName;
-//   }
-
-//   const student = (await createUserWithProfile({
-//     phoneNumber: payload.phoneNumber,
-//     role: USER_ROLE.student,
-//     data: payload,
-//   })) as any;
-
-//   handleParentUserCreation(payload, student);
-//   return student;
-// };
-
 const createStudent = async (
   payload: Partial<TStudent> & { phoneNumber: string; name?: string },
   user: TAuthUser,
