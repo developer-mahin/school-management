@@ -6,7 +6,8 @@ type TType =
   | 'result'
   | 'grade'
   | 'assignmentSubmission'
-  | "attendance";
+  | 'attendance'
+  | 'payment';
 
 export const NOTIFICATION_TYPE = {
   ASSIGNMENT: 'assignment',
@@ -15,6 +16,7 @@ export const NOTIFICATION_TYPE = {
   GRADE: 'grade',
   ASSIGNMENT_SUBMISSION: 'assignmentSubmission',
   ATTENDANCE: 'attendance',
+  PAYMENT: 'payment',
 } as const;
 
 export type TNotification = {

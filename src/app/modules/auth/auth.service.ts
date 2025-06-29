@@ -12,6 +12,7 @@ import User from '../user/user.model';
 import Student from '../student/student.model';
 import School from '../school/school.model';
 import Teacher from '../teacher/teacher.model';
+import Parents from '../parents/parents.model';
 
 const loginUser = async (payload: Pick<TUser, 'phoneNumber'>) => {
   const { phoneNumber } = payload;
@@ -75,9 +76,9 @@ const verifyOtp = async (token: string, otp: { otp: number }) => {
     throw new AppError(httpStatus.UNAUTHORIZED, 'Invalid token');
   }
 
-  const findUser = await User.findOne({
+  const findUser = (await User.findOne({
     phoneNumber: decodedUser.phoneNumber,
-  }) as any;
+  })) as any;
 
   if (!findUser) throw new AppError(httpStatus.NOT_FOUND, 'User not found');
 
@@ -89,6 +90,9 @@ const verifyOtp = async (token: string, otp: { otp: number }) => {
   } else if (findUser.role === USER_ROLE.teacher) {
     const teacher = await Teacher.findById(findUser.teacherId);
     school = await School.findById(teacher?.schoolId);
+  } else if (findUser.role === USER_ROLE.parents) {
+    const parents = await Parents.findById(findUser.parentsId);
+    school = await School.findById(parents?.schoolId);
   } else {
     school = await School.findById(findUser.schoolId);
   }
@@ -137,11 +141,13 @@ const verifyOtp = async (token: string, otp: { otp: number }) => {
     config.jwt.refresh_expires_in as string,
   );
 
-
-  return { accessToken: tokenGenerate, refreshToken, user: findUser, mySchoolUserId: school?.userId };
+  return {
+    accessToken: tokenGenerate,
+    refreshToken,
+    user: findUser,
+    mySchoolUserId: school?.userId,
+  };
 };
-
-
 
 const resendOtp = async (token: string) => {
   const decodedUser = decodeToken(

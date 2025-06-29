@@ -44,7 +44,6 @@ const getBaseOnStudent = async (user: TAuthUser) => {
   if (!findStudent)
     throw new AppError(httpStatus.NOT_FOUND, 'Student not found');
 
-
   const result = await ClassSchedule.aggregate([
     {
       $match: {
@@ -53,52 +52,51 @@ const getBaseOnStudent = async (user: TAuthUser) => {
     },
     {
       $group: {
-        _id: "$teacherId",
-        teacherId: {$first: "$teacherId"},
-      }
+        _id: '$teacherId',
+        teacherId: { $first: '$teacherId' },
+      },
     },
     {
       $lookup: {
-        from: "teachers",
-        localField: "_id",
-        foreignField: "_id",
-        as: "teacher"
-      }
+        from: 'teachers',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'teacher',
+      },
     },
     {
       $unwind: {
-        path: "$teacher",
+        path: '$teacher',
         preserveNullAndEmptyArrays: true,
-      }
+      },
     },
     {
       $lookup: {
-        from: "users",
-        localField: "teacher.userId",
-        foreignField: "_id",
-        as: "user"
-      }
+        from: 'users',
+        localField: 'teacher.userId',
+        foreignField: '_id',
+        as: 'user',
+      },
     },
     {
       $unwind: {
-        path: "$user",
+        path: '$user',
         preserveNullAndEmptyArrays: true,
-      }
+      },
     },
     {
       $project: {
         // teacher: 1,
-        user: 1
-      }
-    }
-  ])
+        user: 1,
+      },
+    },
+  ]);
 
-  return result
-
-}
+  return result;
+};
 
 export const TeacherService = {
   createTeacher,
   findTeacher,
-  getBaseOnStudent
+  getBaseOnStudent,
 };

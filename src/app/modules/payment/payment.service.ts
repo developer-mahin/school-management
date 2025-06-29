@@ -30,11 +30,7 @@ const makePayment = async (
 };
 
 const confirmPayment = async (query: Record<string, unknown>) => {
-  const {
-    userId,
-    subscriptionId,
-    amount,
-  } = query;
+  const { userId, subscriptionId, amount } = query;
 
   const paymentId = `pi_${crypto.randomBytes(16).toString('hex')}`;
   const session = await mongoose.startSession();

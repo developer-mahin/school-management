@@ -52,7 +52,6 @@ const createAttendance = async (
     date: attendanceDate,
   });
 
-
   sendNotification(user, {
     senderId: user.userId,
     role: user.role,
@@ -60,7 +59,7 @@ const createAttendance = async (
     message: `${user.name} has marked attendance for ${payload.className} section ${payload.section}`,
     type: NOTIFICATION_TYPE.ATTENDANCE,
     linkId: attendance._id,
-  })
+  });
 
   return attendance;
 };

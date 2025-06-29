@@ -19,18 +19,15 @@ const createExam = async (payload: Partial<TExam>, user: TAuthUser) => {
   const examDate = new Date(payload?.date as Date);
   examDate.setUTCHours(0, 0, 0, 0);
 
-
-
   const result = await Exam.create({
     ...payload,
     date: examDate,
     schoolId: user.schoolId,
   });
 
-
   const findStudent = await Student.find({
     classId: payload.classId,
-  })
+  });
 
   await Promise.all(
     findStudent.map((student) => {
@@ -41,9 +38,9 @@ const createExam = async (payload: Partial<TExam>, user: TAuthUser) => {
         message: `Exam scheduled for ${payload.date} at ${payload.startTime}`,
         type: NOTIFICATION_TYPE.EXAM,
         linkId: result._id,
-      })
-    })
-  )
+      });
+    }),
+  );
 
   return result;
 };
@@ -84,7 +81,7 @@ const updateExams = async (
 
   const findStudent = await Student.find({
     classId: payload.classId,
-  })
+  });
 
   await Promise.all(
     findStudent.map((student) => {
@@ -95,9 +92,9 @@ const updateExams = async (
         message: `Exam scheduled updated`,
         type: NOTIFICATION_TYPE.EXAM,
         linkId: result?._id,
-      })
-    })
-  )
+      });
+    }),
+  );
 
   return result;
 };
@@ -163,12 +160,15 @@ const updateGrade = async (
   }
 
   // Execute all independent database queries in parallel
-  const [findTeacher, findSchoolGrade, findExistingResult, findExam] = await Promise.all([
-    TeacherService.findTeacher(user),
-    GradeSystem.find({ schoolId: user.schoolId }).select('grade mark gpa').lean(),
-    Result.findOne({ examId }).lean(),
-    Exam.findOne({ _id: examId }).populate('classId').lean() as any
-  ]);
+  const [findTeacher, findSchoolGrade, findExistingResult, findExam] =
+    await Promise.all([
+      TeacherService.findTeacher(user),
+      GradeSystem.find({ schoolId: user.schoolId })
+        .select('grade mark gpa')
+        .lean(),
+      Result.findOne({ examId }).lean(),
+      Exam.findOne({ _id: examId }).populate('classId').lean() as any,
+    ]);
 
   // Early validation checks
   if (!findTeacher) {
@@ -207,14 +207,15 @@ const updateGrade = async (
   }
 
   // Convert to sorted array for efficient lookup
-  const sortedGradeSystem = Array.from(gradeSystemMap.values())
-    .sort((a, b) => a.min - b.min);
+  const sortedGradeSystem = Array.from(gradeSystemMap.values()).sort(
+    (a, b) => a.min - b.min,
+  );
 
   // Assign grades to students (synchronous operation, no need for async map)
   const studentsWithGrades = students.map((student) => {
     // Use binary search or simple find for better performance
     const foundGrade = sortedGradeSystem.find(
-      (g) => student.mark >= g.min && student.mark <= g.max
+      (g) => student.mark >= g.min && student.mark <= g.max,
     );
 
     return {

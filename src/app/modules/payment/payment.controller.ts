@@ -33,7 +33,6 @@ const confirmPayment = catchAsync(async (req, res) => {
   //   res.redirect(`https://ootms.com/payment-success?amount`);
   // }
 
-
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.CREATED,

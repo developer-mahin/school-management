@@ -18,16 +18,10 @@ export const createCheckoutSession = async (
   paymentData: Partial<TPayment | TSubscription | any>,
   user: TAuthUser,
 ) => {
-
-  const {
-    subscriptionId,
-    userId,
-    amount,
-  } = paymentData;
-
+  const { subscriptionId, userId, amount } = paymentData;
 
   let paymentGatewayData;
-  if ((subscriptionId) && (amount)) {
+  if (subscriptionId && amount) {
     paymentGatewayData = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [

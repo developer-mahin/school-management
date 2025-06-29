@@ -27,5 +27,5 @@ const getBaseOnStudent = catchAsync(async (req, res) => {
 
 export const TeacherController = {
   createTeacher,
-  getBaseOnStudent
+  getBaseOnStudent,
 };
