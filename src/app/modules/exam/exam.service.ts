@@ -163,9 +163,7 @@ const updateGrade = async (
   const [findTeacher, findExistingResult, findExam] = await Promise.all([
     TeacherService.findTeacher(user),
     Result.findOne({ examId }).lean(),
-    Exam.findOne({ _id: examId })
-      .populate('classId')
-      .lean() as any
+    Exam.findOne({ _id: examId }).populate('classId').lean() as any,
   ]);
 
   // Early validation checks

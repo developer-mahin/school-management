@@ -14,13 +14,21 @@ router
     validateRequest(StudentValidation.studentSchema),
     StudentController.createStudent,
   )
-  .get("/student_list", auth(USER_ROLE.admin, USER_ROLE.supperAdmin, USER_ROLE.school), StudentController.getAllStudents)
+  .get(
+    '/student_list',
+    auth(USER_ROLE.admin, USER_ROLE.supperAdmin, USER_ROLE.school),
+    StudentController.getAllStudents,
+  )
   .get('/my_child', auth(USER_ROLE.parents), StudentController.getMyChildren)
   .get(
     '/select_child/:userId',
     auth(USER_ROLE.parents),
     StudentController.selectChild,
+  )
+  .patch(
+    '/edit_student/:studentId',
+    auth(USER_ROLE.admin, USER_ROLE.supperAdmin, USER_ROLE.school),
+    StudentController.editStudent,
   );
-// .get("/", auth(USER_ROLE.school), StudentController.getAllStudents)
 
 export const StudentRoutes = router;

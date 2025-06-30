@@ -182,10 +182,14 @@ const getAssignmentCount = async (user: TAuthUser) => {
   };
 };
 
-const getStudentAttendance = async (user: TAuthUser, query: Record<string, unknown>) => {
-  const { year } = query
-  const { startDate, endDate } = StatisticHelper.statisticHelper(year as string)
-
+const getStudentAttendance = async (
+  user: TAuthUser,
+  query: Record<string, unknown>,
+) => {
+  const { year } = query;
+  const { startDate, endDate } = StatisticHelper.statisticHelper(
+    year as string,
+  );
 
   const attendance = await Attendance.aggregate([
     {
@@ -195,43 +199,43 @@ const getStudentAttendance = async (user: TAuthUser, query: Record<string, unkno
           $gte: startDate,
           $lte: endDate,
         },
-      }
+      },
     },
     {
       $project: {
-        month: { $month: "$date" },
-        year: { $year: "$date" },
-        presentCount: { $size: "$presentStudents" },
+        month: { $month: '$date' },
+        year: { $year: '$date' },
+        presentCount: { $size: '$presentStudents' },
       },
     },
     {
       $group: {
         _id: {
-          year: "$year",
-          month: "$month",
+          year: '$year',
+          month: '$month',
         },
-        totalPresent: { $sum: "$presentCount" },
+        totalPresent: { $sum: '$presentCount' },
       },
     },
     {
       $sort: {
-        "_id.year": 1,
-        "_id.month": 1,
+        '_id.year': 1,
+        '_id.month': 1,
       },
-    }
-  ])
+    },
+  ]);
 
   const formattedResult = months.map((month, index) => {
-    const monthData = attendance.find((r: any) => r._id.month === index + 1)
+    const monthData = attendance.find((r: any) => r._id.month === index + 1);
 
     return {
       month: month,
       totalPresent: monthData?.totalPresent || 0,
-    }
-  })
+    };
+  });
 
-  return formattedResult
-}
+  return formattedResult;
+};
 
 const getStudentHomePageOverview = async (user: TAuthUser) => {
   return user;
@@ -252,5 +256,5 @@ export const OverviewService = {
   getStudentHomePageOverview,
   getParentHomePageOverview,
   getAdminHomePageOverview,
-  getStudentAttendance
+  getStudentAttendance,
 };

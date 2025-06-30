@@ -20,7 +20,11 @@ router
     '/assignment_count',
     auth(USER_ROLE.teacher),
     OverviewController.getAssignmentCount,
-)
-  .get("/student_attendance", auth(USER_ROLE.school), OverviewController.getStudentAttendance);
+  )
+  .get(
+    '/student_attendance',
+    auth(USER_ROLE.school),
+    OverviewController.getStudentAttendance,
+  );
 
 export const OverviewRoutes = router;

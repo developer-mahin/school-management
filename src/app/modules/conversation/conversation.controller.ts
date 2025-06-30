@@ -10,7 +10,6 @@ const createConversation = catchAsync(async (req, res) => {
     req.user as TAuthUser,
   );
 
-
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.CREATED,

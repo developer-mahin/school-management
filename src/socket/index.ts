@@ -66,9 +66,25 @@ const socketIO = (io: Server) => {
 
     io.emit('online_users', Array.from(connectedUser.keys()));
     // sending message
-    socket.on('send_message', async (payload: Partial<TMessage>) => {
-      await MessageService.createMessage(payload);
-      io.emit(`receive_message::${payload.conversationId}`, payload);
+    socket.on('send_message', async (payload: Partial<TMessage>, callback) => {
+      try {
+        if (!payload.conversationId || !payload.text_message) {
+          return callback?.({ success: false, message: 'Invalid payload' });
+        }
+
+        const savedMessage = await MessageService.createMessage(payload);
+
+        io.emit(`receive_message::${payload.conversationId}`, savedMessage);
+
+        callback?.({
+          success: true,
+          message: 'Message sent successfully',
+          data: savedMessage,
+        });
+      } catch (error) {
+        console.error('Error sending message:', error);
+        callback?.({ success: false, message: 'Internal server error' });
+      }
     });
 
     socket.on('typing', async (payload, callback) => {

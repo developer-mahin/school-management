@@ -20,8 +20,8 @@ router
     auth(USER_ROLE.parents),
     UserController.addParentsMessage,
   )
-  .post("/file_upload", upload.single('file'), UserController.fileUpload)
-  
+  .post('/file_upload', upload.single('file'), UserController.fileUpload)
+
   .get(
     '/get_parents_message/:studentId',
     auth(

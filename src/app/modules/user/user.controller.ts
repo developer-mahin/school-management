@@ -104,7 +104,6 @@ const editProfile = catchAsync(async (req, res) => {
   });
 });
 
-
 const fileUpload = catchAsync(async (req, res) => {
   if (req.file) {
     req.body.file = req.file.path;
@@ -128,5 +127,5 @@ export const UserController = {
   addParentsMessage,
   getParentsMessage,
   editProfile,
-  fileUpload
+  fileUpload,
 };

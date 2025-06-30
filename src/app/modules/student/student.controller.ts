@@ -18,13 +18,16 @@ const createStudent = catchAsync(async (req, res) => {
 });
 
 const getAllStudents = catchAsync(async (req, res) => {
-    const result = await StudentService.getAllStudents(req.user as TAuthUser);
-    sendResponse(res, {
-        success: true,
-        statusCode: httpStatus.OK,
-        message: 'Students fetched successfully',
-        data: result,
-    });
+  const result = await StudentService.getAllStudents(
+    req.user as TAuthUser,
+    req.query,
+  );
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Students fetched successfully',
+    data: result,
+  });
 });
 
 const getMyChildren = catchAsync(async (req, res) => {
@@ -46,10 +49,23 @@ const selectChild = catchAsync(async (req, res) => {
   });
 });
 
+const editStudent = catchAsync(async (req, res) => {
+  const result = await StudentService.editStudent(
+    req.params.studentId,
+    req.body,
+  );
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Students fetched successfully',
+    data: result,
+  });
+});
 
 export const StudentController = {
   createStudent,
   getMyChildren,
   selectChild,
-  getAllStudents
+  getAllStudents,
+  editStudent,
 };

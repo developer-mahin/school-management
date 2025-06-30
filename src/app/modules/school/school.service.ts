@@ -21,7 +21,6 @@ const createSchool = async (
 };
 
 const getSchoolList = async (query: Record<string, unknown>) => {
-
   const schoolListQuery = new AggregationQueryBuilder(query);
 
   const result = await schoolListQuery
@@ -29,56 +28,56 @@ const getSchoolList = async (query: Record<string, unknown>) => {
       {
         $match: {
           role: USER_ROLE.school,
-        }
+        },
       },
 
       {
         $lookup: {
-          from: "schools",
-          localField: "_id",
-          foreignField: "userId",
-          as: "school"
-        }
+          from: 'schools',
+          localField: '_id',
+          foreignField: 'userId',
+          as: 'school',
+        },
       },
       {
         $unwind: {
-          path: "$school",
-          preserveNullAndEmptyArrays: true
-        }
+          path: '$school',
+          preserveNullAndEmptyArrays: true,
+        },
       },
 
       {
         $lookup: {
-          from: "students",
-          localField: "schoolId",
-          foreignField: "schoolId",
-          as: "student"
-        }
+          from: 'students',
+          localField: 'schoolId',
+          foreignField: 'schoolId',
+          as: 'student',
+        },
       },
 
       {
         $lookup: {
-          from: "parents",
-          localField: "schoolId",
+          from: 'parents',
+          localField: 'schoolId',
           pipeline: [
             {
               $group: {
-                _id: "$userId"
-              }
-            }
+                _id: '$userId',
+              },
+            },
           ],
-          foreignField: "schoolId",
-          as: "parents"
-        }
+          foreignField: 'schoolId',
+          as: 'parents',
+        },
       },
 
       {
         $lookup: {
-          from: "teachers",
-          localField: "schoolId",
-          foreignField: "schoolId",
-          as: "teachers"
-        }
+          from: 'teachers',
+          localField: 'schoolId',
+          foreignField: 'schoolId',
+          as: 'teachers',
+        },
       },
 
       {
@@ -87,17 +86,17 @@ const getSchoolList = async (query: Record<string, unknown>) => {
           phoneNumber: 1,
           image: 1,
           school: 1,
-          teachers: { $size: "$teachers" },
-          students: { $size: "$student" },
-          parents: { $size: "$parents" },
-        }
-      }
+          teachers: { $size: '$teachers' },
+          students: { $size: '$student' },
+          parents: { $size: '$parents' },
+        },
+      },
     ])
     .sort()
     .paginate()
-    .execute(User)
+    .execute(User);
 
-  const meta = await schoolListQuery.countTotal(User)
+  const meta = await schoolListQuery.countTotal(User);
 
   return { meta, result };
 };
@@ -152,24 +151,22 @@ const getTeachers = async (user: TAuthUser, query: Record<string, unknown>) => {
 };
 
 const editSchool = async (schoolId: string, payload: Partial<TSchool>) => {
-  const result = await School.findOneAndUpdate(
-    { _id: schoolId },
-    payload,
-    { new: true },
-  );
+  const result = await School.findOneAndUpdate({ _id: schoolId }, payload, {
+    new: true,
+  });
   return result;
-}
+};
 
 const deleteSchool = async (schoolId: string) => {
   const result = await School.findByIdAndDelete(schoolId);
   await User.findOneAndDelete({ schoolId: schoolId });
   return result;
-}
+};
 
 export const SchoolService = {
   createSchool,
   getSchoolList,
   getTeachers,
   editSchool,
-  deleteSchool
+  deleteSchool,
 };

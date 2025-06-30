@@ -237,9 +237,9 @@ const userOverView = async (
       month,
       total: monthData
         ? monthData.roles.reduce(
-          (total: number, role: any) => total + role.count,
-          0,
-        )
+            (total: number, role: any) => total + role.count,
+            0,
+          )
         : 0,
     };
   });

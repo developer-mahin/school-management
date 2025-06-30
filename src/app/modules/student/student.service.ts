@@ -15,6 +15,7 @@ import {
   handleParentUserCreation,
 } from './students.helper';
 import generateUID from '../../utils/generateUID';
+import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 
 const createStudent = async (
   payload: Partial<TStudent> & { phoneNumber: string; name?: string },
@@ -161,12 +162,112 @@ const selectChild = async (id: string) => {
   };
 };
 
+const getAllStudents = async (
+  user: TAuthUser,
+  query: Record<string, unknown>,
+) => {
+  const sudentQuery = new AggregationQueryBuilder(query);
 
-const getAllStudents = async (user: TAuthUser) => {
+  const result = await sudentQuery
+    .customPipeline([
+      {
+        $match: {
+          role: USER_ROLE.student,
+        },
+      },
+      {
+        $lookup: {
+          from: 'students',
+          localField: '_id',
+          pipeline: [
+            {
+              $lookup: {
+                from: 'schools',
+                localField: 'schoolId',
+                foreignField: '_id',
+                as: 'school',
+              },
+            },
+            {
+              $unwind: {
+                path: '$school',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+          ],
+          foreignField: 'userId',
+          as: 'student',
+        },
+      },
+      {
+        $unwind: {
+          path: '$student',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
 
-  const studentList = await Student.find({ schoolId: user.schoolId })
-  return studentList
+      {
+        $project: {
+          student: 1,
+        },
+      },
+    ])
+    .sort()
+    .paginate()
+    .execute(User);
 
+  const meta = await sudentQuery.countTotal(User);
+
+  return { meta, result };
+};
+
+const editStudent = async (id: string, payload: any) => {
+  const student = await Student.findById(id);
+  if (!student) throw new Error('Student not found');
+
+  const sudentData = {
+    schoolId: payload.schoolId,
+    classId: payload.classId,
+    section: payload.section,
+    schoolName: payload.schoolName,
+    className: payload.className,
+    fatherPhoneNumber: payload.fatherPhoneNumber,
+    motherPhoneNumber: payload.motherPhoneNumber,
+  };
+  const studentUserData = {
+    phoneNumber: payload.phoneNumber,
+    name: payload.phoneNumber,
+  };
+
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    const updateStudent = await Student.findOneAndUpdate(
+      { _id: id },
+      sudentData,
+      { new: true, session }
+    );
+
+    if (!updateStudent) throw new Error('Student not update');
+
+    await User.findOneAndUpdate(
+      { schoolId: id },
+      studentUserData,
+      { new: true, session }
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return updateStudent;
+
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
 };
 
 export const StudentService = {
@@ -174,5 +275,6 @@ export const StudentService = {
   findStudent,
   getMyChildren,
   selectChild,
-  getAllStudents
+  getAllStudents,
+  editStudent,
 };

@@ -46,7 +46,7 @@ const OverviewController = {
   getStudentAttendance: catchAsync(async (req, res) => {
     const result = await OverviewService.getStudentAttendance(
       req.user as TAuthUser,
-      req.query
+      req.query,
     );
 
     sendResponse(res, {
