@@ -172,13 +172,12 @@ const deleteSchool = async (schoolId: string) => {
     await session.commitTransaction();
     session.endSession();
 
-    return result
+    return result;
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
     throw error;
   }
-
 };
 
 export const SchoolService = {

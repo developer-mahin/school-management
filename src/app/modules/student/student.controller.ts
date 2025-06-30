@@ -72,6 +72,30 @@ const deleteStudent = catchAsync(async (req, res) => {
   });
 });
 
+const getParentsList = catchAsync(async (req, res) => {
+  const result = await StudentService.getParentsList(
+    req.user as TAuthUser,
+    req.query,
+  );
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Students fetched successfully',
+    data: result,
+  });
+});
+
+const getParentsDetails = catchAsync(async (req, res) => {
+  const result = await StudentService.getParentsDetails(
+    req.params.parentUserId,
+  );
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Students fetched successfully',
+    data: result,
+  });
+});
 
 export const StudentController = {
   createStudent,
@@ -79,5 +103,7 @@ export const StudentController = {
   selectChild,
   getAllStudents,
   editStudent,
-  deleteStudent
+  deleteStudent,
+  getParentsList,
+  getParentsDetails,
 };

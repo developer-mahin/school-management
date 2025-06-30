@@ -21,6 +21,16 @@ router
   )
   .get('/my_child', auth(USER_ROLE.parents), StudentController.getMyChildren)
   .get(
+    '/parents_list',
+    auth(USER_ROLE.parents, USER_ROLE.admin, USER_ROLE.supperAdmin),
+    StudentController.getParentsList,
+  )
+  .get(
+    '/parents_details/:parentUserId',
+    auth(USER_ROLE.supperAdmin),
+    StudentController.getParentsDetails,
+  )
+  .get(
     '/select_child/:userId',
     auth(USER_ROLE.parents),
     StudentController.selectChild,
@@ -30,6 +40,10 @@ router
     auth(USER_ROLE.admin, USER_ROLE.supperAdmin, USER_ROLE.school),
     StudentController.editStudent,
   )
-  .delete("/delete_student/:studentId", auth(USER_ROLE.admin, USER_ROLE.supperAdmin, USER_ROLE.school), StudentController.deleteStudent);
+  .delete(
+    '/delete_student/:studentId',
+    auth(USER_ROLE.admin, USER_ROLE.supperAdmin, USER_ROLE.school),
+    StudentController.deleteStudent,
+  );
 
 export const StudentRoutes = router;
