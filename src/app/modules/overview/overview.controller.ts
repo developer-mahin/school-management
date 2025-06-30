@@ -30,6 +30,33 @@ const OverviewController = {
     });
   }),
 
+  getAssignmentCount: catchAsync(async (req, res) => {
+    const result = await OverviewService.getAssignmentCount(
+      req.user as TAuthUser,
+    );
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'Assignment count retrieved successfully',
+      data: result,
+    });
+  }),
+
+  getStudentAttendance: catchAsync(async (req, res) => {
+    const result = await OverviewService.getStudentAttendance(
+      req.user as TAuthUser,
+      req.query,
+    );
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'Student attendance retrieved successfully',
+      data: result,
+    });
+  }),
+
   getStudentHomePageOverview: catchAsync(async (req, res) => {
     const result = await OverviewService.getStudentHomePageOverview(
       req.user as TAuthUser,

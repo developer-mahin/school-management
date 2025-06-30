@@ -6,6 +6,7 @@ import Teacher from '../teacher/teacher.model';
 import { createUserWithProfile } from '../user/user.helper';
 import { TSchool } from './school.interface';
 import School from './school.model';
+import User from '../user/user.model';
 
 const createSchool = async (
   payload: Partial<TSchool> & { phoneNumber: string; name?: string },
@@ -19,9 +20,85 @@ const createSchool = async (
   return newSchool;
 };
 
-const getSchoolList = async () => {
-  const schools = await School.find({});
-  return schools;
+const getSchoolList = async (query: Record<string, unknown>) => {
+  const schoolListQuery = new AggregationQueryBuilder(query);
+
+  const result = await schoolListQuery
+    .customPipeline([
+      {
+        $match: {
+          role: USER_ROLE.school,
+        },
+      },
+
+      {
+        $lookup: {
+          from: 'schools',
+          localField: '_id',
+          foreignField: 'userId',
+          as: 'school',
+        },
+      },
+      {
+        $unwind: {
+          path: '$school',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      {
+        $lookup: {
+          from: 'students',
+          localField: 'schoolId',
+          foreignField: 'schoolId',
+          as: 'student',
+        },
+      },
+
+      {
+        $lookup: {
+          from: 'parents',
+          localField: 'schoolId',
+          pipeline: [
+            {
+              $group: {
+                _id: '$userId',
+              },
+            },
+          ],
+          foreignField: 'schoolId',
+          as: 'parents',
+        },
+      },
+
+      {
+        $lookup: {
+          from: 'teachers',
+          localField: 'schoolId',
+          foreignField: 'schoolId',
+          as: 'teachers',
+        },
+      },
+
+      {
+        $project: {
+          _id: 1,
+          phoneNumber: 1,
+          image: 1,
+          school: 1,
+          teachers: { $size: '$teachers' },
+          students: { $size: '$student' },
+          parents: { $size: '$parents' },
+        },
+      },
+    ])
+    .sort()
+    .paginate()
+    .execute(User);
+
+  const meta = await schoolListQuery.countTotal(User);
+
+  return { meta, result };
 };
 
 const getTeachers = async (user: TAuthUser, query: Record<string, unknown>) => {
@@ -73,8 +150,40 @@ const getTeachers = async (user: TAuthUser, query: Record<string, unknown>) => {
   return { meta, result };
 };
 
+const editSchool = async (schoolId: string, payload: Partial<TSchool>) => {
+  const result = await School.findOneAndUpdate({ _id: schoolId }, payload, {
+    new: true,
+  });
+  return result;
+};
+
+const deleteSchool = async (schoolId: string) => {
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    const result = await School.findByIdAndDelete(schoolId, { session });
+
+    if (!result) throw new Error('School not deleted');
+
+    await User.findOneAndDelete({ schoolId }, { session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return result;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+};
+
 export const SchoolService = {
   createSchool,
   getSchoolList,
   getTeachers,
+  editSchool,
+  deleteSchool,
 };

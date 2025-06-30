@@ -15,7 +15,7 @@ const createSchool = catchAsync(async (req, res) => {
 });
 
 const getSchoolList = catchAsync(async (req, res) => {
-  const result = await SchoolService.getSchoolList();
+  const result = await SchoolService.getSchoolList(req.query);
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
@@ -37,8 +37,30 @@ const getTeachers = catchAsync(async (req, res) => {
   });
 });
 
+const editSchool = catchAsync(async (req, res) => {
+  const result = await SchoolService.editSchool(req.params.schoolId, req.body);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'School updated successfully',
+    data: result,
+  });
+});
+
+const deleteSchool = catchAsync(async (req, res) => {
+  const result = await SchoolService.deleteSchool(req.params.schoolId);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'School deleted successfully',
+    data: result,
+  });
+});
+
 export const SchoolController = {
   createSchool,
   getSchoolList,
   getTeachers,
+  editSchool,
+  deleteSchool,
 };

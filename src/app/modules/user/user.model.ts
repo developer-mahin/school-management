@@ -38,6 +38,10 @@ export const userSchema = new mongoose.Schema<TUser, UserModel>(
     image: {
       type: String,
     },
+    gender: {
+      type: String,
+      enum: ['male', 'female'],
+    },
     relation: {
       type: String,
       enum: ['father', 'mother'],

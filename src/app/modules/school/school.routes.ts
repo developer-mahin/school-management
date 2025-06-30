@@ -18,6 +18,16 @@ router
     auth(USER_ROLE.admin, USER_ROLE.supperAdmin),
     SchoolController.getSchoolList,
   )
-  .get('/teacher', auth(USER_ROLE.school), SchoolController.getTeachers);
+  .get('/teacher', auth(USER_ROLE.school), SchoolController.getTeachers)
+  .patch(
+    '/edit_school/:schoolId',
+    auth(USER_ROLE.supperAdmin),
+    SchoolController.editSchool,
+  )
+  .delete(
+    '/delete_school/:schoolId',
+    auth(USER_ROLE.supperAdmin),
+    SchoolController.deleteSchool,
+  );
 
 export const SchoolRoutes = router;

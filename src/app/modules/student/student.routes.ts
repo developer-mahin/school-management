@@ -14,13 +14,36 @@ router
     validateRequest(StudentValidation.studentSchema),
     StudentController.createStudent,
   )
-  .get('/uniqueId', StudentController.uniqueId)
+  .get(
+    '/student_list',
+    auth(USER_ROLE.admin, USER_ROLE.supperAdmin, USER_ROLE.school),
+    StudentController.getAllStudents,
+  )
   .get('/my_child', auth(USER_ROLE.parents), StudentController.getMyChildren)
+  .get(
+    '/parents_list',
+    auth(USER_ROLE.parents, USER_ROLE.admin, USER_ROLE.supperAdmin),
+    StudentController.getParentsList,
+  )
+  .get(
+    '/parents_details/:parentUserId',
+    auth(USER_ROLE.supperAdmin),
+    StudentController.getParentsDetails,
+  )
   .get(
     '/select_child/:userId',
     auth(USER_ROLE.parents),
     StudentController.selectChild,
+  )
+  .patch(
+    '/edit_student/:studentId',
+    auth(USER_ROLE.admin, USER_ROLE.supperAdmin, USER_ROLE.school),
+    StudentController.editStudent,
+  )
+  .delete(
+    '/delete_student/:studentId',
+    auth(USER_ROLE.admin, USER_ROLE.supperAdmin, USER_ROLE.school),
+    StudentController.deleteStudent,
   );
-// .get("/", auth(USER_ROLE.school), StudentController.getAllStudents)
 
 export const StudentRoutes = router;

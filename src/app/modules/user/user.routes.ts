@@ -5,7 +5,7 @@ import { UserController } from './user.controller';
 import fileUpload from '../../utils/uploadImage';
 import parseFormData from '../../middleware/parsedData';
 
-const upload = fileUpload('./public/uploads/images/');
+const upload = fileUpload('./public/uploads/message_files/');
 
 const router = Router();
 
@@ -20,6 +20,8 @@ router
     auth(USER_ROLE.parents),
     UserController.addParentsMessage,
   )
+  .post('/file_upload', upload.single('file'), UserController.fileUpload)
+
   .get(
     '/get_parents_message/:studentId',
     auth(

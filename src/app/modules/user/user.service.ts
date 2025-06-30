@@ -6,7 +6,6 @@ import { USER_ROLE } from '../../constant';
 import { months, StatisticHelper } from '../../helper/staticsHelper';
 import { TAuthUser } from '../../interface/authUser';
 import AppError from '../../utils/AppError';
-import generateUID from '../../utils/generateUID';
 import Attendance from '../attendance/attendance.model';
 import Payment from '../payment/payment.model';
 import Student from '../student/student.model';
@@ -63,7 +62,6 @@ const createAdmin = async (payload: { phoneNumber: string; name: string }) => {
   if (uniquePhoneNumber) throw new Error('Phone number already exists');
 
   const user = await User.create({
-    uid: await generateUID(),
     phoneNumber,
     role: USER_ROLE.admin,
     name,
