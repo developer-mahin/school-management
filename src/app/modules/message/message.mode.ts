@@ -9,7 +9,7 @@ const messageSchema = new Schema<TMessage>(
       ref: 'Conversation',
     },
     text_message: { type: String, required: [true, 'Message is required'] },
-    image: { type: String },
+    file: { type: String },
     sender: {
       type: Schema.Types.ObjectId,
       required: [true, 'Sender is required'],

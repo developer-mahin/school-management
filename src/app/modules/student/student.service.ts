@@ -161,9 +161,18 @@ const selectChild = async (id: string) => {
   };
 };
 
+
+const getAllStudents = async (user: TAuthUser) => {
+
+  const studentList = await Student.find({ schoolId: user.schoolId })
+  return studentList
+
+};
+
 export const StudentService = {
   createStudent,
   findStudent,
   getMyChildren,
   selectChild,
+  getAllStudents
 };

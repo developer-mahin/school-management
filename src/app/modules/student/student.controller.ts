@@ -1,9 +1,8 @@
 import httpStatus from 'http-status';
+import { TAuthUser } from '../../interface/authUser';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { StudentService } from './student.service';
-import { TAuthUser } from '../../interface/authUser';
-import generateUID from '../../utils/generateUID';
 
 const createStudent = catchAsync(async (req, res) => {
   const result = await StudentService.createStudent(
@@ -18,15 +17,15 @@ const createStudent = catchAsync(async (req, res) => {
   });
 });
 
-// const getAllStudents = catchAsync(async (req, res) => {
-//     const result = await StudentService.getAllStudents(req.user as TAuthUser);
-//     sendResponse(res, {
-//         success: true,
-//         statusCode: httpStatus.OK,
-//         message: 'Students fetched successfully',
-//         data: result,
-//     });
-// });
+const getAllStudents = catchAsync(async (req, res) => {
+    const result = await StudentService.getAllStudents(req.user as TAuthUser);
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: 'Students fetched successfully',
+        data: result,
+    });
+});
 
 const getMyChildren = catchAsync(async (req, res) => {
   const result = await StudentService.getMyChildren(req.user as TAuthUser);
@@ -37,17 +36,6 @@ const getMyChildren = catchAsync(async (req, res) => {
     data: result,
   });
 });
-
-const uniqueId = catchAsync(async (req, res) => {
-  const result = await generateUID();
-  sendResponse(res, {
-    success: true,
-    statusCode: httpStatus.OK,
-    message: 'Students fetched successfully',
-    data: result,
-  });
-});
-
 const selectChild = catchAsync(async (req, res) => {
   const result = await StudentService.selectChild(req.params.userId);
   sendResponse(res, {
@@ -58,10 +46,10 @@ const selectChild = catchAsync(async (req, res) => {
   });
 });
 
+
 export const StudentController = {
   createStudent,
   getMyChildren,
-  uniqueId,
   selectChild,
-  // getAllStudents
+  getAllStudents
 };

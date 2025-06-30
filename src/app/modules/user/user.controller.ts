@@ -104,6 +104,20 @@ const editProfile = catchAsync(async (req, res) => {
   });
 });
 
+
+const fileUpload = catchAsync(async (req, res) => {
+  if (req.file) {
+    req.body.file = req.file.path;
+  }
+  const result = req.body;
+  sendResponse(res, {
+    data: result,
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'user overview fetched successfully',
+  });
+});
+
 export const UserController = {
   updateUserActions,
   createAdmin,
@@ -114,4 +128,5 @@ export const UserController = {
   addParentsMessage,
   getParentsMessage,
   editProfile,
+  fileUpload
 };

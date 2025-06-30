@@ -14,7 +14,7 @@ router
     validateRequest(StudentValidation.studentSchema),
     StudentController.createStudent,
   )
-  .get('/uniqueId', StudentController.uniqueId)
+  .get("/student_list", auth(USER_ROLE.admin, USER_ROLE.supperAdmin, USER_ROLE.school), StudentController.getAllStudents)
   .get('/my_child', auth(USER_ROLE.parents), StudentController.getMyChildren)
   .get(
     '/select_child/:userId',
