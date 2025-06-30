@@ -103,37 +103,6 @@ const getConversations = async (
         },
       },
 
-      // Lookup self profile
-      {
-        $lookup: {
-          from: 'profiles',
-          localField: 'self.profile',
-          foreignField: '_id',
-          as: 'self.profile',
-        },
-      },
-      {
-        $unwind: {
-          path: '$self.profile',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      // Lookup otherUser profile
-      {
-        $lookup: {
-          from: 'profiles',
-          localField: 'otherUser.profile',
-          foreignField: '_id',
-          as: 'otherUser.profile',
-        },
-      },
-      {
-        $unwind: {
-          path: '$otherUser.profile',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-
       {
         $project: {
           users: 0,
@@ -149,12 +118,14 @@ const getConversations = async (
           self: {
             _id: '$self._id',
             name: '$self.name',
-            image: '$self.profile.image',
+            image: '$self.image',
+            relation: '$self.relation',
           },
           otherUser: {
             _id: '$otherUser._id',
             name: '$otherUser.name',
-            image: '$otherUser.profile.image',
+            image: '$otherUser.image',
+            relation: '$otherUser.relation',
           },
         },
       },

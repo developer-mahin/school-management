@@ -13,7 +13,7 @@ export const auth = (...requestedRole: TUserRole[]) => {
     const bearerToken = req.headers.authorization;
 
     if (!bearerToken) {
-      throw new AppError(httpStatus.FORBIDDEN, 'You are not authorized');
+      throw new AppError(httpStatus.FORBIDDEN, 'You are not authorized to access token is not found');
     }
     const token = bearerToken?.split(' ')[1];
 

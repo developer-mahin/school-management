@@ -1,7 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose from 'mongoose';
+import { months, StatisticHelper } from '../../helper/staticsHelper';
 import { TAuthUser } from '../../interface/authUser';
-import ClassSchedule from '../classSchedule/classSchedule.model';
 import Assignment from '../assignment/assignment.model';
+import Attendance from '../attendance/attendance.model';
+import ClassSchedule from '../classSchedule/classSchedule.model';
+import { TeacherService } from '../teacher/teacher.service';
 import { calculateAttendanceRate, getAttendanceRate } from './overview.helper';
 
 const getTeacherHomePageOverview = async (user: TAuthUser) => {
@@ -147,6 +151,88 @@ const getDailyWeeklyMonthlyAttendanceRate = async (user: TAuthUser) => {
   };
 };
 
+const getAssignmentCount = async (user: TAuthUser) => {
+  const teacher = await TeacherService.findTeacher(user);
+
+  if (!teacher || !teacher._id) {
+    throw new Error('Teacher not found or invalid teacher data');
+  }
+
+  // Use teacher._id instead of teacher.schoolId for teacherId field
+  const schoolId = new mongoose.Types.ObjectId(String(teacher.schoolId));
+
+  // Calculate date for last week
+  const lastWeekDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+  // Run both queries in parallel for better performance
+  const [activeAssignment, assignmentThisWeek] = await Promise.all([
+    Assignment.countDocuments({
+      schoolId,
+      status: 'on-going',
+    }),
+    Assignment.countDocuments({
+      schoolId,
+      dueDate: { $gte: lastWeekDate },
+    }),
+  ]);
+
+  return {
+    activeAssignment: activeAssignment || 0,
+    assignmentThisWeek: assignmentThisWeek || 0,
+  };
+};
+
+const getStudentAttendance = async (user: TAuthUser, query: Record<string, unknown>) => {
+  const { year } = query
+  const { startDate, endDate } = StatisticHelper.statisticHelper(year as string)
+
+
+  const attendance = await Attendance.aggregate([
+    {
+      $match: {
+        schoolId: new mongoose.Types.ObjectId(String(user.schoolId)),
+        date: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      }
+    },
+    {
+      $project: {
+        month: { $month: "$date" },
+        year: { $year: "$date" },
+        presentCount: { $size: "$presentStudents" },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          year: "$year",
+          month: "$month",
+        },
+        totalPresent: { $sum: "$presentCount" },
+      },
+    },
+    {
+      $sort: {
+        "_id.year": 1,
+        "_id.month": 1,
+      },
+    }
+  ])
+
+  const formattedResult = months.map((month, index) => {
+    const monthData = attendance.find((r: any) => r._id.month === index + 1)
+
+    return {
+      month: month,
+      totalPresent: monthData?.totalPresent || 0,
+    }
+  })
+
+  return formattedResult
+}
+
 const getStudentHomePageOverview = async (user: TAuthUser) => {
   return user;
 };
@@ -161,8 +247,10 @@ const getAdminHomePageOverview = async (user: TAuthUser) => {
 
 export const OverviewService = {
   getTeacherHomePageOverview,
+  getAssignmentCount,
   getDailyWeeklyMonthlyAttendanceRate,
   getStudentHomePageOverview,
   getParentHomePageOverview,
   getAdminHomePageOverview,
+  getStudentAttendance
 };

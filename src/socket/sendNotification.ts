@@ -17,13 +17,16 @@ const sendNotification = async (
       receiverId: receiverId,
     };
 
-    const connectUser: any = connectedUser.get(receiverId.toString());
+
+    const connectUser: any = connectedUser.get(receiverId?.toString());
     if (connectUser) {
       IO.to(connectUser.socketId).emit('notification', {
         success: true,
         data: payload,
       });
     }
+
+    console.log(notificationData, "notificationData");
 
     await NotificationService.createNotification(notificationData);
   } catch (error) {
