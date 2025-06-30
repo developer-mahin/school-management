@@ -270,6 +270,30 @@ const editStudent = async (id: string, payload: any) => {
   }
 };
 
+
+const deleteStudent = async (id: string) => {
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    const student = await Student.findByIdAndDelete(id, { session });
+    if (!student) throw new Error('Student not found');
+
+    await User.findOneAndDelete({ studentId: id }, { session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return student;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+
+};
+
 export const StudentService = {
   createStudent,
   findStudent,
@@ -277,4 +301,5 @@ export const StudentService = {
   selectChild,
   getAllStudents,
   editStudent,
+  deleteStudent
 };

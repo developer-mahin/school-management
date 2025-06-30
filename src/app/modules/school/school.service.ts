@@ -158,9 +158,27 @@ const editSchool = async (schoolId: string, payload: Partial<TSchool>) => {
 };
 
 const deleteSchool = async (schoolId: string) => {
-  const result = await School.findByIdAndDelete(schoolId);
-  await User.findOneAndDelete({ schoolId: schoolId });
-  return result;
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    const result = await School.findByIdAndDelete(schoolId, { session });
+
+    if (!result) throw new Error('School not deleted');
+
+    await User.findOneAndDelete({ schoolId }, { session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return result
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+
 };
 
 export const SchoolService = {

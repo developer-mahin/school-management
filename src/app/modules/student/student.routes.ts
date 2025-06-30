@@ -29,6 +29,7 @@ router
     '/edit_student/:studentId',
     auth(USER_ROLE.admin, USER_ROLE.supperAdmin, USER_ROLE.school),
     StudentController.editStudent,
-  );
+  )
+  .delete("/delete_student/:studentId", auth(USER_ROLE.admin, USER_ROLE.supperAdmin, USER_ROLE.school), StudentController.deleteStudent);
 
 export const StudentRoutes = router;
