@@ -140,7 +140,7 @@ const paymentList = async (user: TAuthUser, query: Record<string, unknown>) => {
     .customPipeline([
       {
         $match: {
-          companyId: new mongoose.Types.ObjectId(String(user.userId)),
+
         },
       },
       {

@@ -15,6 +15,7 @@ const messageSchema = new Schema<TMessage>(
       required: [true, 'Sender is required'],
       ref: 'User',
     },
+    isRead: { type: Boolean, default: false },
   },
   {
     timestamps: true,

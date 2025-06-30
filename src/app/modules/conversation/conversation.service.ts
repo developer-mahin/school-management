@@ -146,6 +146,12 @@ const getMessages = async (
 ) => {
   const messageAggregation = new AggregationQueryBuilder(query);
 
+
+  await Message.updateMany(
+    { conversationId: conversationId, isRead: false },
+    { $set: { isRead: true } }
+  );
+
   const result = await messageAggregation
     .customPipeline([
       {
