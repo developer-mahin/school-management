@@ -18,6 +18,21 @@ router
     '/base_on_student',
     auth(USER_ROLE.student, USER_ROLE.parents),
     TeacherController.getBaseOnStudent,
+  )
+  .get(
+    '/teacher_list',
+    auth(USER_ROLE.supperAdmin),
+    TeacherController.getTeacherList,
+  )
+  .patch(
+    '/edit_teacher/:teacherUserId',
+    auth(USER_ROLE.admin, USER_ROLE.supperAdmin),
+    TeacherController.editTeacher,
+  )
+  .delete(
+    '/delete_teacher/:teacherUserId',
+    auth(USER_ROLE.admin, USER_ROLE.supperAdmin),
+    TeacherController.deleteTeacher,
   );
 
 export const TeacherRoutes = router;
