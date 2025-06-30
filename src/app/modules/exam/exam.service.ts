@@ -160,15 +160,11 @@ const updateGrade = async (
   }
 
   // Execute all independent database queries in parallel
-  const [findTeacher, findSchoolGrade, findExistingResult, findExam] =
-    await Promise.all([
-      TeacherService.findTeacher(user),
-      GradeSystem.find({ schoolId: user.schoolId })
-        .select('grade mark gpa')
-        .lean(),
-      Result.findOne({ examId }).lean(),
-      Exam.findOne({ _id: examId }).populate('classId').lean() as any,
-    ]);
+  const [findTeacher, findExistingResult, findExam] = await Promise.all([
+    TeacherService.findTeacher(user),
+    Result.findOne({ examId }).lean(),
+    Exam.findOne({ _id: examId }).populate('classId').lean() as any,
+  ]);
 
   // Early validation checks
   if (!findTeacher) {
@@ -182,6 +178,12 @@ const updateGrade = async (
   if (!findExam) {
     throw new Error('Exam not found');
   }
+
+  const findSchoolGrade = await GradeSystem.find({
+    schoolId: findTeacher.schoolId,
+  })
+    .select('grade mark gpa')
+    .lean();
 
   if (!findSchoolGrade?.length) {
     throw new Error('Grade system not configured for this school');
@@ -239,13 +241,26 @@ const updateGrade = async (
     receiverId: user.mySchoolUserId,
     message: `Grades updated for class ${findExam.classId?.className}`,
     type: NOTIFICATION_TYPE.GRADE,
-    linkId: null, // Will be updated after result creation
+    linkId: examId, // Will be updated after result creation
   });
 
-  const [result] = await Promise.all([resultPromise, notificationPromise]);
+  const updateExam = Exam.findOneAndUpdate(
+    {
+      _id: examId,
+    },
+    {
+      $set: {
+        isSubmitted: true,
+      },
+    },
+    { new: true },
+  );
 
-  // Update notification with actual result ID if needed
-  // This depends on your notification system implementation
+  const [result] = await Promise.all([
+    resultPromise,
+    notificationPromise,
+    updateExam,
+  ]);
 
   return result;
 };

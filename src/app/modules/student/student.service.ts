@@ -15,6 +15,7 @@ import {
   handleParentUserCreation,
 } from './students.helper';
 import generateUID from '../../utils/generateUID';
+import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 
 const createStudent = async (
   payload: Partial<TStudent> & { phoneNumber: string; name?: string },
@@ -161,9 +162,316 @@ const selectChild = async (id: string) => {
   };
 };
 
+const getAllStudents = async (
+  user: TAuthUser,
+  query: Record<string, unknown>,
+) => {
+  const sudentQuery = new AggregationQueryBuilder(query);
+
+  const result = await sudentQuery
+    .customPipeline([
+      {
+        $match: {
+          role: USER_ROLE.student,
+        },
+      },
+      {
+        $lookup: {
+          from: 'students',
+          localField: '_id',
+          pipeline: [
+            {
+              $lookup: {
+                from: 'schools',
+                localField: 'schoolId',
+                foreignField: '_id',
+                as: 'school',
+              },
+            },
+            {
+              $unwind: {
+                path: '$school',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+          ],
+          foreignField: 'userId',
+          as: 'student',
+        },
+      },
+      {
+        $unwind: {
+          path: '$student',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      {
+        $project: {
+          student: 1,
+        },
+      },
+    ])
+    .sort()
+    .paginate()
+    .execute(User);
+
+  const meta = await sudentQuery.countTotal(User);
+
+  return { meta, result };
+};
+
+const editStudent = async (id: string, payload: any) => {
+  const student = await Student.findById(id);
+  if (!student) throw new Error('Student not found');
+
+  const sudentData = {
+    schoolId: payload.schoolId,
+    classId: payload.classId,
+    section: payload.section,
+    schoolName: payload.schoolName,
+    className: payload.className,
+    fatherPhoneNumber: payload.fatherPhoneNumber,
+    motherPhoneNumber: payload.motherPhoneNumber,
+  };
+  const studentUserData = {
+    phoneNumber: payload.phoneNumber,
+    name: payload.phoneNumber,
+  };
+
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    const updateStudent = await Student.findOneAndUpdate(
+      { _id: id },
+      sudentData,
+      { new: true, session },
+    );
+
+    if (!updateStudent) throw new Error('Student not update');
+
+    await User.findOneAndUpdate({ schoolId: id }, studentUserData, {
+      new: true,
+      session,
+    });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return updateStudent;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+};
+
+const deleteStudent = async (id: string) => {
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    const student = await Student.findByIdAndDelete(id, { session });
+    if (!student) throw new Error('Student not found');
+
+    await User.findOneAndDelete({ studentId: id }, { session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return student;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+};
+
+const getParentsList = async (
+  user: TAuthUser,
+  query: Record<string, unknown>,
+) => {
+  const parentsListQuery = new AggregationQueryBuilder(query);
+
+  const result = await parentsListQuery
+    .customPipeline([
+      {
+        $match: {
+          role: USER_ROLE.parents,
+        },
+      },
+      {
+        $lookup: {
+          from: 'parents',
+          localField: 'parentsId',
+          pipeline: [
+            {
+              $lookup: {
+                from: 'students',
+                localField: 'childId',
+                foreignField: '_id',
+                as: 'student',
+              },
+            },
+            {
+              $unwind: {
+                path: '$student',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $lookup: {
+                from: 'users',
+                localField: 'student.userId',
+                foreignField: '_id',
+                as: 'studentUser',
+              },
+            },
+            {
+              $unwind: {
+                path: '$studentUser',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+          ],
+          foreignField: '_id',
+          as: 'parents',
+        },
+      },
+
+      {
+        $unwind: {
+          path: '$parents',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      {
+        $lookup: {
+          from: 'mysubscriptions',
+          localField: '_id',
+          foreignField: 'userId',
+          as: 'subscription',
+        },
+      },
+      {
+        $unwind: {
+          path: '$subscription',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'subscriptions',
+          localField: 'subscription.subscriptionId',
+          foreignField: '_id',
+          as: 'subscriptionDetails',
+        },
+      },
+      {
+        $unwind: {
+          path: '$subscriptionDetails',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      {
+        $project: {
+          _id: 1,
+          phoneNumber: 1,
+          name: 1,
+          role: 1,
+          parents: 1,
+          subscriptionDetails: 1,
+        },
+      },
+    ])
+    .sort()
+    .paginate()
+    .execute(User);
+
+  const meta = await parentsListQuery.countTotal(User);
+
+  return { meta, result };
+};
+
+const getParentsDetails = async (id: string) => {
+  const result = await Parents.aggregate([
+    {
+      $match: {
+        userId: new mongoose.Types.ObjectId(String(id)),
+      },
+    },
+
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'userId',
+        foreignField: '_id',
+        as: 'parentsInfo',
+      },
+    },
+    {
+      $unwind: {
+        path: '$parentsInfo',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: 'students',
+        localField: 'childId',
+        foreignField: '_id',
+        as: 'student',
+      },
+    },
+
+    {
+      $unwind: {
+        path: '$student',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'student.userId',
+        foreignField: '_id',
+        as: 'studentUser',
+      },
+    },
+    {
+      $unwind: {
+        path: '$studentUser',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $project: {
+        studentName: '$studentUser.name',
+        studentClass: '$student.className',
+        studentSection: '$student.section',
+        studentSchoolName: '$student.schoolName',
+        parentsInfo: 1,
+      },
+    },
+  ]);
+
+  return result;
+};
+
 export const StudentService = {
   createStudent,
   findStudent,
   getMyChildren,
   selectChild,
+  getAllStudents,
+  editStudent,
+  deleteStudent,
+  getParentsList,
+  getParentsDetails,
 };

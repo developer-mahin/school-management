@@ -1,9 +1,8 @@
 import httpStatus from 'http-status';
+import { TAuthUser } from '../../interface/authUser';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { StudentService } from './student.service';
-import { TAuthUser } from '../../interface/authUser';
-import generateUID from '../../utils/generateUID';
 
 const createStudent = catchAsync(async (req, res) => {
   const result = await StudentService.createStudent(
@@ -18,15 +17,18 @@ const createStudent = catchAsync(async (req, res) => {
   });
 });
 
-// const getAllStudents = catchAsync(async (req, res) => {
-//     const result = await StudentService.getAllStudents(req.user as TAuthUser);
-//     sendResponse(res, {
-//         success: true,
-//         statusCode: httpStatus.OK,
-//         message: 'Students fetched successfully',
-//         data: result,
-//     });
-// });
+const getAllStudents = catchAsync(async (req, res) => {
+  const result = await StudentService.getAllStudents(
+    req.user as TAuthUser,
+    req.query,
+  );
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Students fetched successfully',
+    data: result,
+  });
+});
 
 const getMyChildren = catchAsync(async (req, res) => {
   const result = await StudentService.getMyChildren(req.user as TAuthUser);
@@ -37,9 +39,8 @@ const getMyChildren = catchAsync(async (req, res) => {
     data: result,
   });
 });
-
-const uniqueId = catchAsync(async (req, res) => {
-  const result = await generateUID();
+const selectChild = catchAsync(async (req, res) => {
+  const result = await StudentService.selectChild(req.params.userId);
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
@@ -48,8 +49,46 @@ const uniqueId = catchAsync(async (req, res) => {
   });
 });
 
-const selectChild = catchAsync(async (req, res) => {
-  const result = await StudentService.selectChild(req.params.userId);
+const editStudent = catchAsync(async (req, res) => {
+  const result = await StudentService.editStudent(
+    req.params.studentId,
+    req.body,
+  );
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Students fetched successfully',
+    data: result,
+  });
+});
+
+const deleteStudent = catchAsync(async (req, res) => {
+  const result = await StudentService.deleteStudent(req.params.studentId);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Students fetched successfully',
+    data: result,
+  });
+});
+
+const getParentsList = catchAsync(async (req, res) => {
+  const result = await StudentService.getParentsList(
+    req.user as TAuthUser,
+    req.query,
+  );
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Students fetched successfully',
+    data: result,
+  });
+});
+
+const getParentsDetails = catchAsync(async (req, res) => {
+  const result = await StudentService.getParentsDetails(
+    req.params.parentUserId,
+  );
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
@@ -61,7 +100,10 @@ const selectChild = catchAsync(async (req, res) => {
 export const StudentController = {
   createStudent,
   getMyChildren,
-  uniqueId,
   selectChild,
-  // getAllStudents
+  getAllStudents,
+  editStudent,
+  deleteStudent,
+  getParentsList,
+  getParentsDetails,
 };

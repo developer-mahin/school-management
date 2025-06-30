@@ -22,6 +22,7 @@ export const IO: SocketIoServer = new SocketIoServer(socketServer, {
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   },
+  transports: ['websocket'],
 });
 
 // Connect to database and start the server

@@ -12,6 +12,8 @@ import ClassSchedule from '../classSchedule/classSchedule.model';
 import mongoose from 'mongoose';
 import sendNotification from '../../../socket/sendNotification';
 import { NOTIFICATION_TYPE } from '../notification/notification.interface';
+import User from '../user/user.model';
+import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 
 const createTeacher = async (
   payload: Partial<TTeacher> & { phoneNumber: string; name?: string },
@@ -107,8 +109,158 @@ const getBaseOnStudent = async (user: TAuthUser) => {
   return result;
 };
 
+const getTeacherList = async (user: TAuthUser, query: any) => {
+  const teacherListQuery = new AggregationQueryBuilder(query);
+
+  const result = await teacherListQuery
+    .customPipeline([
+      {
+        $match: {
+          role: USER_ROLE.teacher,
+        },
+      },
+      {
+        $lookup: {
+          from: 'teachers',
+          localField: 'teacherId',
+          pipeline: [
+            {
+              $lookup: {
+                from: 'schools',
+                localField: 'schoolId',
+                foreignField: '_id',
+                as: 'school',
+              },
+            },
+            {
+              $unwind: {
+                path: '$school',
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+          ],
+          foreignField: '_id',
+          as: 'teacher',
+        },
+      },
+      {
+        $unwind: {
+          path: '$teacher',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          name: 1,
+          phoneNumber: 1,
+          createdAt: 1,
+          image: 1,
+          schoolName: '$teacher.school.schoolName',
+          schoolAddress: '$teacher.school.schoolAddress',
+        },
+      },
+    ])
+    .sort()
+    .paginate()
+    .execute(User);
+
+  const meta = await teacherListQuery.countTotal(User);
+
+  return { meta, result };
+};
+
+const editTeacher = async (
+  teacherId: string,
+  payload: Partial<TTeacher & { phoneNumber: string; name?: string }>,
+) => {
+  const teacherInfo = {
+    schoolId: payload.schoolId,
+    schoolName: payload.schoolName,
+    subjectId: payload.subjectId,
+    subjectName: payload.subjectName,
+  };
+
+  const teacherUserInfo = {
+    name: payload.name,
+    phoneNumber: payload.phoneNumber,
+  };
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const teacher = await Teacher.findOneAndUpdate(
+      {
+        userId: teacherId,
+      },
+      {
+        $set: teacherInfo,
+      },
+      {
+        new: true,
+        session,
+      },
+    );
+
+    if (!teacher) throw new AppError(httpStatus.NOT_FOUND, 'Teacher not found');
+
+    const user = await User.findOneAndUpdate(
+      {
+        _id: teacherId,
+      },
+      {
+        $set: teacherUserInfo,
+      },
+      {
+        new: true,
+        session,
+      },
+    );
+
+    if (!user) throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return user;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+};
+
+const deleteTeacher = async (teacherId: string) => {
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    const teacher = await Teacher.findByIdAndDelete(
+      { userId: teacherId },
+      { session },
+    );
+    if (!teacher) throw new Error('Teacher not found');
+
+    const user = await User.findOneAndDelete({ _id: teacherId }, { session });
+    if (!user) throw new Error('User not found');
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return teacher;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+};
+
 export const TeacherService = {
   createTeacher,
   findTeacher,
   getBaseOnStudent,
+  getTeacherList,
+  editTeacher,
+  deleteTeacher,
 };
