@@ -5,9 +5,7 @@ import { UserService } from './user.service';
 import { TAuthUser } from '../../interface/authUser';
 
 const updateUserActions = catchAsync(async (req, res) => {
-  const { id } = req.params;
-  const { action } = req.body;
-  const result = await UserService.updateUserActions(id, action);
+  const result = await UserService.updateUserActions(req.body);
 
   sendResponse(res, {
     success: true,
@@ -90,10 +88,36 @@ const getParentsMessage = catchAsync(async (req, res) => {
   });
 });
 
+
+export interface MulterFiles {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [fieldname: string]: any[];
+}
+
 const editProfile = catchAsync(async (req, res) => {
-  if (req.file) {
-    req.body.image = req.file.path;
+  const fields = [
+    'image',
+    'schoolImage',
+    'coverImage'
+  ];
+
+  // Type req.files as MulterFiles
+  const files = req.files as MulterFiles | undefined;
+
+  if (files && !Array.isArray(files) && typeof files === 'object') {
+    await Promise.all(
+      fields.map(async (field) => {
+        const fileArray = files[field];
+        if (fileArray && fileArray.length > 0) {
+          // const s3Url = await uploadFileWithS3(fileArray[0]);
+          req.body[field] = fileArray[0]?.path;
+          console.log(fileArray[0]?.path);
+        }
+      }),
+    );
   }
+
+
 
   const result = await UserService.editProfile(req.user as TAuthUser, req.body);
   sendResponse(res, {

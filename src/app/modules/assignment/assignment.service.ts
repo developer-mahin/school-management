@@ -205,6 +205,7 @@ const getAssignmentDetails = async (
           {
             $addFields: {
               studentName: '$userInfo.name',
+              
             },
           },
           {
@@ -212,6 +213,7 @@ const getAssignmentDetails = async (
               studentId: '$_id',
               userId: 1,
               studentName: 1,
+              parentsMessage:"$parentsMessage",
             },
           },
         ],

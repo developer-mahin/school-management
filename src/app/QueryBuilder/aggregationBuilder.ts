@@ -113,38 +113,30 @@ class AggregationQueryBuilder {
 
   // Adds a count query to get total documents for pagination
   async countTotal(model: any) {
-    // Clone the pipeline to avoid mutating the original one
-    const countPipeline = [...this.aggregationPipeline];
+    // Create a new pipeline without $skip and $limit
+    const countPipeline = this.aggregationPipeline.filter(
+      (stage) => !stage.$skip && !stage.$limit,
+    );
 
-    // Remove the pagination stages ($skip, $limit) from the pipeline for counting total records
-    countPipeline.forEach((stage, index) => {
-      if (stage.$skip || stage.$limit) {
-        countPipeline.splice(index, 1);
-      }
-    });
-
-    // Add the $count stage to get the total count of documents
-    countPipeline.push({
-      $count: 'totalCount',
-    });
+    // Add the $count stage
+    countPipeline.push({ $count: 'totalCount' });
 
     try {
-      // Execute the aggregation to get the total count
       const totalCountResult = await model.aggregate(countPipeline);
 
-      // Calculate total count and total pages
       const total = totalCountResult[0]?.totalCount || 0;
       const page = Number(this.query.page) || 1;
       const limit = Number(this.query.limit) || 10;
       const totalPage = Math.ceil(total / limit);
 
       return {
-        total: total,
-        totalPage: totalPage,
-        page: page,
+        total,
+        totalPage,
+        page,
         limit,
       };
     } catch (error) {
+      console.error('Error in total count aggregation:', error);
       throw new Error('Failed to get total count');
     }
   }
