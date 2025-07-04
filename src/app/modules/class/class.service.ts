@@ -46,17 +46,19 @@ const deleteClass = async (id: string) => {
   return result;
 };
 
-const getClassBySchoolId = async (id: string, user: TAuthUser, query: Record<string, unknown>) => {
+const getClassBySchoolId = async (
+  id: string,
+  user: TAuthUser,
+  query: Record<string, unknown>,
+) => {
   if (user.role === USER_ROLE.school) {
     id = user.schoolId;
   } else if (user.role === USER_ROLE.teacher) {
     const findTeacher = await TeacherService.findTeacher(user);
     id = findTeacher?.schoolId as any;
   } else if (user.role === USER_ROLE.supperAdmin) {
-    id = query.schoolId as any
+    id = query.schoolId as any;
   }
-
-
 
   const result = await Class.find({ schoolId: id });
   return result;

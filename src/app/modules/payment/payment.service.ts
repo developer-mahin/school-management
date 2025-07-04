@@ -139,9 +139,7 @@ const paymentList = async (user: TAuthUser, query: Record<string, unknown>) => {
   const result = await paymentAggregation
     .customPipeline([
       {
-        $match: {
-
-        },
+        $match: {},
       },
       {
         $lookup: {
@@ -171,7 +169,6 @@ const paymentList = async (user: TAuthUser, query: Record<string, unknown>) => {
           preserveNullAndEmptyArrays: true,
         },
       },
-
     ])
     .sort()
     .paginate()

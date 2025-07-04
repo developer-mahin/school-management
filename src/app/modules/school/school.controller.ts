@@ -70,12 +70,11 @@ const getAllStudents = catchAsync(async (req, res) => {
   });
 });
 
-
 export const SchoolController = {
   createSchool,
   getSchoolList,
   getTeachers,
   editSchool,
   deleteSchool,
-  getAllStudents
+  getAllStudents,
 };

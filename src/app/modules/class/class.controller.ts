@@ -54,7 +54,7 @@ const getClassBySchoolId = catchAsync(async (req, res) => {
   const result = await ClassService.getClassBySchoolId(
     req.params.schoolId,
     req.user as TAuthUser,
-    req.query
+    req.query,
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,

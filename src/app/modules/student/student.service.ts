@@ -214,7 +214,7 @@ const getAllStudents = async (
           image: 1,
           status: 1,
           createdAt: 1,
-          phoneNumber: 1
+          phoneNumber: 1,
         },
       },
     ])

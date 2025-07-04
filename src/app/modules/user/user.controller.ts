@@ -88,18 +88,13 @@ const getParentsMessage = catchAsync(async (req, res) => {
   });
 });
 
-
 export interface MulterFiles {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [fieldname: string]: any[];
 }
 
 const editProfile = catchAsync(async (req, res) => {
-  const fields = [
-    'image',
-    'schoolImage',
-    'coverImage'
-  ];
+  const fields = ['image', 'schoolImage', 'coverImage'];
 
   // Type req.files as MulterFiles
   const files = req.files as MulterFiles | undefined;
@@ -116,8 +111,6 @@ const editProfile = catchAsync(async (req, res) => {
       }),
     );
   }
-
-
 
   const result = await UserService.editProfile(req.user as TAuthUser, req.body);
   sendResponse(res, {

@@ -94,7 +94,7 @@ const getSchoolList = async (query: Record<string, unknown>) => {
         },
       },
     ])
-    .search(['name', "school.schoolName"])
+    .search(['name', 'school.schoolName'])
     .sort()
     .paginate()
     .execute(User);
@@ -154,7 +154,6 @@ const getTeachers = async (user: TAuthUser, query: Record<string, unknown>) => {
 };
 
 const editSchool = async (schoolId: string, payload: Partial<TSchool>) => {
-
   const result = await School.findOneAndUpdate({ _id: schoolId }, payload, {
     new: true,
   });
@@ -184,12 +183,14 @@ const deleteSchool = async (schoolId: string) => {
   }
 };
 
-const getAllStudents = async (user: TAuthUser, query: Record<string, unknown>) => {
+const getAllStudents = async (
+  user: TAuthUser,
+  query: Record<string, unknown>,
+) => {
   const studentsQuery = new AggregationQueryBuilder(query);
 
-  const today = new Date()
-  today.setUTCHours(0, 0, 0, 0)
-
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
 
   const result = await studentsQuery
     .customPipeline([
@@ -225,7 +226,12 @@ const getAllStudents = async (user: TAuthUser, query: Record<string, unknown>) =
                 $expr: {
                   $and: [
                     { $eq: ['$schoolId', '$$sId'] },
-                    { $gte: ['$date', new Date(Date.now() - 1000 * 60 * 60 * 24 * 30)] },
+                    {
+                      $gte: [
+                        '$date',
+                        new Date(Date.now() - 1000 * 60 * 60 * 24 * 30),
+                      ],
+                    },
                   ],
                 },
               },
@@ -272,17 +278,17 @@ const getAllStudents = async (user: TAuthUser, query: Record<string, unknown>) =
                           },
                         },
                       },
-                      { $size: '$attendances' }
-                    ]
+                      { $size: '$attendances' },
+                    ],
                   },
-                  100
-                ]
-              }
+                  100,
+                ],
+              },
             ],
           },
         },
       },
-      
+
       {
         $lookup: {
           from: 'results',
@@ -337,10 +343,10 @@ const getAllStudents = async (user: TAuthUser, query: Record<string, unknown>) =
           motherPhoneNumber: 1,
           fatherPhoneNumber: 1,
           createdAt: 1,
-          studentName: "$userInfo.name",
-          uid: "$userInfo.uid",
-          phoneNumber: "$userInfo.phoneNumber",
-          image: "$userInfo.image",
+          studentName: '$userInfo.name',
+          uid: '$userInfo.uid',
+          phoneNumber: '$userInfo.phoneNumber',
+          image: '$userInfo.image',
           attendanceRate: { $round: ['$attendanceRate', 2] },
         },
       },
@@ -350,11 +356,10 @@ const getAllStudents = async (user: TAuthUser, query: Record<string, unknown>) =
     .paginate()
     .execute(Student);
 
-
   const meta = await studentsQuery.countTotal(Student);
 
-  return { meta, result }
-}
+  return { meta, result };
+};
 
 export const SchoolService = {
   createSchool,
@@ -362,5 +367,5 @@ export const SchoolService = {
   getTeachers,
   editSchool,
   deleteSchool,
-  getAllStudents
+  getAllStudents,
 };

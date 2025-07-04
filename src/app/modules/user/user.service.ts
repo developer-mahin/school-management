@@ -13,8 +13,10 @@ import Teacher from '../teacher/teacher.model';
 import User from './user.model';
 import School from '../school/school.model';
 
-const updateUserActions = async (payload: { userId: string; action: string }): Promise<any> => {
-
+const updateUserActions = async (payload: {
+  userId: string;
+  action: string;
+}): Promise<any> => {
   const { userId, action } = payload;
 
   const user = await User.findById(userId);
@@ -241,9 +243,9 @@ const userOverView = async (
       month,
       total: monthData
         ? monthData.roles.reduce(
-          (total: number, role: any) => total + role.count,
-          0,
-        )
+            (total: number, role: any) => total + role.count,
+            0,
+          )
         : 0,
     };
   });
@@ -290,17 +292,17 @@ const editProfile = async (user: TAuthUser, payload: any) => {
     adminName: payload.adminName,
     schoolImage: payload.schoolImage,
     coverImage: payload.coverImage,
-  }
+  };
   console.log(payload);
 
   if (user.role === USER_ROLE.school) {
-    await School.findOneAndUpdate({ userId: user.userId }, schoolPayload, { new: true });
+    await School.findOneAndUpdate({ userId: user.userId }, schoolPayload, {
+      new: true,
+    });
   }
 
   return result;
 };
-
-
 
 export const UserService = {
   updateUserActions,
