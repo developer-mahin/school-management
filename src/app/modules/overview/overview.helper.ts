@@ -6,6 +6,7 @@ const calculateAttendanceRate = (data: any) => {
   let totalPresent = 0;
   let totalAbsent = 0;
 
+  console.log(data);
   data.forEach((entry: any) => {
     const presentCount = entry.attendance?.presentStudents?.length || 0;
     const absentCount = entry.attendance?.absentStudents?.length || 0;

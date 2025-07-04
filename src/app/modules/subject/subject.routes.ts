@@ -9,7 +9,7 @@ router
   .post('/create', auth(USER_ROLE.school), SubjectController.createSubject)
   .get(
     '/',
-    auth(USER_ROLE.school, USER_ROLE.teacher),
+    auth(USER_ROLE.school, USER_ROLE.teacher, USER_ROLE.supperAdmin),
     SubjectController.getSubject,
   )
   .patch('/action', auth(USER_ROLE.school), SubjectController.updateSubject)

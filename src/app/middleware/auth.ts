@@ -15,7 +15,7 @@ export const auth = (...requestedRole: TUserRole[]) => {
     if (!bearerToken) {
       throw new AppError(
         httpStatus.FORBIDDEN,
-        'You are not authorized to access token is not found',
+        'You are not authorized to access this route & token is not found please login',
       );
     }
     const token = bearerToken?.split(' ')[1];
@@ -28,7 +28,10 @@ export const auth = (...requestedRole: TUserRole[]) => {
     const { role, email } = decoded;
 
     if (requestedRole && !requestedRole.includes(role)) {
-      throw new AppError(httpStatus.FORBIDDEN, 'You are not authorized');
+      throw new AppError(
+        httpStatus.FORBIDDEN,
+        'You are not authorized to access this route',
+      );
     }
 
     const user = await User.findOne({ email });

@@ -155,6 +155,7 @@ const getTeacherList = async (user: TAuthUser, query: any) => {
           phoneNumber: 1,
           createdAt: 1,
           image: 1,
+          status: 1,
           schoolName: '$teacher.school.schoolName',
           schoolAddress: '$teacher.school.schoolAddress',
         },
@@ -236,7 +237,7 @@ const deleteTeacher = async (teacherId: string) => {
   try {
     session.startTransaction();
 
-    const teacher = await Teacher.findByIdAndDelete(
+    const teacher = await Teacher.findOneAndDelete(
       { userId: teacherId },
       { session },
     );

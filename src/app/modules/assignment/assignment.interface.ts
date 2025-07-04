@@ -7,6 +7,7 @@ export type TAssignment = {
   teacherId: ObjectId;
   section: string;
   title: string;
+  description: string;
   dueDate: Date;
   marks: number;
   fileUrl?: string;

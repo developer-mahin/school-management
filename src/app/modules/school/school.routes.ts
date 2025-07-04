@@ -18,6 +18,7 @@ router
     auth(USER_ROLE.admin, USER_ROLE.supperAdmin),
     SchoolController.getSchoolList,
   )
+  .get('/all_students', auth(USER_ROLE.school), SchoolController.getAllStudents)
   .get('/teacher', auth(USER_ROLE.school), SchoolController.getTeachers)
   .patch(
     '/edit_school/:schoolId',

@@ -2,11 +2,12 @@ import mongoose from 'mongoose';
 import { USER_ROLE } from '../../constant';
 import { TAuthUser } from '../../interface/authUser';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
+import Student from '../student/student.model';
 import Teacher from '../teacher/teacher.model';
 import { createUserWithProfile } from '../user/user.helper';
+import User from '../user/user.model';
 import { TSchool } from './school.interface';
 import School from './school.model';
-import User from '../user/user.model';
 
 const createSchool = async (
   payload: Partial<TSchool> & { phoneNumber: string; name?: string },
@@ -86,12 +87,14 @@ const getSchoolList = async (query: Record<string, unknown>) => {
           phoneNumber: 1,
           image: 1,
           school: 1,
+          createdAt: 1,
           teachers: { $size: '$teachers' },
           students: { $size: '$student' },
           parents: { $size: '$parents' },
         },
       },
     ])
+    .search(['name', 'school.schoolName'])
     .sort()
     .paginate()
     .execute(User);
@@ -180,10 +183,189 @@ const deleteSchool = async (schoolId: string) => {
   }
 };
 
+const getAllStudents = async (
+  user: TAuthUser,
+  query: Record<string, unknown>,
+) => {
+  const studentsQuery = new AggregationQueryBuilder(query);
+
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+
+  const result = await studentsQuery
+    .customPipeline([
+      {
+        $match: {
+          schoolId: new mongoose.Types.ObjectId(String(user.schoolId)),
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'userInfo',
+        },
+      },
+      {
+        $unwind: {
+          path: '$userInfo',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'attendances',
+          let: {
+            sId: '$schoolId',
+            studentId: '$_id', // or '$userId' depending on your schema
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$schoolId', '$$sId'] },
+                    {
+                      $gte: [
+                        '$date',
+                        new Date(Date.now() - 1000 * 60 * 60 * 24 * 30),
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+            {
+              $project: {
+                date: 1,
+                presentStudents: 1,
+                isPresent: {
+                  $in: ['$$studentId', '$presentStudents.studentId'],
+                },
+              },
+            },
+          ],
+          as: 'attendances',
+        },
+      },
+      {
+        $addFields: {
+          totalClasses: { $size: '$attendances' },
+          presentCount: {
+            $size: {
+              $filter: {
+                input: '$attendances',
+                as: 'att',
+                cond: { $eq: ['$$att.isPresent', true] },
+              },
+            },
+          },
+          attendanceRate: {
+            $cond: [
+              { $eq: [{ $size: '$attendances' }, 0] },
+              0,
+              {
+                $multiply: [
+                  {
+                    $divide: [
+                      {
+                        $size: {
+                          $filter: {
+                            input: '$attendances',
+                            as: 'att',
+                            cond: { $eq: ['$$att.isPresent', true] },
+                          },
+                        },
+                      },
+                      { $size: '$attendances' },
+                    ],
+                  },
+                  100,
+                ],
+              },
+            ],
+          },
+        },
+      },
+
+      {
+        $lookup: {
+          from: 'results',
+          let: { studentId: '$_id', schoolId: '$schoolId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$schoolId', '$$schoolId'],
+                },
+              },
+            },
+            {
+              $unwind: '$students',
+            },
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$students.studentId', '$$studentId'],
+                },
+              },
+            },
+            {
+              $group: {
+                _id: '$students.studentId',
+                averageGPA: { $avg: '$students.gpa' },
+                totalSubjects: { $sum: 1 },
+              },
+            },
+          ],
+          as: 'gpaInfo',
+        },
+      },
+      {
+        $addFields: {
+          averageGPA: {
+            $round: [{ $arrayElemAt: ['$gpaInfo.averageGPA', 0] }, 2],
+          },
+          totalSubjects: {
+            $arrayElemAt: ['$gpaInfo.totalSubjects', 0],
+          },
+        },
+      },
+
+      {
+        $project: {
+          schoolId: 1,
+          averageGPA: 1,
+          schoolName: 1,
+          className: 1,
+          section: 1,
+          motherPhoneNumber: 1,
+          fatherPhoneNumber: 1,
+          createdAt: 1,
+          studentName: '$userInfo.name',
+          uid: '$userInfo.uid',
+          phoneNumber: '$userInfo.phoneNumber',
+          image: '$userInfo.image',
+          attendanceRate: { $round: ['$attendanceRate', 2] },
+        },
+      },
+    ])
+    .sort()
+    .search(['studentName'])
+    .paginate()
+    .execute(Student);
+
+  const meta = await studentsQuery.countTotal(Student);
+
+  return { meta, result };
+};
+
 export const SchoolService = {
   createSchool,
   getSchoolList,
   getTeachers,
   editSchool,
   deleteSchool,
+  getAllStudents,
 };

@@ -11,9 +11,15 @@ import Payment from '../payment/payment.model';
 import Student from '../student/student.model';
 import Teacher from '../teacher/teacher.model';
 import User from './user.model';
+import School from '../school/school.model';
 
-const updateUserActions = async (id: string, action: string): Promise<any> => {
-  const user = await User.findById(id);
+const updateUserActions = async (payload: {
+  userId: string;
+  action: string;
+}): Promise<any> => {
+  const { userId, action } = payload;
+
+  const user = await User.findById(userId);
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, 'User not found');
   }
@@ -279,6 +285,22 @@ const editProfile = async (user: TAuthUser, payload: any) => {
     { $set: payload },
     { new: true },
   );
+
+  const schoolPayload = {
+    schoolName: payload.schoolName,
+    schoolAddress: payload.schoolAddress,
+    adminName: payload.adminName,
+    schoolImage: payload.schoolImage,
+    coverImage: payload.coverImage,
+  };
+  console.log(payload);
+
+  if (user.role === USER_ROLE.school) {
+    await School.findOneAndUpdate({ userId: user.userId }, schoolPayload, {
+      new: true,
+    });
+  }
+
   return result;
 };
 
