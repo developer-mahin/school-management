@@ -23,8 +23,23 @@ router
   )
   .get(
     '/student_attendance',
-    auth(USER_ROLE.school),
+    auth(USER_ROLE.student, USER_ROLE.parents),
     OverviewController.getStudentAttendance,
+  )
+  .get(
+    '/student_overview',
+    auth(USER_ROLE.student),
+    OverviewController.getStudentHomePageOverview,
+  )
+  .get(
+    '/parent_overview',
+    auth(USER_ROLE.parents),
+    OverviewController.getParentHomePageOverview,
+  )
+  .get(
+    '/admin_overview',
+    auth(USER_ROLE.admin),
+    OverviewController.getAdminHomePageOverview,
   );
 
 export const OverviewRoutes = router;

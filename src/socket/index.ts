@@ -1,11 +1,11 @@
 import { JwtPayload, Secret } from 'jsonwebtoken';
 import { Server, Socket } from 'socket.io';
 import { TAuthUser } from '../app/interface/authUser';
-import User from '../app/modules/user/user.model';
-import { decodeToken } from '../app/utils/decodeToken';
-import config from '../config'; // Ensure jwtSecret is defined in config
 import { TMessage } from '../app/modules/message/message.interface';
 import { MessageService } from '../app/modules/message/message.service';
+import User from '../app/modules/user/user.model';
+import { decodeToken } from '../app/utils/decodeToken';
+import config from '../config';
 
 export interface IConnectedUser {
   socketId: string;
@@ -65,27 +65,43 @@ const socketIO = (io: Server) => {
     connectedUser.set(socket.user.userId, { socketId: socket.user.socketId });
 
     io.emit('online_users', Array.from(connectedUser.keys()));
+
     // sending message
-    socket.on('send_message', async (payload: Partial<TMessage>, callback) => {
-      try {
-        if (!payload.conversationId || !payload.text_message) {
-          return callback?.({ success: false, message: 'Invalid payload' });
+    socket.on(
+      'send_message',
+      async (payload: Partial<TMessage & { receiverId: string }>, callback) => {
+        try {
+          if (!payload.conversationId || !payload.text_message) {
+            return callback?.({ success: false, message: 'Invalid payload' });
+          }
+
+          const savedMessage = await MessageService.createMessage(payload);
+
+          io.emit(`receive_message::${payload.conversationId}`, savedMessage);
+
+          callback?.({
+            success: true,
+            message: 'Message sent successfully',
+            data: savedMessage,
+          });
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const connectUser: any = connectedUser.get(
+            payload!.receiverId!.toString(),
+          );
+
+          if (connectUser) {
+            io.to(connectUser.socketId).emit('new_message', {
+              success: true,
+              data: savedMessage,
+            });
+          }
+        } catch (error) {
+          console.error('Error sending message:', error);
+          callback?.({ success: false, message: 'Internal server error' });
         }
-
-        const savedMessage = await MessageService.createMessage(payload);
-
-        io.emit(`receive_message::${payload.conversationId}`, savedMessage);
-
-        callback?.({
-          success: true,
-          message: 'Message sent successfully',
-          data: savedMessage,
-        });
-      } catch (error) {
-        console.error('Error sending message:', error);
-        callback?.({ success: false, message: 'Internal server error' });
-      }
-    });
+      },
+    );
 
     socket.on('typing', async (payload, callback) => {
       if (payload.status === true) {

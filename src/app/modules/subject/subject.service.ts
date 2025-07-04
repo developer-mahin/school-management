@@ -18,10 +18,9 @@ const getSubject = async (user: TAuthUser, query: Record<string, unknown>) => {
   if (user.role === USER_ROLE.teacher) {
     const findTeacher = await TeacherService.findTeacher(user);
     schoolId = findTeacher?.schoolId as any;
-
   } else if (user.role === USER_ROLE.supperAdmin) {
     const findSchool = await School.findOne({
-      _id: query.schoolId
+      _id: query.schoolId,
     });
 
     schoolId = findSchool?._id as any;
@@ -33,8 +32,7 @@ const getSubject = async (user: TAuthUser, query: Record<string, unknown>) => {
     }),
     query,
   );
-  const result = await subjectQuery
-    .sort().paginate().search(['subjectName'])
+  const result = await subjectQuery.sort().paginate().search(['subjectName'])
     .queryModel;
 
   const meta = await subjectQuery.countTotal();

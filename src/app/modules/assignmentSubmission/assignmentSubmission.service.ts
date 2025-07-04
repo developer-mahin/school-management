@@ -38,7 +38,6 @@ const submitAssignment = async (
       userId: user.userId,
     }),
     School.findById(findAssignment.schoolId),
-
   ]);
 
   if (!findSchool) {
@@ -46,7 +45,6 @@ const submitAssignment = async (
   }
 
   const receiverIds = [findAssignment.teacherId, user.mySchoolUserId];
-
 
   await Promise.all([
     receiverIds.map((receiverId) => {
@@ -56,7 +54,7 @@ const submitAssignment = async (
         receiverId: receiverId,
         message: `${user.name} submitted assignment ${findAssignment.title}`,
         type: NOTIFICATION_TYPE.ASSIGNMENT_SUBMISSION,
-        linkId: result._id
+        linkId: result._id,
       });
     }),
   ]);

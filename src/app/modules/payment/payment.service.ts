@@ -139,9 +139,7 @@ const paymentList = async (user: TAuthUser, query: Record<string, unknown>) => {
   const result = await paymentAggregation
     .customPipeline([
       {
-        $match: {
-          companyId: new mongoose.Types.ObjectId(String(user.userId)),
-        },
+        $match: {},
       },
       {
         $lookup: {
@@ -154,6 +152,20 @@ const paymentList = async (user: TAuthUser, query: Record<string, unknown>) => {
       {
         $unwind: {
           path: '$user',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'subscriptions',
+          localField: 'subscriptionId',
+          foreignField: '_id',
+          as: 'subscription',
+        },
+      },
+      {
+        $unwind: {
+          path: '$subscription',
           preserveNullAndEmptyArrays: true,
         },
       },
