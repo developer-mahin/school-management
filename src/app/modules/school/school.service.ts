@@ -8,7 +8,6 @@ import { createUserWithProfile } from '../user/user.helper';
 import User from '../user/user.model';
 import { TSchool } from './school.interface';
 import School from './school.model';
-import { pipeline } from 'stream';
 
 const createSchool = async (
   payload: Partial<TSchool> & { phoneNumber: string; name?: string },
@@ -199,7 +198,7 @@ const getAllStudents = async (user: TAuthUser, query: Record<string, unknown>) =
       {
         $match: {
           schoolId: new mongoose.Types.ObjectId(String(user.schoolId)),
-        }
+        },
       },
       {
         $lookup: {
@@ -207,40 +206,147 @@ const getAllStudents = async (user: TAuthUser, query: Record<string, unknown>) =
           localField: 'userId',
           foreignField: '_id',
           as: 'userInfo',
-        }
+        },
       },
       {
         $unwind: {
           path: '$userInfo',
           preserveNullAndEmptyArrays: true,
-        }
+        },
       },
       {
         $lookup: {
           from: 'attendances',
-          localField: 'schoolId',
-          foreignField: 'schoolId',
-          as: 'attendance',
-        }
+          let: {
+            sId: '$schoolId',
+            studentId: '$_id', // or '$userId' depending on your schema
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$schoolId', '$$sId'] },
+                    { $gte: ['$date', new Date(Date.now() - 1000 * 60 * 60 * 24 * 30)] },
+                  ],
+                },
+              },
+            },
+            {
+              $project: {
+                date: 1,
+                presentStudents: 1,
+                isPresent: {
+                  $in: ['$$studentId', '$presentStudents.studentId'],
+                },
+              },
+            },
+          ],
+          as: 'attendances',
+        },
       },
-      // {
-      //   $unwind: {
-      //     path: '$attendance',
-      //     preserveNullAndEmptyArrays: true,
-      //   }
-      // }
+      {
+        $addFields: {
+          totalClasses: { $size: '$attendances' },
+          presentCount: {
+            $size: {
+              $filter: {
+                input: '$attendances',
+                as: 'att',
+                cond: { $eq: ['$$att.isPresent', true] },
+              },
+            },
+          },
+          attendanceRate: {
+            $cond: [
+              { $eq: [{ $size: '$attendances' }, 0] },
+              0,
+              {
+                $multiply: [
+                  {
+                    $divide: [
+                      {
+                        $size: {
+                          $filter: {
+                            input: '$attendances',
+                            as: 'att',
+                            cond: { $eq: ['$$att.isPresent', true] },
+                          },
+                        },
+                      },
+                      { $size: '$attendances' }
+                    ]
+                  },
+                  100
+                ]
+              }
+            ],
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: 'results',
+          let: { studentId: '$_id', schoolId: '$schoolId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$schoolId', '$$schoolId'],
+                },
+              },
+            },
+            {
+              $unwind: '$students',
+            },
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$students.studentId', '$$studentId'],
+                },
+              },
+            },
+            {
+              $group: {
+                _id: '$students.studentId',
+                averageGPA: { $avg: '$students.gpa' },
+                totalSubjects: { $sum: 1 },
+              },
+            },
+          ],
+          as: 'gpaInfo',
+        },
+      },
+      {
+        $addFields: {
+          averageGPA: {
+            $round: [{ $arrayElemAt: ['$gpaInfo.averageGPA', 0] }, 2],
+          },
+          totalSubjects: {
+            $arrayElemAt: ['$gpaInfo.totalSubjects', 0],
+          },
+        },
+      },
 
-
-      // {
-      //   $project: {
-      //     attendance: 1
-      //   }
-
-      // }
-
+      {
+        $project: {
+          schoolId: 1,
+          averageGPA: 1,
+          schoolName: 1,
+          className: 1,
+          section: 1,
+          motherPhoneNumber: 1,
+          fatherPhoneNumber: 1,
+          createdAt: 1,
+          studentName: "$userInfo.name",
+          uid: "$userInfo.uid",
+          phoneNumber: "$userInfo.phoneNumber",
+          image: "$userInfo.image",
+          attendanceRate: { $round: ['$attendanceRate', 2] },
+        },
+      },
     ])
-    .paginate()
-    .execute(Student)
+    .execute(Student);
 
 
   return result

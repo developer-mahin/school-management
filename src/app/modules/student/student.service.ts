@@ -384,12 +384,14 @@ const getParentsList = async (
           phoneNumber: 1,
           name: 1,
           role: 1,
+          status: 1,
           parents: 1,
           subscriptionDetails: 1,
         },
       },
     ])
     .sort()
+    .search(['name'])
     .paginate()
     .execute(User);
 

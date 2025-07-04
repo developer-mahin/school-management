@@ -13,11 +13,11 @@ import Teacher from '../teacher/teacher.model';
 import User from './user.model';
 import School from '../school/school.model';
 
-const updateUserActions = async (payload: { id: string; action: string }): Promise<any> => {
+const updateUserActions = async (payload: { userId: string; action: string }): Promise<any> => {
 
-  const { id, action } = payload;
+  const { userId, action } = payload;
 
-  const user = await User.findById(id);
+  const user = await User.findById(userId);
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, 'User not found');
   }
