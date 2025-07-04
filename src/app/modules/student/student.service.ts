@@ -4,7 +4,9 @@ import mongoose from 'mongoose';
 import config from '../../../config';
 import { USER_ROLE } from '../../constant';
 import { TAuthUser } from '../../interface/authUser';
+import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 import generateToken from '../../utils/generateToken';
+import generateUID from '../../utils/generateUID';
 import Parents from '../parents/parents.model';
 import School from '../school/school.model';
 import User from '../user/user.model';
@@ -14,9 +16,6 @@ import {
   createStudentWithProfile,
   handleParentUserCreation,
 } from './students.helper';
-import generateUID from '../../utils/generateUID';
-import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
-import { stat } from 'fs';
 
 const createStudent = async (
   payload: Partial<TStudent> & { phoneNumber: string; name?: string },
@@ -24,6 +23,8 @@ const createStudent = async (
 ) => {
   const session = await mongoose.startSession();
   session.startTransaction();
+
+
 
   try {
     if (user.role === USER_ROLE.school) {
@@ -38,6 +39,8 @@ const createStudent = async (
     } as any;
     // Pre-generate all UIDs that might be needed
     const studentUID = await generateUID(generateData);
+
+
 
     const student = (await createStudentWithProfile(
       {
