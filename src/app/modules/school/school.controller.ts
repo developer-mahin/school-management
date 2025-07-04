@@ -57,10 +57,25 @@ const deleteSchool = catchAsync(async (req, res) => {
   });
 });
 
+const getAllStudents = catchAsync(async (req, res) => {
+  const result = await SchoolService.getAllStudents(
+    req.user as TAuthUser,
+    req.query,
+  );
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Students fetched successfully',
+    data: result,
+  });
+});
+
+
 export const SchoolController = {
   createSchool,
   getSchoolList,
   getTeachers,
   editSchool,
   deleteSchool,
+  getAllStudents
 };

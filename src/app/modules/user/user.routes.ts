@@ -21,7 +21,6 @@ router
     UserController.addParentsMessage,
   )
   .post('/file_upload', upload.single('file'), UserController.fileUpload)
-
   .get(
     '/get_parents_message/:studentId',
     auth(
@@ -54,9 +53,18 @@ router
       USER_ROLE.school,
       USER_ROLE.teacher,
     ),
-    upload.single('image'),
+    upload.fields([
+      { name: 'image', maxCount: 2 },
+      { name: 'coverImage', maxCount: 2 },
+      { name: 'schoolImage', maxCount: 2 },
+    ]),
     parseFormData,
     UserController.editProfile,
+  )
+  .patch(
+    '/action',
+    auth(USER_ROLE.admin, USER_ROLE.supperAdmin),
+    UserController.updateUserActions,
   );
 
 export const UserRoutes = router;

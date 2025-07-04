@@ -2,11 +2,13 @@ import mongoose from 'mongoose';
 import { USER_ROLE } from '../../constant';
 import { TAuthUser } from '../../interface/authUser';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
+import Student from '../student/student.model';
 import Teacher from '../teacher/teacher.model';
 import { createUserWithProfile } from '../user/user.helper';
+import User from '../user/user.model';
 import { TSchool } from './school.interface';
 import School from './school.model';
-import User from '../user/user.model';
+import { pipeline } from 'stream';
 
 const createSchool = async (
   payload: Partial<TSchool> & { phoneNumber: string; name?: string },
@@ -86,12 +88,14 @@ const getSchoolList = async (query: Record<string, unknown>) => {
           phoneNumber: 1,
           image: 1,
           school: 1,
+          createdAt: 1,
           teachers: { $size: '$teachers' },
           students: { $size: '$student' },
           parents: { $size: '$parents' },
         },
       },
     ])
+    .search(['name', "school.schoolName"])
     .sort()
     .paginate()
     .execute(User);
@@ -151,6 +155,9 @@ const getTeachers = async (user: TAuthUser, query: Record<string, unknown>) => {
 };
 
 const editSchool = async (schoolId: string, payload: Partial<TSchool>) => {
+
+  console.log(payload, "edit school data");
+  console.log(schoolId, "school id");
   const result = await School.findOneAndUpdate({ _id: schoolId }, payload, {
     new: true,
   });
@@ -180,10 +187,70 @@ const deleteSchool = async (schoolId: string) => {
   }
 };
 
+const getAllStudents = async (user: TAuthUser, query: Record<string, unknown>) => {
+  const studentsQuery = new AggregationQueryBuilder(query);
+
+  const today = new Date()
+  today.setUTCHours(0, 0, 0, 0)
+
+
+  const result = await studentsQuery
+    .customPipeline([
+      {
+        $match: {
+          schoolId: new mongoose.Types.ObjectId(String(user.schoolId)),
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'userInfo',
+        }
+      },
+      {
+        $unwind: {
+          path: '$userInfo',
+          preserveNullAndEmptyArrays: true,
+        }
+      },
+      {
+        $lookup: {
+          from: 'attendances',
+          localField: 'schoolId',
+          foreignField: 'schoolId',
+          as: 'attendance',
+        }
+      },
+      // {
+      //   $unwind: {
+      //     path: '$attendance',
+      //     preserveNullAndEmptyArrays: true,
+      //   }
+      // }
+
+
+      // {
+      //   $project: {
+      //     attendance: 1
+      //   }
+
+      // }
+
+    ])
+    .paginate()
+    .execute(Student)
+
+
+  return result
+}
+
 export const SchoolService = {
   createSchool,
   getSchoolList,
   getTeachers,
   editSchool,
   deleteSchool,
+  getAllStudents
 };
