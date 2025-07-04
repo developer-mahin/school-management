@@ -2,12 +2,10 @@ import colors from 'colors';
 import config from '../../config';
 import { USER_ROLE } from '../constant';
 import User from '../modules/user/user.model';
-import generateUID from '../utils/generateUID';
 
 const seedAdmin = async () => {
   // if admin is not exist
   const admin = {
-    uid: await generateUID(),
     phoneNumber: config.admin.admin_phone_number,
     role: USER_ROLE.supperAdmin,
   };

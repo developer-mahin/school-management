@@ -7,6 +7,8 @@ import Attendance from '../attendance/attendance.model';
 import ClassSchedule from '../classSchedule/classSchedule.model';
 import { TeacherService } from '../teacher/teacher.service';
 import { calculateAttendanceRate, getAttendanceRate } from './overview.helper';
+import { StudentService } from '../student/student.service';
+import Result from '../result/result.model';
 
 const getTeacherHomePageOverview = async (user: TAuthUser) => {
   const day = new Date()
@@ -238,8 +240,95 @@ const getStudentAttendance = async (
 };
 
 const getStudentHomePageOverview = async (user: TAuthUser) => {
-  return user;
+  const studentId = user.studentId;
+
+  // Get current day name
+  const dayName = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][new Date().getDay()];
+
+  // Fetch student profile once
+  const studentProfile = await StudentService.findStudent(studentId);
+  if (!studentProfile) throw new Error('Student profile not found');
+
+  const { schoolId, classId, className } = studentProfile;
+
+  // Prepare date range
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+
+  const last30Days = new Date(today);
+  last30Days.setUTCDate(today.getUTCDate() - 30);
+
+  // Prepare ObjectIds once
+  const schoolObjectId = new mongoose.Types.ObjectId(String(schoolId));
+  const studentObjectId = new mongoose.Types.ObjectId(String(studentId));
+
+  // Run all parallel queries
+  const [todaysClassCount, attendanceRecords, assignmentDueCount, gpaResult] = await Promise.all([
+    ClassSchedule.countDocuments({
+      schoolId,
+      classId,
+      days: dayName,
+    }),
+
+    Attendance.aggregate([
+      {
+        $match: {
+          schoolId: schoolObjectId,
+          className,
+          date: { $gte: last30Days },
+        },
+      },
+      {
+        $project: {
+          presentStudents: 1,
+        },
+      },
+    ]),
+
+    Assignment.countDocuments({
+      schoolId,
+      classId,
+      status: 'on-going',
+    }),
+
+    Result.aggregate([
+      { $match: { schoolId: schoolObjectId } },
+      { $unwind: "$students" },
+      { $match: { "students.studentId": studentObjectId } },
+      {
+        $group: {
+          _id: null,
+          cgpa: { $avg: "$students.gpa" },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          cgpa: 1,
+        },
+      },
+    ]),
+  ]);
+
+  // Calculate attendance
+  const totalDays = attendanceRecords.length;
+  const presentCount = attendanceRecords.reduce((count, record) => {
+    const isPresent = record.presentStudents.some(
+      (student: any) => student.studentId.toString() === studentId
+    );
+    return isPresent ? count + 1 : count;
+  }, 0);
+
+  const attendanceRate = totalDays > 0 ? (presentCount / totalDays) * 100 : 0;
+
+  return {
+    todaysClass: todaysClassCount,
+    attendanceRate: Math.round(attendanceRate * 100) / 100,
+    assignmentDue: assignmentDueCount,
+    gpa: gpaResult[0]?.cgpa || 0,
+  };
 };
+
 
 const getParentHomePageOverview = async (user: TAuthUser) => {
   return user;

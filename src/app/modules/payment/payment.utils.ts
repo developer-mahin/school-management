@@ -18,7 +18,7 @@ export const createCheckoutSession = async (
   paymentData: Partial<TPayment | TSubscription | any>,
   user: TAuthUser,
 ) => {
-  const { subscriptionId, userId, amount } = paymentData;
+  const { subscriptionId, amount } = paymentData;
 
   let paymentGatewayData;
   if (subscriptionId && amount) {

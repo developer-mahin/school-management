@@ -157,6 +157,21 @@ const paymentList = async (user: TAuthUser, query: Record<string, unknown>) => {
           preserveNullAndEmptyArrays: true,
         },
       },
+      {
+        $lookup: {
+          from: 'subscriptions',
+          localField: 'subscriptionId',
+          foreignField: '_id',
+          as: 'subscription',
+        },
+      },
+      {
+        $unwind: {
+          path: '$subscription',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
     ])
     .sort()
     .paginate()

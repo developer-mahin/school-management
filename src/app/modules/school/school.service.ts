@@ -155,8 +155,6 @@ const getTeachers = async (user: TAuthUser, query: Record<string, unknown>) => {
 
 const editSchool = async (schoolId: string, payload: Partial<TSchool>) => {
 
-  console.log(payload, "edit school data");
-  console.log(schoolId, "school id");
   const result = await School.findOneAndUpdate({ _id: schoolId }, payload, {
     new: true,
   });
@@ -284,6 +282,7 @@ const getAllStudents = async (user: TAuthUser, query: Record<string, unknown>) =
           },
         },
       },
+      
       {
         $lookup: {
           from: 'results',
@@ -346,10 +345,15 @@ const getAllStudents = async (user: TAuthUser, query: Record<string, unknown>) =
         },
       },
     ])
+    .sort()
+    .search(['studentName'])
+    .paginate()
     .execute(Student);
 
 
-  return result
+  const meta = await studentsQuery.countTotal(Student);
+
+  return { meta, result }
 }
 
 export const SchoolService = {

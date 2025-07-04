@@ -16,6 +16,7 @@ import {
 } from './students.helper';
 import generateUID from '../../utils/generateUID';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
+import { stat } from 'fs';
 
 const createStudent = async (
   payload: Partial<TStudent> & { phoneNumber: string; name?: string },
@@ -209,10 +210,16 @@ const getAllStudents = async (
       {
         $project: {
           student: 1,
+          name: 1,
+          image: 1,
+          status: 1,
+          createdAt: 1,
+          phoneNumber: 1
         },
       },
     ])
     .sort()
+    .search(['name'])
     .paginate()
     .execute(User);
 
