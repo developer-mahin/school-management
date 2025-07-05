@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose from 'mongoose';
 import { TAuthUser } from '../../interface/authUser';
 import Student from '../student/student.model';
@@ -10,6 +11,7 @@ import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 import { commonStageInAttendance } from './attendance.helper';
 import sendNotification from '../../../socket/sendNotification';
 import { NOTIFICATION_TYPE } from '../notification/notification.interface';
+import { USER_ROLE } from '../../constant';
 
 const createAttendance = async (
   payload: Partial<TAttendance>,
@@ -70,24 +72,35 @@ const getAttendanceHistory = async (
 ) => {
   const { date } = query;
 
-  const findTeacher = await TeacherService.findTeacher(user);
+  const targetDate = date ? new Date(date as string) : new Date();
+  targetDate.setUTCHours(0, 0, 0, 0);
 
-  const startOfDay = new Date(date as string);
-  startOfDay.setUTCHours(0, 0, 0, 0); // 00:00:00.000
+  const startOfDay = new Date(targetDate);
+  const endOfDay = new Date(targetDate);
+  endOfDay.setUTCHours(23, 59, 59, 999);
 
-  const endOfDay = new Date(date as string);
-  endOfDay.setUTCHours(23, 59, 59, 999); // 23:59:59.999
+  const matchStage: any = {
+    $match: {},
+  };
+
+  if (user.role === USER_ROLE.school) {
+    matchStage.$match.schoolId = new mongoose.Types.ObjectId(String(user.schoolId));
+
+  } else {
+    const findTeacher = await TeacherService.findTeacher(user);
+    if (!findTeacher) throw new Error('Teacher not found');
+
+    matchStage.$match.schoolId = new mongoose.Types.ObjectId(String(findTeacher.schoolId));
+    matchStage.$match.date = {
+      $gte: startOfDay,
+      $lte: endOfDay,
+    };
+  }
+
+  console.log(matchStage);
 
   const result = await Attendance.aggregate([
-    {
-      $match: {
-        schoolId: new mongoose.Types.ObjectId(String(findTeacher.schoolId)),
-        date: {
-          $gte: startOfDay,
-          $lte: endOfDay,
-        },
-      },
-    },
+    matchStage,
     ...commonStageInAttendance,
     {
       $project: {
@@ -96,12 +109,8 @@ const getAttendanceHistory = async (
         className: 1,
         section: 1,
         totalStudents: 1,
-        presentStudents: {
-          $size: '$presentStudents',
-        },
-        absentStudents: {
-          $size: '$absentStudents',
-        },
+        presentStudents: { $size: '$presentStudents' },
+        absentStudents: { $size: '$absentStudents' },
         startTime: '$classSchedule.selectTime',
         endTime: '$classSchedule.endTime',
         date: 1,
@@ -111,6 +120,8 @@ const getAttendanceHistory = async (
 
   return result;
 };
+
+
 
 const getMyAttendance = async (
   user: TAuthUser,

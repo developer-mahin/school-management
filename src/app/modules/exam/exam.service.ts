@@ -154,6 +154,8 @@ const updateGrade = async (
 ) => {
   const { examId, students } = payload;
 
+  console.log(payload, "updateGrade ==========>");
+
   // Validate required fields early
   if (!examId || !students?.length) {
     throw new Error('Exam ID and students are required');
@@ -325,9 +327,59 @@ const getExamSchedule = async (
 };
 
 const getGradesResult = async (user: TAuthUser, examId: string) => {
-  const result = await Result.find({
-    examId
-  })
+  const result = await Result.aggregate([
+    {
+      $match: {
+        examId: new mongoose.Types.ObjectId(String(examId)),
+      }
+    },
+    {
+      $unwind: {
+        path: "$students",
+        preserveNullAndEmptyArrays: true
+      }
+    },
+    {
+      $lookup: {
+        from: "students",
+        localField: "students.studentId",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "userId",
+              foreignField: "_id",
+              as: "user"
+            }
+          }, 
+          {
+            $unwind: {
+              path: "$user",
+              preserveNullAndEmptyArrays: true
+            }
+          }
+        ],
+        foreignField: "_id",
+        as: "student"
+      }
+    }, 
+    {
+      $unwind: {
+        path: "$student",
+        preserveNullAndEmptyArrays: true
+      }
+    },
+    {
+      $project: {
+        _id: 1,
+        createdAt: 1,
+        studentId: "$student._id",
+        studentName: "$student.user.name",
+        parentsMessage: "$student.parentsMessage",
+        mark: "$students.mark",
+      }
+    }
+  ])
 
   return result;
 };

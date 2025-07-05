@@ -16,7 +16,7 @@ router
   )
   .get(
     '/history',
-    auth(USER_ROLE.teacher),
+    auth(USER_ROLE.teacher, USER_ROLE.school),
     AttendanceController.getAttendanceHistory,
   )
   .get(
