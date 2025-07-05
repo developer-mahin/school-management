@@ -81,21 +81,29 @@ const getStudentsOfClasses = async (
   const { className, section } = query;
   const findTeacher = await TeacherService.findTeacher(user);
 
+  const matchConditions: Record<string, any>[] = [
+    {
+      schoolId: new mongoose.Types.ObjectId(String(findTeacher.schoolId)),
+    },
+  ];
+
+  // Always match className if provided
+  if (className) {
+    matchConditions.push({ className });
+  }
+
+  // Conditionally add section if provided
+  if (section) {
+    matchConditions.push({ section });
+  }
+
   const studentQuery = new AggregationQueryBuilder(query);
 
   const result = await studentQuery
     .customPipeline([
       {
         $match: {
-          $and: [
-            {
-              schoolId: new mongoose.Types.ObjectId(
-                String(findTeacher.schoolId),
-              ),
-            },
-            { className },
-            { section },
-          ],
+          $and: matchConditions,
         },
       },
       {
@@ -129,6 +137,7 @@ const getStudentsOfClasses = async (
 
   return { meta, result };
 };
+
 
 export const ClassService = {
   createClass,

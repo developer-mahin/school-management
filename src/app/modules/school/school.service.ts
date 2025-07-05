@@ -8,6 +8,7 @@ import { createUserWithProfile } from '../user/user.helper';
 import User from '../user/user.model';
 import { TSchool } from './school.interface';
 import School from './school.model';
+import Result from '../result/result.model';
 
 const createSchool = async (
   payload: Partial<TSchool> & { phoneNumber: string; name?: string },
@@ -361,6 +362,77 @@ const getAllStudents = async (
   return { meta, result };
 };
 
+const getResultOfStudents = async (user: TAuthUser, query: Record<string, unknown>) => {
+  const result = await Result.aggregate([
+    {
+      $match: {
+        schoolId: new mongoose.Types.ObjectId(String(user.schoolId)),
+      }
+    },
+    {
+      $unwind: {
+        path: '$students',
+        preserveNullAndEmptyArrays: true
+      }
+    },
+    {
+      $group: {
+        _id: '$students.studentId',
+        averageGPA: { $avg: '$students.gpa' },
+        totalSubjects: { $sum: 1 },
+        studentId: { $first: '$students.studentId' }
+      }
+    },
+    {
+      $lookup: {
+        from: "students",
+        localField: "studentId",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "userId",
+              foreignField: "_id",
+              as: "userInfo"
+            }
+          },
+          {
+            $unwind: {
+              path: '$userInfo',
+              preserveNullAndEmptyArrays: true
+            }
+          }
+        ],
+        foreignField: "_id",
+        as: "student"
+      }
+    },
+    {
+      $unwind: {
+        path: '$student',
+        preserveNullAndEmptyArrays: true
+      }
+    },
+    {
+      $project: {
+        _id: 0,
+        averageGPA: 1,
+        totalSubjects: 1,
+        class: "$student.className",
+        section: "$student.section",
+        studentName: '$student.userInfo.name',
+        uid: '$student.userInfo.uid',
+        phoneNumber: '$student.userInfo.phoneNumber',
+        image: '$student.userInfo.image',
+        studentId: 1
+      }
+    }
+
+  ])
+
+  return result;
+};
+
 export const SchoolService = {
   createSchool,
   getSchoolList,
@@ -368,4 +440,5 @@ export const SchoolService = {
   editSchool,
   deleteSchool,
   getAllStudents,
+  getResultOfStudents
 };

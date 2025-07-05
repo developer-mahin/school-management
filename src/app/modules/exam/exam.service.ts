@@ -318,11 +318,18 @@ const getExamSchedule = async (
         },
       },
     ])
-    // .sort()
     .paginate()
     .execute(Exam);
   const meta = await examQuery.countTotal(Exam);
   return { meta, result };
+};
+
+const getGradesResult = async (user: TAuthUser, examId: string) => {
+  const result = await Result.find({
+    examId
+  })
+
+  return result;
 };
 
 export const ExamService = {
@@ -333,4 +340,5 @@ export const ExamService = {
   getExamsOfTeacher,
   updateGrade,
   getExamSchedule,
+  getGradesResult
 };

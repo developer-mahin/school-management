@@ -91,6 +91,19 @@ const getExamSchedule = catchAsync(async (req, res) => {
   });
 });
 
+const getGradesResult = catchAsync(async (req, res) => {
+  const result = await ExamService.getGradesResult(
+    req.user as TAuthUser,
+    req.params.examId,
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Exams fetched successfully',
+    data: result,
+  });
+});
+
 export const ExamController = {
   createExam,
   getTermsExams,
@@ -99,4 +112,5 @@ export const ExamController = {
   getExamsOfTeacher,
   updateGrade,
   getExamSchedule,
+  getGradesResult
 };
