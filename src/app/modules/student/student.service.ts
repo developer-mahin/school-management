@@ -16,6 +16,8 @@ import {
   createStudentWithProfile,
   handleParentUserCreation,
 } from './students.helper';
+import AppError from '../../utils/AppError';
+import httpStatus from 'http-status';
 
 const createStudent = async (
   payload: Partial<TStudent> & { phoneNumber: string; name?: string },
@@ -246,8 +248,9 @@ const editStudent = async (id: string, payload: any) => {
   };
   const studentUserData = {
     phoneNumber: payload.phoneNumber,
-    name: payload.phoneNumber,
+    name: payload.name,
   };
+
 
   const session = await mongoose.startSession();
 
@@ -262,7 +265,7 @@ const editStudent = async (id: string, payload: any) => {
 
     if (!updateStudent) throw new Error('Student not update');
 
-    await User.findOneAndUpdate({ schoolId: id }, studentUserData, {
+    await User.findOneAndUpdate({ studentId: id }, studentUserData, {
       new: true,
       session,
     });
@@ -271,10 +274,10 @@ const editStudent = async (id: string, payload: any) => {
     session.endSession();
 
     return updateStudent;
-  } catch (error) {
+  } catch (error: any) {
     await session.abortTransaction();
     session.endSession();
-    throw error;
+    throw new AppError(httpStatus.BAD_REQUEST, error);
   }
 };
 

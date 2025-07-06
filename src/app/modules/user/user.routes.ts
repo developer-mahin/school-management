@@ -63,7 +63,7 @@ router
   )
   .patch(
     '/action',
-    auth(USER_ROLE.admin, USER_ROLE.supperAdmin),
+    auth(USER_ROLE.admin, USER_ROLE.supperAdmin, USER_ROLE.school),
     UserController.updateUserActions,
   );
 

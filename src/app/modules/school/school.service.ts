@@ -2,14 +2,13 @@ import mongoose from 'mongoose';
 import { USER_ROLE } from '../../constant';
 import { TAuthUser } from '../../interface/authUser';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
+import Exam from '../exam/exam.model';
 import Student from '../student/student.model';
 import Teacher from '../teacher/teacher.model';
 import { createUserWithProfile } from '../user/user.helper';
 import User from '../user/user.model';
 import { TSchool } from './school.interface';
 import School from './school.model';
-import Result from '../result/result.model';
-import Exam from '../exam/exam.model';
 
 const createSchool = async (
   payload: Partial<TSchool> & { phoneNumber: string; name?: string },
@@ -189,6 +188,7 @@ const getAllStudents = async (
   user: TAuthUser,
   query: Record<string, unknown>,
 ) => {
+
   const studentsQuery = new AggregationQueryBuilder(query);
 
   const today = new Date();
@@ -347,14 +347,17 @@ const getAllStudents = async (
           createdAt: 1,
           studentName: '$userInfo.name',
           uid: '$userInfo.uid',
+          userId: "$userInfo._id",
+          status: "$userInfo.status",
           phoneNumber: '$userInfo.phoneNumber',
           image: '$userInfo.image',
           attendanceRate: { $round: ['$attendanceRate', 2] },
+          parentsMessage: 1,
         },
       },
     ])
+    .search(['studentName', "name"])
     .sort()
-    .search(['studentName'])
     .paginate()
     .execute(Student);
 

@@ -112,60 +112,61 @@ const getBaseOnStudent = async (user: TAuthUser) => {
 const getTeacherList = async (user: TAuthUser, query: any) => {
   const teacherListQuery = new AggregationQueryBuilder(query);
 
+  const matchStage: any = {};
+  if (user.role === 'school') {
+    matchStage.schoolId = new mongoose.Types.ObjectId(String(user.schoolId));
+  }
+
   const result = await teacherListQuery
     .customPipeline([
       {
-        $match: {
-          role: USER_ROLE.teacher,
-        },
+        $match: matchStage, // ✅ Filter teachers by schoolId if role === 'school'
       },
       {
         $lookup: {
-          from: 'teachers',
-          localField: 'teacherId',
-          pipeline: [
-            {
-              $lookup: {
-                from: 'schools',
-                localField: 'schoolId',
-                foreignField: '_id',
-                as: 'school',
-              },
-            },
-            {
-              $unwind: {
-                path: '$school',
-                preserveNullAndEmptyArrays: true,
-              },
-            },
-          ],
+          from: 'users',
+          localField: 'userId',
           foreignField: '_id',
-          as: 'teacher',
+          as: 'user',
         },
       },
       {
         $unwind: {
-          path: '$teacher',
+          path: '$user',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'schools',
+          localField: 'schoolId',
+          foreignField: '_id',
+          as: 'school',
+        },
+      },
+      {
+        $unwind: {
+          path: '$school',
           preserveNullAndEmptyArrays: true,
         },
       },
       {
         $project: {
-          name: 1,
-          phoneNumber: 1,
-          createdAt: 1,
-          image: 1,
-          status: 1,
-          schoolName: '$teacher.school.schoolName',
-          schoolAddress: '$teacher.school.schoolAddress',
+          name: '$user.name',
+          phoneNumber: '$user.phoneNumber',
+          createdAt: '$user.createdAt',
+          image: '$user.image',
+          status: '$user.status',
+          schoolName: '$school.schoolName',
+          schoolAddress: '$school.schoolAddress',
         },
       },
     ])
     .sort()
     .paginate()
-    .execute(User);
+    .execute(Teacher); // ✅ Now from the Teacher model directly
 
-  const meta = await teacherListQuery.countTotal(User);
+  const meta = await teacherListQuery.countTotal(Teacher);
 
   return { meta, result };
 };

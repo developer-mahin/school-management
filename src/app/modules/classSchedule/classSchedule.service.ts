@@ -116,6 +116,7 @@ const getAllClassSchedule = async (
           roomNo: 1,
           date: 1,
           _id: 1,
+          createdAt: 1,
           className: '$class.className',
           subject: '$subject.subjectName',
           teacherName: '$user.name',

@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
 import { TAuthUser } from '../../interface/authUser';
-import Conversation from './conversation.model';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 import Message from '../message/message.mode';
+import Conversation from './conversation.model';
 
 const createConversation = async (
   data: { receiverId: string },
@@ -158,6 +158,62 @@ const getMessages = async (
           conversationId: new mongoose.Types.ObjectId(String(conversationId)),
         },
       },
+      {
+        $lookup: {
+          from: "conversations",
+          localField: "conversationId",
+          foreignField: "_id",
+          as: "conversation",
+        },
+      },
+      {
+        $unwind: "$conversation"
+      },
+      {
+        $addFields: {
+          otherUsers: {
+            $filter: {
+              input: "$conversation.users",
+              as: "user",
+              cond: {
+                $ne: ["$$user", "$sender"]
+              }
+            }
+          }
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "otherUsers",
+          foreignField: "_id",
+          as: "otherUserInfo"
+        }
+      },
+      {
+        $unwind: {
+          path: "$otherUserInfo",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          sender: 1,
+          text_message: 1,
+          file: 1,
+          isRead: 1,
+          conversationId: 1,
+          otherUser: {
+            _id: "$otherUserInfo._id",
+            name: "$otherUserInfo.name",
+            image: "$otherUserInfo.image",
+            role: "$otherUserInfo.role"
+          }
+        }
+      }
     ])
     .sort()
     .paginate()

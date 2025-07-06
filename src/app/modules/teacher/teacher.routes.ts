@@ -21,7 +21,7 @@ router
   )
   .get(
     '/teacher_list',
-    auth(USER_ROLE.supperAdmin),
+    auth(USER_ROLE.supperAdmin, USER_ROLE.school, USER_ROLE.admin),
     TeacherController.getTeacherList,
   )
   .patch(
