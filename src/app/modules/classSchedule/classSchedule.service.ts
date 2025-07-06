@@ -1,15 +1,15 @@
 import httpStatus from 'http-status';
 import mongoose from 'mongoose';
+import { USER_ROLE } from '../../constant';
+import { classAndSubjectQuery } from '../../helper/aggregationPipline';
 import { TAuthUser } from '../../interface/authUser';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 import AppError from '../../utils/AppError';
+import { StudentService } from '../student/student.service';
+import { TeacherService } from '../teacher/teacher.service';
+import { commonPipeline } from './classSchedule.helper';
 import { TClassSchedule } from './classSchedule.interface';
 import ClassSchedule from './classSchedule.model';
-import { commonPipeline } from './classSchedule.helper';
-import { TeacherService } from '../teacher/teacher.service';
-import { USER_ROLE } from '../../constant';
-import { StudentService } from '../student/student.service';
-import { classAndSubjectQuery } from '../../helper/aggregationPipline';
 
 const createClassSchedule = async (
   payload: Partial<TClassSchedule>,
@@ -79,7 +79,34 @@ const getAllClassSchedule = async (
         },
       },
       {
+        $lookup: {
+          from: "students",
+          let: {
+            classId: "$classId",
+            section: "$section",
+            schoolId: new mongoose.Types.ObjectId(String(user.schoolId)),
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$classId", "$$classId"] },
+                    { $eq: ["$section", "$$section"] },
+                    { $eq: ["$schoolId", "$$schoolId"] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "students", // use plural to indicate array of students
+        }
+      },
+      {
         $project: {
+          totalStudent: {
+            $size: "$students",
+          },
           section: 1,
           days: 1,
           period: 1,
@@ -89,7 +116,6 @@ const getAllClassSchedule = async (
           roomNo: 1,
           date: 1,
           _id: 1,
-
           className: '$class.className',
           subject: '$subject.subjectName',
           teacherName: '$user.name',
