@@ -13,10 +13,8 @@ export const TermsService = {
 
   getAllTerms: async (user: TAuthUser) => {
     const result = await Terms.find({ schoolId: user.schoolId })
-      .sort({
-        createdAt: -1,
-      })
       .lean();
+
     return result;
   },
 
