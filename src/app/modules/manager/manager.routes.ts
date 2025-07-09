@@ -11,11 +11,11 @@ router
     auth(USER_ROLE.school),
     ManagerController.createManager,
   )
-  .get('/all_manager', auth(USER_ROLE.admin), ManagerController.getAllManager)
-  .patch('/:managerId', auth(USER_ROLE.admin), ManagerController.updateManager)
+  .get('/all_manager', auth(USER_ROLE.school), ManagerController.getAllManager)
+  .patch('/update/:managerId', auth(USER_ROLE.school), ManagerController.updateManager)
   .delete(
-    '/:managerId',
-    auth(USER_ROLE.admin),
+    '/delete/:managerId',
+    auth(USER_ROLE.school),
     ManagerController.deleteManager,
   );
 

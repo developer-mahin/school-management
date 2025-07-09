@@ -1,17 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import httpStatus from 'http-status';
 import mongoose from 'mongoose';
 import sendNotification from '../../../socket/sendNotification';
 import { USER_ROLE } from '../../constant';
 import { TAuthUser } from '../../interface/authUser';
-import QueryBuilder from '../../QueryBuilder/queryBuilder';
+import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
+import AppError from '../../utils/AppError';
 import { NOTIFICATION_TYPE } from '../notification/notification.interface';
 import { TTeacher } from '../teacher/teacher.interface';
 import { createUserWithProfile } from '../user/user.helper';
 import User from '../user/user.model';
-import Manager from './manager.model';
 import { TManager } from './manager.interface';
-import AppError from '../../utils/AppError';
-import httpStatus from 'http-status';
+import Manager from './manager.model';
 
 const createManager = async (
   payload: Partial<TTeacher & { phoneNumber: string | any; name?: string }>,
@@ -42,14 +42,49 @@ const getAllManager = async (
   user: TAuthUser,
   query: Record<string, unknown>,
 ) => {
-  const managerQuery = new QueryBuilder(
-    Manager.find({ schoolId: user.schoolId }).populate('userId'),
-    query,
-  );
-  const result = await managerQuery.sort().search(['userId.name']).paginate()
-    .queryModel;
+  const managerQuery = new AggregationQueryBuilder(query)
 
-  const meta = await managerQuery.countTotal();
+  const result = await managerQuery
+    .customPipeline([
+      {
+        $match: {
+          schoolId: new mongoose.Types.ObjectId(String(user.schoolId)),
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: 'managerId',
+          as: 'user',
+        }
+      },
+      {
+        $unwind: {
+          path: '$user',
+          preserveNullAndEmptyArrays: true,
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          schoolId: 1,
+          managerRole: 1,
+          userId: "$user._id",
+          name: '$user.name',
+          phoneNumber: '$user.phoneNumber',
+          image: '$user.image',
+          role: '$user.role',
+          status: '$user.status',
+        }
+      }
+    ])
+    .search(['name'])
+    .sort()
+    .paginate()
+    .execute(Manager);
+
+  const meta = await managerQuery.countTotal(Manager);
 
   return { meta, result };
 };
