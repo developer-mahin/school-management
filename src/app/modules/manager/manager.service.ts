@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import httpStatus from 'http-status';
 import mongoose from 'mongoose';
 import sendNotification from '../../../socket/sendNotification';
 import { USER_ROLE } from '../../constant';
 import { TAuthUser } from '../../interface/authUser';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
-import AppError from '../../utils/AppError';
+import { transactionWrapper } from '../../utils/transactionWrapper';
 import { NOTIFICATION_TYPE } from '../notification/notification.interface';
 import { TTeacher } from '../teacher/teacher.interface';
 import { createUserWithProfile } from '../user/user.helper';
@@ -104,11 +103,7 @@ const updateManager = async (
     managerRole: payload.managerRole,
   };
 
-  const session = await mongoose.startSession();
-
-  try {
-    session.startTransaction();
-
+  const result = transactionWrapper(async (session) => {
     const updateStudent = await User.findOneAndUpdate({ managerId }, userData, {
       new: true,
       session,
@@ -120,38 +115,23 @@ const updateManager = async (
       new: true,
       session,
     });
+  })
 
-    await session.commitTransaction();
-    session.endSession();
-
-    return updateStudent;
-  } catch (error: any) {
-    await session.abortTransaction();
-    session.endSession();
-    throw new AppError(httpStatus.BAD_REQUEST, error);
-  }
+  return result
 };
 
 const deleteManager = async (managerId: string) => {
-  const session = await mongoose.startSession();
 
-  try {
-    session.startTransaction();
-
+  const result = transactionWrapper(async (session) => {
     const student = await Manager.findByIdAndDelete(managerId, { session });
     if (!student) throw new Error('Student not found');
 
     await User.findOneAndDelete({ managerId: managerId }, { session });
 
-    await session.commitTransaction();
-    session.endSession();
+  })
 
-    return student;
-  } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    throw error;
-  }
+  return result
+
 };
 
 export const ManagerService = {
