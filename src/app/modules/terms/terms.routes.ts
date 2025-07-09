@@ -10,7 +10,7 @@ router
   .get('/', auth(USER_ROLE.school), TermsController.getAllTerms)
   .get(
     '/result/get_result_based_on_terms/:termsId',
-    auth(USER_ROLE.student),
+    auth(USER_ROLE.student, USER_ROLE.school),
     TermsController.getResultBasedOnTerms,
   )
   .patch('/:termsId', auth(USER_ROLE.school), TermsController.updateTerms)
