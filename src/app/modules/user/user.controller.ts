@@ -1,8 +1,8 @@
 import httpStatus from 'http-status';
+import { TAuthUser } from '../../interface/authUser';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { UserService } from './user.service';
-import { TAuthUser } from '../../interface/authUser';
 
 const updateUserActions = catchAsync(async (req, res) => {
   const result = await UserService.updateUserActions(req.body);

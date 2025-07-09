@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose from 'mongoose';
 import { TAuthUser } from '../../interface/authUser';
 import Student from '../student/student.model';
@@ -10,6 +11,7 @@ import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 import { commonStageInAttendance } from './attendance.helper';
 import sendNotification from '../../../socket/sendNotification';
 import { NOTIFICATION_TYPE } from '../notification/notification.interface';
+import { USER_ROLE } from '../../constant';
 
 const createAttendance = async (
   payload: Partial<TAttendance>,
@@ -70,46 +72,62 @@ const getAttendanceHistory = async (
 ) => {
   const { date } = query;
 
-  const findTeacher = await TeacherService.findTeacher(user);
+  const targetDate = date ? new Date(date as string) : new Date();
+  targetDate.setUTCHours(0, 0, 0, 0);
 
-  const startOfDay = new Date(date as string);
-  startOfDay.setUTCHours(0, 0, 0, 0); // 00:00:00.000
+  const startOfDay = new Date(targetDate);
+  const endOfDay = new Date(targetDate);
+  endOfDay.setUTCHours(23, 59, 59, 999);
 
-  const endOfDay = new Date(date as string);
-  endOfDay.setUTCHours(23, 59, 59, 999); // 23:59:59.999
+  const matchStage: any = {
+    $match: {},
+  };
 
-  const result = await Attendance.aggregate([
-    {
-      $match: {
-        schoolId: new mongoose.Types.ObjectId(String(findTeacher.schoolId)),
-        date: {
-          $gte: startOfDay,
-          $lte: endOfDay,
+  if (user.role === USER_ROLE.school) {
+    matchStage.$match.schoolId = new mongoose.Types.ObjectId(
+      String(user.schoolId),
+    );
+  } else {
+    const findTeacher = await TeacherService.findTeacher(user);
+    if (!findTeacher) throw new Error('Teacher not found');
+
+    matchStage.$match.schoolId = new mongoose.Types.ObjectId(
+      String(findTeacher.schoolId),
+    );
+    matchStage.$match.date = {
+      $gte: startOfDay,
+      $lte: endOfDay,
+    };
+  }
+
+  const attendanceQuery = new AggregationQueryBuilder(query);
+
+  const result = await attendanceQuery
+    .customPipeline([
+      matchStage,
+      ...commonStageInAttendance,
+      {
+        $project: {
+          _id: 1,
+          classId: 1,
+          className: 1,
+          section: 1,
+          totalStudents: 1,
+          presentStudents: { $size: '$presentStudents' },
+          absentStudents: { $size: '$absentStudents' },
+          startTime: '$classSchedule.selectTime',
+          endTime: '$classSchedule.endTime',
+          date: 1,
         },
       },
-    },
-    ...commonStageInAttendance,
-    {
-      $project: {
-        _id: 1,
-        classId: 1,
-        className: 1,
-        section: 1,
-        totalStudents: 1,
-        presentStudents: {
-          $size: '$presentStudents',
-        },
-        absentStudents: {
-          $size: '$absentStudents',
-        },
-        startTime: '$classSchedule.selectTime',
-        endTime: '$classSchedule.endTime',
-        date: 1,
-      },
-    },
-  ]);
+    ])
+    .sort()
+    .paginate()
+    .execute(Attendance);
 
-  return result;
+  const meta = await attendanceQuery.countTotal(Attendance);
+
+  return { meta, result };
 };
 
 const getMyAttendance = async (
@@ -290,6 +308,57 @@ const getAttendanceDetails = async (attendanceId: string) => {
       },
     },
     ...commonStageInAttendance,
+
+    // Unwind student array to lookup individually
+    { $unwind: '$student' },
+
+    // Lookup user info from users collection
+    {
+      $lookup: {
+        from: 'users', // Replace with your actual collection name if different
+        localField: 'student.userId',
+        foreignField: '_id',
+        as: 'userInfo',
+      },
+    },
+
+    // Flatten userInfo array
+    { $unwind: { path: '$userInfo', preserveNullAndEmptyArrays: true } },
+
+    // Rebuild the student object with merged user info
+    {
+      $addFields: {
+        student: {
+          $mergeObjects: [
+            '$student',
+            {
+              name: '$userInfo.name',
+              image: '$userInfo.image',
+              email: '$userInfo.email', // optional, add more fields if needed
+            },
+          ],
+        },
+      },
+    },
+
+    // Re-group back the students into array
+    {
+      $group: {
+        _id: '$_id',
+        classId: { $first: '$classId' },
+        className: { $first: '$className' },
+        section: { $first: '$section' },
+        totalStudents: { $first: '$totalStudents' },
+        presentStudents: { $first: '$presentStudents' },
+        absentStudents: { $first: '$absentStudents' },
+        startTime: { $first: '$classSchedule.selectTime' },
+        endTime: { $first: '$classSchedule.endTime' },
+        date: { $first: '$date' },
+        student: { $push: '$student' },
+      },
+    },
+
+    // Final project
     {
       $project: {
         _id: 1,
@@ -297,14 +366,10 @@ const getAttendanceDetails = async (attendanceId: string) => {
         className: 1,
         section: 1,
         totalStudents: 1,
-        presentStudents: {
-          $size: '$presentStudents',
-        },
-        absentStudents: {
-          $size: '$absentStudents',
-        },
-        startTime: '$classSchedule.selectTime',
-        endTime: '$classSchedule.endTime',
+        presentStudents: { $size: '$presentStudents' },
+        absentStudents: { $size: '$absentStudents' },
+        startTime: 1,
+        endTime: 1,
         date: 1,
         student: {
           $map: {

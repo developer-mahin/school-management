@@ -6,12 +6,14 @@ import Student from '../student/student.model';
 import Teacher from '../teacher/teacher.model';
 import User from './user.model';
 import { UserService } from './user.service';
+import Manager from '../manager/manager.model';
 
 type RoleModelsMap = {
   [USER_ROLE.school]: typeof School;
   [USER_ROLE.teacher]: typeof Teacher;
   [USER_ROLE.student]: typeof Student;
   [USER_ROLE.parents]: typeof Parents;
+  [USER_ROLE.manager]: typeof Manager;
 };
 
 const roleModelMap: RoleModelsMap = {
@@ -19,12 +21,13 @@ const roleModelMap: RoleModelsMap = {
   [USER_ROLE.teacher]: Teacher,
   [USER_ROLE.student]: Student,
   [USER_ROLE.parents]: Parents,
+  [USER_ROLE.manager]: Manager,
 };
 
 // Generic payload type: must include phoneNumber + any profile data
 interface CreateUserPayload<T> {
   phoneNumber: string;
-  role: 'parents' | 'student' | 'teacher' | 'school';
+  role: 'parents' | 'student' | 'teacher' | 'school' | 'manager';
   data: T;
 }
 

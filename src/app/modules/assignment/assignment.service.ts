@@ -221,8 +221,23 @@ const getAssignmentDetails = async (
     {
       $lookup: {
         from: 'assignmentsubmissions',
-        localField: '_id',
-        foreignField: 'assignmentId',
+        let: { assignmentId: '$_id' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $eq: ['$assignmentId', '$$assignmentId'],
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              userId: 1,
+              grade: 1,
+            },
+          },
+        ],
         as: 'submissions',
       },
     },
@@ -231,17 +246,18 @@ const getAssignmentDetails = async (
         _id: 1,
         title: 1,
         className: '$class.className',
+        subjectName: '$subject.subjectName',
         section: 1,
+        description: 1,
         dueDate: 1,
         marks: 1,
         fileUrl: 1,
         status: 1,
         students: 1,
-        submissions: {
-          userId: 1,
-        },
+        submissions: 1,
       },
     },
+
     {
       $addFields: {
         students: {
@@ -249,14 +265,36 @@ const getAssignmentDetails = async (
             input: '$students',
             as: 'student',
             in: {
-              $mergeObjects: [
-                '$$student',
-                {
-                  isSubmit: {
-                    $in: ['$$student.userId', '$submissions.userId'],
+              $let: {
+                vars: {
+                  matchedSubmission: {
+                    $first: {
+                      $filter: {
+                        input: '$submissions',
+                        as: 'sub',
+                        cond: {
+                          $eq: ['$$sub.userId', '$$student.userId'],
+                        },
+                      },
+                    },
                   },
                 },
-              ],
+                in: {
+                  $mergeObjects: [
+                    '$$student',
+                    {
+                      isSubmit: {
+                        $cond: [
+                          { $ifNull: ['$$matchedSubmission', false] },
+                          true,
+                          false,
+                        ],
+                      },
+                      grade: '$$matchedSubmission.grade',
+                    },
+                  ],
+                },
+              },
             },
           },
         },
@@ -266,6 +304,8 @@ const getAssignmentDetails = async (
       $project: {
         title: 1,
         className: 1,
+        subjectName: 1,
+        description: 1,
         section: 1,
         dueDate: 1,
         marks: 1,

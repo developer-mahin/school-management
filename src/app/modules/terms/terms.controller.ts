@@ -58,6 +58,7 @@ const getResultBasedOnTerms = catchAsync(async (req, res) => {
   const result = await TermsService.getResultBasedOnTerms(
     req.params.termsId,
     req.user as TAuthUser,
+    req.query,
   );
   sendResponse(res, {
     success: true,

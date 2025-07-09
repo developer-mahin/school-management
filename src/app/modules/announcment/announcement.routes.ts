@@ -16,7 +16,12 @@ router
   )
   .get(
     '/',
-    auth(USER_ROLE.student, USER_ROLE.parents, USER_ROLE.teacher),
+    auth(
+      USER_ROLE.student,
+      USER_ROLE.parents,
+      USER_ROLE.teacher,
+      USER_ROLE.school,
+    ),
     AnnouncementController.getAllAnnouncements,
   );
 

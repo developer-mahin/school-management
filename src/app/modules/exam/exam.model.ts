@@ -28,7 +28,11 @@ const examSchema = new Schema<TExam>(
       required: true,
       ref: 'Class',
     },
-
+    totalMarks: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
     details: {
       type: String,
       required: true,

@@ -115,14 +115,14 @@ async function handleParentUserCreation(
       user = newUser;
 
       const findSchoolUser = await User.findOne({
-        schoolId: payload.data.schoolId,
+        schoolId: payload?.schoolId,
       });
 
       const receiverId = findSchoolUser?._id;
       const message = `Parent Has Been Created on ${new Date().toLocaleTimeString()}`;
 
       await sendNotification(user as any, {
-        senderId: newUser._id,
+        senderId: user?._id || receiverId,
         role: user.role,
         receiverId,
         message,
@@ -142,6 +142,8 @@ async function handleParentUserCreation(
       ],
       { session },
     );
+
+    console.log(newProfile, 'After newProfile ===============>');
 
     if (!existingUser) {
       const userIdField = `${role}Id`;
