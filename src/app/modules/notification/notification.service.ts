@@ -34,24 +34,25 @@ const getNotifications = async (
   return { meta, result };
 };
 
-
-const notificationSend = async (payload: { receiverId: string, message: string }, user: TAuthUser) => {
-
+const notificationSend = async (
+  payload: { receiverId: string; message: string },
+  user: TAuthUser,
+) => {
   const notificationBody = {
     ...payload,
     senderId: user.userId,
     role: user.role,
     type: NOTIFICATION_TYPE.CUSTOM,
     linkId: user.userId,
-  }
+  };
 
   const result = await sendNotification(user, notificationBody);
 
-  return result
+  return result;
 };
 
 export const NotificationService = {
   createNotification,
   getNotifications,
-  notificationSend
+  notificationSend,
 };

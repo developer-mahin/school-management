@@ -12,8 +12,6 @@ async function createStudentWithProfile(
   payload: any,
   session: mongoose.ClientSession,
 ): Promise<mongoose.Document> {
-
-
   const findSchoolUser = await User.findOne({
     schoolId: payload.data.schoolId,
   });
@@ -116,8 +114,6 @@ async function handleParentUserCreation(
       );
       user = newUser;
 
-
-
       const findSchoolUser = await User.findOne({
         schoolId: payload?.schoolId,
       });
@@ -135,7 +131,6 @@ async function handleParentUserCreation(
       });
     }
 
-
     const [newProfile] = await Parents.create(
       [
         {
@@ -148,7 +143,7 @@ async function handleParentUserCreation(
       { session },
     );
 
-    console.log(newProfile, "After newProfile ===============>");
+    console.log(newProfile, 'After newProfile ===============>');
 
     if (!existingUser) {
       const userIdField = `${role}Id`;

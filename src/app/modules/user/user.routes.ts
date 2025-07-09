@@ -12,7 +12,7 @@ const router = Router();
 router
   .post(
     '/create_admin',
-    auth(USER_ROLE.supperAdmin),
+    auth(USER_ROLE.supperAdmin, USER_ROLE.school),
     UserController.createAdmin,
   )
   .post(

@@ -26,8 +26,6 @@ const createStudent = async (
   const session = await mongoose.startSession();
   session.startTransaction();
 
-
-
   try {
     if (user.role === USER_ROLE.school) {
       const findSchool = await School.findById(user.schoolId);
@@ -41,8 +39,6 @@ const createStudent = async (
     } as any;
     // Pre-generate all UIDs that might be needed
     const studentUID = await generateUID(generateData);
-
-
 
     const student = (await createStudentWithProfile(
       {
@@ -250,7 +246,6 @@ const editStudent = async (id: string, payload: any) => {
     phoneNumber: payload.phoneNumber,
     name: payload.name,
   };
-
 
   const session = await mongoose.startSession();
 

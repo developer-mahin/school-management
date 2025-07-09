@@ -12,8 +12,7 @@ export const TermsService = {
   },
 
   getAllTerms: async (user: TAuthUser) => {
-    const result = await Terms.find({ schoolId: user.schoolId })
-      .lean();
+    const result = await Terms.find({ schoolId: user.schoolId }).lean();
 
     return result;
   },

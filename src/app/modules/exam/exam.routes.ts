@@ -29,7 +29,11 @@ router
     auth(USER_ROLE.teacher, USER_ROLE.school),
     ExamController.updateGrade,
   )
-  .get("/grades_result/:examId", auth(USER_ROLE.teacher), ExamController.getGradesResult)
+  .get(
+    '/grades_result/:examId',
+    auth(USER_ROLE.teacher),
+    ExamController.getGradesResult,
+  )
   .get('/:termsId', auth(USER_ROLE.school), ExamController.getTermsExams)
   .patch('/:examId', auth(USER_ROLE.school), ExamController.updateExams)
 

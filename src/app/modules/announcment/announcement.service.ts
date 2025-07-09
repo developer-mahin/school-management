@@ -60,12 +60,11 @@ const getAllAnnouncements = async (
   user: TAuthUser,
   query: Record<string, unknown>,
 ) => {
-
-  let matchStage = {}
+  let matchStage = {};
   if (user.role !== USER_ROLE.school) {
-    matchStage = { receiverId: user.userId }
+    matchStage = { receiverId: user.userId };
   } else {
-    matchStage = { schoolId: user.schoolId }
+    matchStage = { schoolId: user.schoolId };
   }
 
   const announcementQuery = new QueryBuilder(

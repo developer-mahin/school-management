@@ -246,7 +246,7 @@ const getAssignmentDetails = async (
         _id: 1,
         title: 1,
         className: '$class.className',
-        subjectName: "$subject.subjectName",
+        subjectName: '$subject.subjectName',
         section: 1,
         description: 1,
         dueDate: 1,
@@ -254,7 +254,7 @@ const getAssignmentDetails = async (
         fileUrl: 1,
         status: 1,
         students: 1,
-        submissions: 1
+        submissions: 1,
       },
     },
 
@@ -283,7 +283,13 @@ const getAssignmentDetails = async (
                   $mergeObjects: [
                     '$$student',
                     {
-                      isSubmit: { $cond: [{ $ifNull: ['$$matchedSubmission', false] }, true, false] },
+                      isSubmit: {
+                        $cond: [
+                          { $ifNull: ['$$matchedSubmission', false] },
+                          true,
+                          false,
+                        ],
+                      },
                       grade: '$$matchedSubmission.grade',
                     },
                   ],
@@ -309,7 +315,6 @@ const getAssignmentDetails = async (
       },
     },
   ]);
-
 
   return result;
 };

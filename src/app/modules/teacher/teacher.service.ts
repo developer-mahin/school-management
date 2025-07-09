@@ -152,7 +152,7 @@ const getTeacherList = async (user: TAuthUser, query: any) => {
       },
       {
         $project: {
-          userId: "$userId",
+          userId: '$userId',
           subjectName: 1,
           name: '$user.name',
           phoneNumber: '$user.phoneNumber',
@@ -164,7 +164,7 @@ const getTeacherList = async (user: TAuthUser, query: any) => {
         },
       },
     ])
-    .search(["name"])
+    .search(['name'])
     .sort()
     .paginate()
     .execute(Teacher); // ✅ Now from the Teacher model directly

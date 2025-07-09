@@ -188,7 +188,6 @@ const getAllStudents = async (
   user: TAuthUser,
   query: Record<string, unknown>,
 ) => {
-
   const studentsQuery = new AggregationQueryBuilder(query);
 
   const today = new Date();
@@ -347,8 +346,8 @@ const getAllStudents = async (
           createdAt: 1,
           studentName: '$userInfo.name',
           uid: '$userInfo.uid',
-          userId: "$userInfo._id",
-          status: "$userInfo.status",
+          userId: '$userInfo._id',
+          status: '$userInfo.status',
           phoneNumber: '$userInfo.phoneNumber',
           image: '$userInfo.image',
           attendanceRate: { $round: ['$attendanceRate', 2] },
@@ -356,7 +355,7 @@ const getAllStudents = async (
         },
       },
     ])
-    .search(['studentName', "name"])
+    .search(['studentName', 'name'])
     .sort()
     .paginate()
     .execute(Student);
@@ -366,7 +365,10 @@ const getAllStudents = async (
   return { meta, result };
 };
 
-const getResultOfStudents = async (user: TAuthUser, query: Record<string, unknown>) => {
+const getResultOfStudents = async (
+  user: TAuthUser,
+  query: Record<string, unknown>,
+) => {
   // const result = await Exam.aggregate([
   //   // Step 1: Match Exams for the school
   //   {
@@ -464,7 +466,6 @@ const getResultOfStudents = async (user: TAuthUser, query: Record<string, unknow
   //     },
   //   },
   // ]);
-
 
   const result = await Exam.aggregate([
     {
@@ -611,7 +612,6 @@ const getResultOfStudents = async (user: TAuthUser, query: Record<string, unknow
     },
   ]);
 
-
   return result;
 };
 
@@ -622,5 +622,5 @@ export const SchoolService = {
   editSchool,
   deleteSchool,
   getAllStudents,
-  getResultOfStudents
+  getResultOfStudents,
 };

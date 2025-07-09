@@ -5,6 +5,7 @@ export type TRole =
   | 'admin'
   | 'supperAdmin'
   | 'school'
+  | 'manager'
   | 'teacher'
   | 'parents'
   | 'student';
@@ -18,6 +19,7 @@ export type TUser = {
   parentsId?: ObjectId;
   schoolId: ObjectId;
   teacherId: ObjectId;
+  managerId: ObjectId;
   phoneNumber: string;
   name: string;
   image: string;

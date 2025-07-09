@@ -154,7 +154,7 @@ const updateGrade = async (
 ) => {
   const { examId, students } = payload;
 
-  console.log(payload, "updateGrade ==========>");
+  console.log(payload, 'updateGrade ==========>');
 
   // Validate required fields early
   if (!examId || !students?.length) {
@@ -331,55 +331,55 @@ const getGradesResult = async (user: TAuthUser, examId: string) => {
     {
       $match: {
         examId: new mongoose.Types.ObjectId(String(examId)),
-      }
+      },
     },
     {
       $unwind: {
-        path: "$students",
-        preserveNullAndEmptyArrays: true
-      }
+        path: '$students',
+        preserveNullAndEmptyArrays: true,
+      },
     },
     {
       $lookup: {
-        from: "students",
-        localField: "students.studentId",
+        from: 'students',
+        localField: 'students.studentId',
         pipeline: [
           {
             $lookup: {
-              from: "users",
-              localField: "userId",
-              foreignField: "_id",
-              as: "user"
-            }
-          }, 
+              from: 'users',
+              localField: 'userId',
+              foreignField: '_id',
+              as: 'user',
+            },
+          },
           {
             $unwind: {
-              path: "$user",
-              preserveNullAndEmptyArrays: true
-            }
-          }
+              path: '$user',
+              preserveNullAndEmptyArrays: true,
+            },
+          },
         ],
-        foreignField: "_id",
-        as: "student"
-      }
-    }, 
+        foreignField: '_id',
+        as: 'student',
+      },
+    },
     {
       $unwind: {
-        path: "$student",
-        preserveNullAndEmptyArrays: true
-      }
+        path: '$student',
+        preserveNullAndEmptyArrays: true,
+      },
     },
     {
       $project: {
         _id: 1,
         createdAt: 1,
-        studentId: "$student._id",
-        studentName: "$student.user.name",
-        parentsMessage: "$student.parentsMessage",
-        mark: "$students.mark",
-      }
-    }
-  ])
+        studentId: '$student._id',
+        studentName: '$student.user.name',
+        parentsMessage: '$student.parentsMessage',
+        mark: '$students.mark',
+      },
+    },
+  ]);
 
   return result;
 };
@@ -392,5 +392,5 @@ export const ExamService = {
   getExamsOfTeacher,
   updateGrade,
   getExamSchedule,
-  getGradesResult
+  getGradesResult,
 };

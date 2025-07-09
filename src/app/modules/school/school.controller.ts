@@ -90,5 +90,5 @@ export const SchoolController = {
   editSchool,
   deleteSchool,
   getAllStudents,
-  getResultOfStudents
+  getResultOfStudents,
 };

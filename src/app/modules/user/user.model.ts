@@ -46,6 +46,10 @@ export const userSchema = new mongoose.Schema<TUser, UserModel>(
       type: String,
       enum: ['father', 'mother'],
     },
+    managerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Manager',
+    },
     role: {
       type: String,
       enum: [
@@ -53,6 +57,7 @@ export const userSchema = new mongoose.Schema<TUser, UserModel>(
         USER_ROLE.supperAdmin,
         USER_ROLE.parents,
         USER_ROLE.school,
+        USER_ROLE.manager,
         USER_ROLE.teacher,
         USER_ROLE.student,
       ],

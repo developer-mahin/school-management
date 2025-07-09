@@ -80,10 +80,10 @@ const getAllClassSchedule = async (
       },
       {
         $lookup: {
-          from: "students",
+          from: 'students',
           let: {
-            classId: "$classId",
-            section: "$section",
+            classId: '$classId',
+            section: '$section',
             schoolId: new mongoose.Types.ObjectId(String(user.schoolId)),
           },
           pipeline: [
@@ -91,21 +91,21 @@ const getAllClassSchedule = async (
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ["$classId", "$$classId"] },
-                    { $eq: ["$section", "$$section"] },
-                    { $eq: ["$schoolId", "$$schoolId"] },
+                    { $eq: ['$classId', '$$classId'] },
+                    { $eq: ['$section', '$$section'] },
+                    { $eq: ['$schoolId', '$$schoolId'] },
                   ],
                 },
               },
             },
           ],
-          as: "students", // use plural to indicate array of students
-        }
+          as: 'students', // use plural to indicate array of students
+        },
       },
       {
         $project: {
           totalStudent: {
-            $size: "$students",
+            $size: '$students',
           },
           section: 1,
           days: 1,

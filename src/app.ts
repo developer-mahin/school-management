@@ -16,11 +16,14 @@ import config from './config';
 
 const app: Application = express();
 // app.use('/public', express.static('public'));
-app.use('/public', express.static('public', {
-  setHeaders: (res, path) => {
-    res.setHeader("Access-Control-Allow-Origin", "*"); // or set specific domain
-  }
-}));
+app.use(
+  '/public',
+  express.static('public', {
+    setHeaders: (res, path) => {
+      res.setHeader('Access-Control-Allow-Origin', '*'); // or set specific domain
+    },
+  }),
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

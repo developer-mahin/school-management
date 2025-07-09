@@ -8,10 +8,10 @@ import { TAuthUser } from '../../interface/authUser';
 import AppError from '../../utils/AppError';
 import Attendance from '../attendance/attendance.model';
 import Payment from '../payment/payment.model';
+import School from '../school/school.model';
 import Student from '../student/student.model';
 import Teacher from '../teacher/teacher.model';
 import User from './user.model';
-import School from '../school/school.model';
 
 const updateUserActions = async (payload: {
   userId: string;
@@ -293,7 +293,6 @@ const editProfile = async (user: TAuthUser, payload: any) => {
     schoolImage: payload.schoolImage,
     coverImage: payload.coverImage,
   };
-  console.log(payload);
 
   if (user.role === USER_ROLE.school) {
     await School.findOneAndUpdate({ userId: user.userId }, schoolPayload, {

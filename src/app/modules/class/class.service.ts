@@ -138,7 +138,6 @@ const getStudentsOfClasses = async (
   return { meta, result };
 };
 
-
 export const ClassService = {
   createClass,
   getAllClasses,

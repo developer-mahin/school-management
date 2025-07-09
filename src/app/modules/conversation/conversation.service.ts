@@ -160,41 +160,41 @@ const getMessages = async (
       },
       {
         $lookup: {
-          from: "conversations",
-          localField: "conversationId",
-          foreignField: "_id",
-          as: "conversation",
+          from: 'conversations',
+          localField: 'conversationId',
+          foreignField: '_id',
+          as: 'conversation',
         },
       },
       {
-        $unwind: "$conversation"
+        $unwind: '$conversation',
       },
       {
         $addFields: {
           otherUsers: {
             $filter: {
-              input: "$conversation.users",
-              as: "user",
+              input: '$conversation.users',
+              as: 'user',
               cond: {
-                $ne: ["$$user", "$sender"]
-              }
-            }
-          }
-        }
+                $ne: ['$$user', '$sender'],
+              },
+            },
+          },
+        },
       },
       {
         $lookup: {
-          from: "users",
-          localField: "otherUsers",
-          foreignField: "_id",
-          as: "otherUserInfo"
-        }
+          from: 'users',
+          localField: 'otherUsers',
+          foreignField: '_id',
+          as: 'otherUserInfo',
+        },
       },
       {
         $unwind: {
-          path: "$otherUserInfo",
-          preserveNullAndEmptyArrays: true
-        }
+          path: '$otherUserInfo',
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $project: {
@@ -207,13 +207,13 @@ const getMessages = async (
           isRead: 1,
           conversationId: 1,
           otherUser: {
-            _id: "$otherUserInfo._id",
-            name: "$otherUserInfo.name",
-            image: "$otherUserInfo.image",
-            role: "$otherUserInfo.role"
-          }
-        }
-      }
+            _id: '$otherUserInfo._id',
+            name: '$otherUserInfo.name',
+            image: '$otherUserInfo.image',
+            role: '$otherUserInfo.role',
+          },
+        },
+      },
     ])
     .sort()
     .paginate()

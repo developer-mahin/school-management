@@ -19,7 +19,10 @@ const getNotifications = catchAsync(async (req, res) => {
 });
 
 const sendNotification = catchAsync(async (req, res) => {
-  const result = await NotificationService.notificationSend(req.body, req.user as TAuthUser);
+  const result = await NotificationService.notificationSend(
+    req.body,
+    req.user as TAuthUser,
+  );
   sendResponse(res, {
     data: result,
     success: true,
@@ -30,5 +33,5 @@ const sendNotification = catchAsync(async (req, res) => {
 
 export const NotificationController = {
   getNotifications,
-  sendNotification
+  sendNotification,
 };
