@@ -23,7 +23,7 @@ router
   )
   .get(
     '/student_attendance',
-    auth(USER_ROLE.student, USER_ROLE.parents),
+    auth(USER_ROLE.student, USER_ROLE.parents, USER_ROLE.school),
     OverviewController.getStudentAttendance,
   )
   .get(

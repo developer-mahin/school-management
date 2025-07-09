@@ -45,6 +45,10 @@ const assignmentSchema = new Schema<TAssignment>(
       type: String,
       trim: true,
     },
+    description: {
+      type: String,
+      trim: true,
+    },
     status: {
       type: String,
       required: true,

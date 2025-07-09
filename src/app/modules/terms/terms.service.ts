@@ -4,6 +4,7 @@ import Exam from '../exam/exam.model';
 import { TTerms } from './terms.interface';
 import Terms from './terms.model';
 import { StudentService } from '../student/student.service';
+import { USER_ROLE } from '../../constant';
 
 export const TermsService = {
   createTerms: async (payload: Partial<TTerms>, user: TAuthUser) => {
@@ -12,11 +13,8 @@ export const TermsService = {
   },
 
   getAllTerms: async (user: TAuthUser) => {
-    const result = await Terms.find({ schoolId: user.schoolId })
-      .sort({
-        createdAt: -1,
-      })
-      .lean();
+    const result = await Terms.find({ schoolId: user.schoolId }).lean();
+
     return result;
   },
 
@@ -41,9 +39,21 @@ export const TermsService = {
     return result;
   },
 
-  getResultBasedOnTerms: async (id: string, user: TAuthUser) => {
-    const findStudent = await StudentService.findStudent(user.studentId);
-    const studentObjectId = new mongoose.Types.ObjectId(String(user.studentId));
+  getResultBasedOnTerms: async (id: string, user: TAuthUser, query: Record<string, unknown>) => {
+
+
+
+    let findStudent
+    let studentObjectId
+    if (user.role === USER_ROLE.student) {
+      findStudent = await StudentService.findStudent(user.studentId);
+      studentObjectId = new mongoose.Types.ObjectId(String(user.studentId));
+    }
+
+    else if (user.role === USER_ROLE.school) {
+      findStudent = await StudentService.findStudent(query?.studentId as string);
+      studentObjectId = new mongoose.Types.ObjectId(String(query?.studentId));
+    }
 
     const result = await Exam.aggregate([
       {

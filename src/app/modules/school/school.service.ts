@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { USER_ROLE } from '../../constant';
 import { TAuthUser } from '../../interface/authUser';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
+import Exam from '../exam/exam.model';
 import Student from '../student/student.model';
 import Teacher from '../teacher/teacher.model';
 import { createUserWithProfile } from '../user/user.helper';
@@ -345,18 +346,215 @@ const getAllStudents = async (
           createdAt: 1,
           studentName: '$userInfo.name',
           uid: '$userInfo.uid',
+          userId: '$userInfo._id',
+          status: '$userInfo.status',
           phoneNumber: '$userInfo.phoneNumber',
           image: '$userInfo.image',
           attendanceRate: { $round: ['$attendanceRate', 2] },
+          parentsMessage: 1,
         },
       },
     ])
+    .search(['studentName', 'name'])
     .sort()
-    .search(['studentName'])
     .paginate()
     .execute(Student);
 
   const meta = await studentsQuery.countTotal(Student);
+
+  return { meta, result };
+};
+
+const getResultOfStudents = async (
+  user: TAuthUser,
+  query: Record<string, unknown>,
+) => {
+
+  const resultQuery = new AggregationQueryBuilder(query)
+
+  const result = await resultQuery
+    .customPipeline(
+      [
+        {
+          $match: {
+            schoolId: new mongoose.Types.ObjectId(String(user.schoolId)),
+          },
+        },
+        {
+          $lookup: {
+            from: 'results',
+            localField: '_id',
+            foreignField: 'examId',
+            as: 'results',
+          },
+        },
+        {
+          $unwind: {
+            path: '$results',
+            preserveNullAndEmptyArrays: true,
+          }
+        },
+        {
+          $unwind: {
+            path: '$results.students',
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $lookup: {
+            from: 'subjects',
+            localField: 'subjectId',
+            foreignField: '_id',
+            as: 'subject',
+          }
+        },
+        {
+          $unwind: {
+            path: '$subject',
+            preserveNullAndEmptyArrays: true
+          }
+        },
+
+        // Join student info
+        {
+          $lookup: {
+            from: 'students',
+            localField: 'results.students.studentId',
+            foreignField: '_id',
+            as: 'studentInfo',
+          },
+        },
+        { $unwind: { path: '$studentInfo', preserveNullAndEmptyArrays: true } },
+
+        // Join user info (to get student name)
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'studentInfo.userId',
+            foreignField: '_id',
+            as: 'userInfo',
+          },
+        },
+        { $unwind: { path: '$userInfo', preserveNullAndEmptyArrays: true } },
+
+        // Join term name
+        {
+          $lookup: {
+            from: 'terms',
+            localField: 'termsId',
+            foreignField: '_id',
+            as: 'termInfo',
+          },
+        },
+        { $unwind: { path: '$termInfo', preserveNullAndEmptyArrays: true } },
+
+        // Shape each student+term entry
+        {
+          $project: {
+            termsId: "$termInfo._id",
+            studentId: '$results.students.studentId',
+            gpa: '$results.students.gpa',
+            className: '$studentInfo.className',
+            section: '$studentInfo.section',
+            name: '$userInfo.name',
+            termName: '$termInfo.termsName',
+            subjectName: '$subject.subjectName',
+          },
+        },
+
+        // Group by student and pivot term GPAs
+        {
+          $group: {
+            _id: '$studentId',
+            name: { $first: '$name' },
+            className: { $first: '$className' },
+            section: { $first: '$section' },
+            termsId: { $first: '$termsId' },
+            result: {
+              $push: {
+                term: '$termName',
+                subject: '$subjectName',
+                gpa: '$gpa',
+              },
+            },
+          },
+        },
+
+        // Prepare GPA fields and calculate average
+        {
+          $project: {
+            studentId: '$_id',
+            name: 1,
+            termsId: 1,
+            class: {
+              $concat: ['$className', '-', '$section'],
+            },
+            firstTerm: {
+              $first: {
+                $filter: {
+                  input: '$result',
+                  as: 'g',
+                  cond: { $eq: ['$$g.term', 'First Term'] },
+                },
+              },
+            },
+            secondTerm: {
+              $first: {
+                $filter: {
+                  input: '$result',
+                  as: 'g',
+                  cond: { $eq: ['$$g.term', 'Second Term'] },
+                },
+              },
+            },
+            midTerm: {
+              $first: {
+                $filter: {
+                  input: '$result',
+                  as: 'g',
+                  cond: { $eq: ['$$g.term', 'Mid Term'] },
+                },
+              },
+            },
+            allGpas: '$result',
+          },
+        },
+
+        // // Final formatting
+        {
+          $project: {
+            studentId: 1,
+            name: 1,
+            class: 1,
+            termsId: 1,
+            // allGpas: 1,
+            firstTerm: '$firstTerm.gpa',
+            secondTerm: '$secondTerm.gpa',
+            midTerm: '$midTerm.gpa',
+            overall: {
+              $round: [
+                {
+                  $avg: {
+                    $map: {
+                      input: '$allGpas',
+                      as: 'g',
+                      in: '$$g.gpa',
+                    },
+                  },
+                },
+                2,
+              ],
+            },
+          },
+        },
+      ]
+    )
+    .sort()
+    .search(['className', 'section', 'name'])
+    .paginate()
+    .execute(Exam)
+
+  const meta = await resultQuery.countTotal(Exam)
 
   return { meta, result };
 };
@@ -368,4 +566,5 @@ export const SchoolService = {
   editSchool,
   deleteSchool,
   getAllStudents,
+  getResultOfStudents,
 };

@@ -2,6 +2,7 @@ export const USER_ROLE = {
   admin: 'admin',
   supperAdmin: 'supperAdmin',
   school: 'school',
+  manager: 'manager',
   teacher: 'teacher',
   parents: 'parents',
   student: 'student',

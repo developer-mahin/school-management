@@ -7,6 +7,7 @@ import { TAnnouncement } from './announcement.interface';
 import sendAnnouncement from '../../../socket/sendAnnouncement';
 import Announcement from './announcement.model';
 import QueryBuilder from '../../QueryBuilder/queryBuilder';
+import { USER_ROLE } from '../../constant';
 
 const createAnnouncement = async (
   payload: Partial<TAnnouncement>,
@@ -59,8 +60,15 @@ const getAllAnnouncements = async (
   user: TAuthUser,
   query: Record<string, unknown>,
 ) => {
+  let matchStage = {};
+  if (user.role !== USER_ROLE.school) {
+    matchStage = { receiverId: user.userId };
+  } else {
+    matchStage = { schoolId: user.schoolId };
+  }
+
   const announcementQuery = new QueryBuilder(
-    Announcement.find({ receiverId: user.userId }),
+    Announcement.find(matchStage),
     query,
   );
 

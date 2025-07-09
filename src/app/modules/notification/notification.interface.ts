@@ -10,7 +10,9 @@ type TType =
   | 'payment'
   | 'student'
   | 'teacher'
-  | 'parent';
+  | 'parent'
+  | 'custom'
+  | 'manager';
 
 export const NOTIFICATION_TYPE = {
   ASSIGNMENT: 'assignment',
@@ -23,6 +25,8 @@ export const NOTIFICATION_TYPE = {
   STUDENT: 'student',
   TEACHER: 'teacher',
   PARENT: 'parent',
+  CUSTOM: 'custom',
+  MANAGER: 'manager',
 } as const;
 
 export type TNotification = {

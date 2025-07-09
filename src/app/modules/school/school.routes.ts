@@ -20,6 +20,11 @@ router
   )
   .get('/all_students', auth(USER_ROLE.school), SchoolController.getAllStudents)
   .get('/teacher', auth(USER_ROLE.school), SchoolController.getTeachers)
+  .get(
+    '/result_of_students',
+    auth(USER_ROLE.school),
+    SchoolController.getResultOfStudents,
+  )
   .patch(
     '/edit_school/:schoolId',
     auth(USER_ROLE.supperAdmin),

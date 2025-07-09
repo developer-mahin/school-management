@@ -6,7 +6,7 @@ export type TExam = {
   schoolId: ObjectId;
   subjectId: ObjectId;
   classId: ObjectId;
-
+  totalMarks: number;
   details: string;
   passGrade: number;
   date: Date;

@@ -4,7 +4,9 @@ import mongoose from 'mongoose';
 import config from '../../../config';
 import { USER_ROLE } from '../../constant';
 import { TAuthUser } from '../../interface/authUser';
+import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 import generateToken from '../../utils/generateToken';
+import generateUID from '../../utils/generateUID';
 import Parents from '../parents/parents.model';
 import School from '../school/school.model';
 import User from '../user/user.model';
@@ -14,9 +16,8 @@ import {
   createStudentWithProfile,
   handleParentUserCreation,
 } from './students.helper';
-import generateUID from '../../utils/generateUID';
-import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
-import { stat } from 'fs';
+import AppError from '../../utils/AppError';
+import httpStatus from 'http-status';
 
 const createStudent = async (
   payload: Partial<TStudent> & { phoneNumber: string; name?: string },
@@ -66,6 +67,7 @@ const createStudent = async (
 };
 
 const findStudent = async (id: string) => {
+  console.log(id, "======> id in student service");
   const student = await Student.findById(id);
   if (!student) throw new Error('Student not found');
   return student;
@@ -243,7 +245,7 @@ const editStudent = async (id: string, payload: any) => {
   };
   const studentUserData = {
     phoneNumber: payload.phoneNumber,
-    name: payload.phoneNumber,
+    name: payload.name,
   };
 
   const session = await mongoose.startSession();
@@ -259,7 +261,7 @@ const editStudent = async (id: string, payload: any) => {
 
     if (!updateStudent) throw new Error('Student not update');
 
-    await User.findOneAndUpdate({ schoolId: id }, studentUserData, {
+    await User.findOneAndUpdate({ studentId: id }, studentUserData, {
       new: true,
       session,
     });
@@ -268,10 +270,10 @@ const editStudent = async (id: string, payload: any) => {
     session.endSession();
 
     return updateStudent;
-  } catch (error) {
+  } catch (error: any) {
     await session.abortTransaction();
     session.endSession();
-    throw error;
+    throw new AppError(httpStatus.BAD_REQUEST, error);
   }
 };
 

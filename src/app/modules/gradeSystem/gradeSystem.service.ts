@@ -32,7 +32,10 @@ const getAllGradeSystem = async (
     query,
   );
 
-  const result = await gradeSystemQuery.sort().paginate().queryModel;
+  const result = await gradeSystemQuery
+    .sort()
+    .search(['grade', 'mark'])
+    .paginate().queryModel;
 
   const meta = await gradeSystemQuery.countTotal();
 
