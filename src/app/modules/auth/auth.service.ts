@@ -13,6 +13,7 @@ import Student from '../student/student.model';
 import School from '../school/school.model';
 import Teacher from '../teacher/teacher.model';
 import Parents from '../parents/parents.model';
+import Manager from '../manager/manager.model';
 
 const loginUser = async (payload: Pick<TUser, 'phoneNumber'>) => {
   const { phoneNumber } = payload;
@@ -66,7 +67,100 @@ const loginUser = async (payload: Pick<TUser, 'phoneNumber'>) => {
   };
 };
 
+// const verifyOtp = async (token: string, otp: { otp: number }) => {
+//   const decodedUser = decodeToken(
+//     token,
+//     config.jwt.sing_in_token as Secret,
+//   ) as JwtPayload;
+
+//   if (!decodedUser) {
+//     throw new AppError(httpStatus.UNAUTHORIZED, 'Invalid token');
+//   }
+
+//   const findUser = (await User.findOne({
+//     phoneNumber: decodedUser.phoneNumber,
+//   })) as any;
+
+//   if (!findUser) throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+
+//   let school: any;
+
+//   if (findUser.role === USER_ROLE.student) {
+//     const student = await Student.findOne(findUser.studentId);
+//     school = await School.findById(student?.schoolId);
+//   } else if (findUser.role === USER_ROLE.teacher) {
+//     const teacher = await Teacher.findById(findUser.teacherId);
+//     school = await School.findById(teacher?.schoolId);
+//   } else if (findUser.role === USER_ROLE.parents) {
+//     const parents = await Parents.findById(findUser.parentsId);
+//     school = await School.findById(parents?.schoolId);
+//   } else if (findUser.role === USER_ROLE.manager) {
+//     const manager = await Manager.findById(findUser.managerId);
+//     school = await School.findById(manager?.schoolId);
+//   } else {
+//     school = await School.findById(findUser.schoolId);
+//   }
+
+//   const checkOtpExist = await OtpService.checkOtpByPhoneNumber(
+//     decodedUser.phoneNumber,
+//   );
+
+//   if (!checkOtpExist) {
+//     throw new AppError(httpStatus.NOT_FOUND, "Otp doesn't exist");
+//   }
+
+//   const otpVerify = await OtpService.verifyOTP(
+//     otp.otp,
+//     checkOtpExist?._id.toString(),
+//   );
+
+//   if (!otpVerify) {
+//     throw new AppError(httpStatus.BAD_REQUEST, 'Otp not matched');
+//   }
+
+//   await OtpService.deleteOtpById(checkOtpExist?._id.toString());
+
+//   const userData = {
+//     userId: findUser._id,
+//     studentId: findUser.studentId,
+//     parentsId: findUser.parentsId,
+//     schoolId: findUser.schoolId,
+//     teacherId: findUser.teacherId,
+//     managerId: findUser.managerId,
+//     phoneNumber: findUser.phoneNumber,
+//     role: findUser.role,
+//     name: findUser.name,
+//     image: findUser.image,
+//     mySchoolUserId: school?.userId,
+//   };
+
+//   const tokenGenerate = generateToken(
+//     userData,
+//     config.jwt.access_token as Secret,
+//     config.jwt.access_expires_in as string,
+//   );
+
+//   const refreshToken = generateToken(
+//     userData,
+//     config.jwt.refresh_token as Secret,
+//     config.jwt.refresh_expires_in as string,
+//   );
+
+//   const supperAdmin = await User.findOne({
+//     role: USER_ROLE.supperAdmin,
+//   });
+
+//   return {
+//     accessToken: tokenGenerate,
+//     refreshToken,
+//     user: findUser,
+//     mySchoolUserId: school?.userId,
+//     supperAdminUserId: supperAdmin?._id,
+//   };
+// };
+
 const verifyOtp = async (token: string, otp: { otp: number }) => {
+  // Decode token
   const decodedUser = decodeToken(
     token,
     config.jwt.sing_in_token as Secret,
@@ -76,81 +170,104 @@ const verifyOtp = async (token: string, otp: { otp: number }) => {
     throw new AppError(httpStatus.UNAUTHORIZED, 'Invalid token');
   }
 
-  const findUser = (await User.findOne({
+  // Find user by phone number
+  const user = await User.findOne({
     phoneNumber: decodedUser.phoneNumber,
-  })) as any;
+  });
 
-  if (!findUser) throw new AppError(httpStatus.NOT_FOUND, 'User not found');
-
-  let school: any;
-
-  if (findUser.role === USER_ROLE.student) {
-    const student = await Student.findOne(findUser.studentId);
-    school = await School.findById(student?.schoolId);
-  } else if (findUser.role === USER_ROLE.teacher) {
-    const teacher = await Teacher.findById(findUser.teacherId);
-    school = await School.findById(teacher?.schoolId);
-  } else if (findUser.role === USER_ROLE.parents) {
-    const parents = await Parents.findById(findUser.parentsId);
-    school = await School.findById(parents?.schoolId);
-  } else {
-    school = await School.findById(findUser.schoolId);
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, 'User not found');
   }
 
-  const checkOtpExist = await OtpService.checkOtpByPhoneNumber(
+  // Resolve school by role
+  const getSchoolByRole = async (user: any) => {
+    const role = user.role;
+    switch (role) {
+      case USER_ROLE.student: {
+        const student = await Student.findById(user.studentId);
+        return await School.findById(student?.schoolId);
+      }
+      case USER_ROLE.teacher: {
+        const teacher = await Teacher.findById(user.teacherId);
+        return await School.findById(teacher?.schoolId);
+      }
+      case USER_ROLE.parents: {
+        const parent = await Parents.findById(user.parentsId);
+        return await School.findById(parent?.schoolId);
+      }
+      case USER_ROLE.manager: {
+        const manager = await Manager.findById(user.managerId);
+        return await School.findById(manager?.schoolId);
+      }
+      default:
+        return await School.findById(user.schoolId);
+    }
+  };
+
+  const school = await getSchoolByRole(user);
+
+  // Check and verify OTP
+  const otpRecord = await OtpService.checkOtpByPhoneNumber(
     decodedUser.phoneNumber,
   );
 
-  if (!checkOtpExist) {
+  if (!otpRecord) {
     throw new AppError(httpStatus.NOT_FOUND, "Otp doesn't exist");
   }
 
-  const otpVerify = await OtpService.verifyOTP(
+  const isOtpValid = await OtpService.verifyOTP(
     otp.otp,
-    checkOtpExist?._id.toString(),
+    otpRecord._id.toString(),
   );
 
-  if (!otpVerify) {
+  if (!isOtpValid) {
     throw new AppError(httpStatus.BAD_REQUEST, 'Otp not matched');
   }
 
-  await OtpService.deleteOtpById(checkOtpExist?._id.toString());
+  // Delete OTP after verification
+  await OtpService.deleteOtpById(otpRecord._id.toString());
 
-  const userData = {
-    userId: findUser._id,
-    studentId: findUser.studentId,
-    parentsId: findUser.parentsId,
-    schoolId: findUser.schoolId,
-    teacherId: findUser.teacherId,
-    phoneNumber: findUser.phoneNumber,
-    role: findUser.role,
-    name: findUser.name,
-    image: findUser.image,
+  // Prepare user payload for tokens
+  const userPayload = {
+    userId: user._id,
+    studentId: user.studentId,
+    parentsId: user.parentsId,
+    schoolId: user.schoolId,
+    teacherId: user.teacherId,
+    managerId: user.managerId,
+    phoneNumber: user.phoneNumber,
+    role: user.role,
+    name: user.name,
+    image: user.image,
     mySchoolUserId: school?.userId,
+    mySchoolId: school?._id,
   };
 
-  const tokenGenerate = generateToken(
-    userData,
+  // Generate access and refresh tokens
+  const accessToken = generateToken(
+    userPayload,
     config.jwt.access_token as Secret,
     config.jwt.access_expires_in as string,
   );
 
   const refreshToken = generateToken(
-    userData,
+    userPayload,
     config.jwt.refresh_token as Secret,
     config.jwt.refresh_expires_in as string,
   );
 
-  const supperAdmin = await User.findOne({
+  // Find super admin
+  const superAdmin = await User.findOne({
     role: USER_ROLE.supperAdmin,
   });
 
+  // Final response
   return {
-    accessToken: tokenGenerate,
+    accessToken,
     refreshToken,
-    user: findUser,
+    user,
     mySchoolUserId: school?.userId,
-    supperAdminUserId: supperAdmin?._id,
+    supperAdminUserId: superAdmin?._id,
   };
 };
 

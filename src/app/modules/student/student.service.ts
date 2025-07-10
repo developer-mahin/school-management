@@ -67,7 +67,7 @@ const createStudent = async (
 };
 
 const findStudent = async (id: string) => {
-  console.log(id, "======> id in student service");
+  console.log(id, '======> id in student service');
   const student = await Student.findById(id);
   if (!student) throw new Error('Student not found');
   return student;

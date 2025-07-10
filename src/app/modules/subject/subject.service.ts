@@ -2,13 +2,16 @@
 import { USER_ROLE } from '../../constant';
 import { TAuthUser } from '../../interface/authUser';
 import QueryBuilder from '../../QueryBuilder/queryBuilder';
+import { getSchoolIdFromUser } from '../../utils/getSchoolIdForManager';
 import School from '../school/school.model';
 import { TeacherService } from '../teacher/teacher.service';
 import { TSubject } from './subject.interface';
 import Subject from './subject.model';
 
 const createSubject = async (payload: Partial<TSubject>, user: TAuthUser) => {
-  const result = await Subject.create({ ...payload, schoolId: user.schoolId });
+  const schoolId = getSchoolIdFromUser(user);
+
+  const result = await Subject.create({ ...payload, schoolId });
   return result;
 };
 
@@ -18,6 +21,8 @@ const getSubject = async (user: TAuthUser, query: Record<string, unknown>) => {
   if (user.role === USER_ROLE.teacher) {
     const findTeacher = await TeacherService.findTeacher(user);
     schoolId = findTeacher?.schoolId as any;
+  } else if (user.role === USER_ROLE.manager) {
+    schoolId = getSchoolIdFromUser(user);
   } else if (user.role === USER_ROLE.supperAdmin) {
     const findSchool = await School.findOne({
       _id: query.schoolId,

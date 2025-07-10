@@ -8,10 +8,14 @@ const router = Router();
 router
   .post(
     '/create',
-    auth(USER_ROLE.school),
+    auth(USER_ROLE.school, USER_ROLE.manager),
     GradeSystemController.createGradeSystem,
   )
-  .get('/', auth(USER_ROLE.school), GradeSystemController.getAllGradeSystem)
+  .get(
+    '/',
+    auth(USER_ROLE.school, USER_ROLE.manager),
+    GradeSystemController.getAllGradeSystem,
+  )
   .patch(
     '/update/:gradeSystemId',
     auth(USER_ROLE.school),

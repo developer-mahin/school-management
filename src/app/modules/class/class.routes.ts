@@ -6,7 +6,11 @@ import { USER_ROLE } from '../../constant';
 const route = Router();
 
 route
-  .post('/create', auth(USER_ROLE.school), ClassController.createClass)
+  .post(
+    '/create',
+    auth(USER_ROLE.school, USER_ROLE.manager),
+    ClassController.createClass,
+  )
   .get(
     '/students_of_classes',
     auth(USER_ROLE.teacher),
@@ -19,12 +23,18 @@ route
       USER_ROLE.admin,
       USER_ROLE.school,
       USER_ROLE.teacher,
+      USER_ROLE.manager,
     ),
     ClassController.getClassBySchoolId,
   )
   .get(
     '/:levelId',
-    auth(USER_ROLE.school, USER_ROLE.supperAdmin, USER_ROLE.school),
+    auth(
+      USER_ROLE.school,
+      USER_ROLE.supperAdmin,
+      USER_ROLE.school,
+      USER_ROLE.manager,
+    ),
     ClassController.getAllClasses,
   )
   .get(
@@ -34,6 +44,7 @@ route
       USER_ROLE.supperAdmin,
       USER_ROLE.admin,
       USER_ROLE.teacher,
+      USER_ROLE.manager,
     ),
     ClassController.getSectionsByClassId,
   )

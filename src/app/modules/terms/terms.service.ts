@@ -5,15 +5,20 @@ import { TTerms } from './terms.interface';
 import Terms from './terms.model';
 import { StudentService } from '../student/student.service';
 import { USER_ROLE } from '../../constant';
+import { getSchoolIdFromUser } from '../../utils/getSchoolIdForManager';
 
 export const TermsService = {
   createTerms: async (payload: Partial<TTerms>, user: TAuthUser) => {
-    const result = await Terms.create({ ...payload, schoolId: user.schoolId });
+    const schoolId = getSchoolIdFromUser(user);
+
+    const result = await Terms.create({ ...payload, schoolId });
     return result;
   },
 
   getAllTerms: async (user: TAuthUser) => {
-    const result = await Terms.find({ schoolId: user.schoolId }).lean();
+    const schoolId = getSchoolIdFromUser(user);
+
+    const result = await Terms.find({ schoolId }).lean();
 
     return result;
   },
@@ -39,19 +44,20 @@ export const TermsService = {
     return result;
   },
 
-  getResultBasedOnTerms: async (id: string, user: TAuthUser, query: Record<string, unknown>) => {
-
-
-
-    let findStudent
-    let studentObjectId
+  getResultBasedOnTerms: async (
+    id: string,
+    user: TAuthUser,
+    query: Record<string, unknown>,
+  ) => {
+    let findStudent;
+    let studentObjectId;
     if (user.role === USER_ROLE.student) {
       findStudent = await StudentService.findStudent(user.studentId);
       studentObjectId = new mongoose.Types.ObjectId(String(user.studentId));
-    }
-
-    else if (user.role === USER_ROLE.school) {
-      findStudent = await StudentService.findStudent(query?.studentId as string);
+    } else if (user.role === USER_ROLE.school) {
+      findStudent = await StudentService.findStudent(
+        query?.studentId as string,
+      );
       studentObjectId = new mongoose.Types.ObjectId(String(query?.studentId));
     }
 

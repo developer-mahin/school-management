@@ -22,7 +22,7 @@ router
   )
   .get(
     '/all_assignment',
-    auth(USER_ROLE.school),
+    auth(USER_ROLE.school, USER_ROLE.manager),
     AssignmentController.getAllAssignment,
   )
   .get(

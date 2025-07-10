@@ -10,7 +10,7 @@ const router = Router();
 router
   .post(
     '/create',
-    auth(USER_ROLE.school),
+    auth(USER_ROLE.school, USER_ROLE.manager),
     validateRequest(ExamValidation.ExamSchema),
     ExamController.createExam,
   )
@@ -34,7 +34,11 @@ router
     auth(USER_ROLE.teacher),
     ExamController.getGradesResult,
   )
-  .get('/:termsId', auth(USER_ROLE.school), ExamController.getTermsExams)
+  .get(
+    '/:termsId',
+    auth(USER_ROLE.school, USER_ROLE.manager),
+    ExamController.getTermsExams,
+  )
   .patch('/:examId', auth(USER_ROLE.school), ExamController.updateExams)
 
   .delete('/:examId', auth(USER_ROLE.school), ExamController.deleteExams);

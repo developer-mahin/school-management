@@ -8,18 +8,21 @@ import sendAnnouncement from '../../../socket/sendAnnouncement';
 import Announcement from './announcement.model';
 import QueryBuilder from '../../QueryBuilder/queryBuilder';
 import { USER_ROLE } from '../../constant';
+import { getSchoolIdFromUser } from '../../utils/getSchoolIdForManager';
 
 const createAnnouncement = async (
   payload: Partial<TAnnouncement>,
   user: TAuthUser,
 ) => {
+  const schoolId = getSchoolIdFromUser(user);
+
   const [allStudent, allTeacher, allParents] = await Promise.all([
-    Student.find({ schoolId: user.schoolId }),
-    Teacher.find({ schoolId: user.schoolId }),
+    Student.find({ schoolId }),
+    Teacher.find({ schoolId }),
     Parents.aggregate([
       {
         $match: {
-          schoolId: new mongoose.Types.ObjectId(String(user.schoolId)),
+          schoolId: new mongoose.Types.ObjectId(String(schoolId)),
         },
       },
       {
@@ -37,7 +40,7 @@ const createAnnouncement = async (
 
   const announcementData = {
     ...payload,
-    schoolId: user.schoolId,
+    schoolId,
   };
 
   const data =
@@ -60,11 +63,13 @@ const getAllAnnouncements = async (
   user: TAuthUser,
   query: Record<string, unknown>,
 ) => {
+  const schoolId = getSchoolIdFromUser(user);
+
   let matchStage = {};
   if (user.role !== USER_ROLE.school) {
     matchStage = { receiverId: user.userId };
   } else {
-    matchStage = { schoolId: user.schoolId };
+    matchStage = { schoolId };
   }
 
   const announcementQuery = new QueryBuilder(
