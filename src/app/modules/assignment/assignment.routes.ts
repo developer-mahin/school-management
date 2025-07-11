@@ -26,6 +26,11 @@ router
     AssignmentController.getAllAssignment,
   )
   .get(
+    '/my_assignment_details/:assignmentId',
+    auth(USER_ROLE.student),
+    AssignmentController.myAssignmentDetails,
+  )
+  .get(
     '/active',
     auth(USER_ROLE.teacher),
     AssignmentController.getActiveAssignment,

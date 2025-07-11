@@ -25,6 +25,11 @@ router
     AttendanceController.getMyAttendance,
   )
   .get(
+    '/attendance_count',
+    auth(USER_ROLE.school, USER_ROLE.student),
+    AttendanceController.getAttendanceCount,
+  )
+  .get(
     '/my_attendance/details',
     auth(USER_ROLE.student),
     AttendanceController.getMyAttendanceDetails,

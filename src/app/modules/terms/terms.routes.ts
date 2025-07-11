@@ -13,7 +13,7 @@ router
   )
   .get(
     '/',
-    auth(USER_ROLE.school, USER_ROLE.manager),
+    auth(USER_ROLE.school, USER_ROLE.manager, USER_ROLE.student),
     TermsController.getAllTerms,
   )
   .get(

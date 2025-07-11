@@ -522,6 +522,7 @@ const myAssignmentDetails = async (assignmentId: string, user: TAuthUser) => {
         dueDate: 1,
         marks: 1,
         status: 1,
+        description: 1,
         submittedFile: '$assignmentSubmissions.submittedFile',
         assignementGrade: '$assignmentSubmissions.grade',
         assignmentFile: '$fileUrl',
@@ -577,4 +578,5 @@ export const AssignmentService = {
   markAssignmentAsCompleted,
   pendingAssignment,
   getAllAssignment,
+  myAssignmentDetails,
 };

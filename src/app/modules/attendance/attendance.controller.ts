@@ -68,10 +68,24 @@ const getAttendanceDetails = catchAsync(async (req, res) => {
   });
 });
 
+const getAttendanceCount = catchAsync(async (req, res) => {
+  const result = await AttendanceService.getAttendanceCount(
+    req.user as TAuthUser,
+    req.query,
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Attendance count fetched successfully',
+    data: result,
+  });
+});
+
 export const AttendanceController = {
   createAttendance,
   getAttendanceHistory,
   getMyAttendance,
   getMyAttendanceDetails,
   getAttendanceDetails,
+  getAttendanceCount,
 };
