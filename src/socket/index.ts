@@ -118,49 +118,6 @@ const socketIO = (io: Server) => {
       }
     });
 
-    // Handle user location updates
-    // Buffer to store location data
-    const locationBuffer = [];
-    const LOCATION_LIMIT = 30;
-    let lastUpdateTime = Date.now();
-
-    socket.on('client_location', async (data, callback) => {
-      const longitude = Number(data.lang);
-      const latitude = Number(data.lat);
-      locationBuffer.push({ longitude, latitude });
-
-      if (locationBuffer.length >= LOCATION_LIMIT) {
-        const currentTime = Date.now();
-        const timeElapsed = currentTime - lastUpdateTime;
-        if (timeElapsed >= 30 * 1000) {
-          try {
-            await User.findByIdAndUpdate(
-              socket.user.userId,
-              { $set: { 'location.coordinates': [longitude, latitude] } },
-              { new: true },
-            );
-
-            locationBuffer.length = 0;
-            lastUpdateTime = Date.now();
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          } catch (error: any) {
-            // eslint-disable-next-line no-console
-            console.error('Error updating the database:', error.message);
-          }
-        } else {
-          // eslint-disable-next-line no-console
-          console.log(
-            `Waiting for 1 minute. Time remaining: ${30 - Math.floor(timeElapsed / 1000)
-            } seconds`,
-          );
-        }
-      }
-      callback({ success: true, message: 'user data', result: data });
-      // io.emit(`server_location::${user?._id?.toString()}`, data);
-      io.emit(`server_location::${user?.userId.toString()}`, data);
-      socket.emit(`server_location::${user?.userId.toString()}`, data);
-    });
-
     socket.on('disconnect', () => {
       // eslint-disable-next-line no-console
       console.log('Socket disconnected', socket.id);
@@ -175,6 +132,7 @@ const socketIO = (io: Server) => {
         return;
       }
       connectedUser.delete(socket.user.userId);
+      io.emit('online_users', Array.from(connectedUser.keys()));
     });
 
     socket.on('error', (err) => {
