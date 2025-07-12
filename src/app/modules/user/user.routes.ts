@@ -52,6 +52,7 @@ router
       USER_ROLE.supperAdmin,
       USER_ROLE.school,
       USER_ROLE.teacher,
+      USER_ROLE.student,
     ),
     upload.fields([
       { name: 'image', maxCount: 2 },

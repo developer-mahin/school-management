@@ -131,7 +131,7 @@ const selectChild = async (id: string) => {
 
   const student = await Student.findOne(findUser.studentId);
   const school = await School.findById(student?.schoolId);
-
+  
   const userData = {
     userId: findUser._id,
     studentId: findUser.studentId,
@@ -143,6 +143,7 @@ const selectChild = async (id: string) => {
     name: findUser.name,
     image: findUser.image,
     mySchoolUserId: school?.userId,
+    mySchoolId: school?._id,
   };
 
   const tokenGenerate = generateToken(

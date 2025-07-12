@@ -22,7 +22,12 @@ const socketIO = (io: Server) => {
 
   // Middleware to handle JWT authentication
   io.use(async (socket: Socket, next) => {
-    const token = socket.handshake.headers.authorization;
+    const token =
+      socket.handshake.auth.token ||
+      socket.handshake.headers.token ||
+      socket.handshake.headers.authorization;
+
+
     if (!token) {
       return next(new Error('Authentication error: Token not provided.'));
     }
@@ -145,8 +150,7 @@ const socketIO = (io: Server) => {
         } else {
           // eslint-disable-next-line no-console
           console.log(
-            `Waiting for 1 minute. Time remaining: ${
-              30 - Math.floor(timeElapsed / 1000)
+            `Waiting for 1 minute. Time remaining: ${30 - Math.floor(timeElapsed / 1000)
             } seconds`,
           );
         }

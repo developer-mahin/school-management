@@ -14,6 +14,7 @@ import School from '../school/school.model';
 import Teacher from '../teacher/teacher.model';
 import Parents from '../parents/parents.model';
 import Manager from '../manager/manager.model';
+import axios from 'axios';
 
 const loginUser = async (payload: Pick<TUser, 'phoneNumber'>) => {
   const { phoneNumber } = payload;
@@ -206,28 +207,20 @@ const verifyOtp = async (token: string, otp: { otp: number }) => {
 
   const school = await getSchoolByRole(user);
 
-  // Check and verify OTP
-  const otpRecord = await OtpService.checkOtpByPhoneNumber(
-    decodedUser.phoneNumber,
-  );
-
+  const otpRecord = await OtpService.checkOtpByPhoneNumber(decodedUser.phoneNumber);
   if (!otpRecord) {
     throw new AppError(httpStatus.NOT_FOUND, "Otp doesn't exist");
   }
 
-  const isOtpValid = await OtpService.verifyOTP(
-    otp.otp,
-    otpRecord._id.toString(),
-  );
-
+  const isOtpValid = await OtpService.verifyOTP(otp.otp, otpRecord._id.toString());
   if (!isOtpValid) {
     throw new AppError(httpStatus.BAD_REQUEST, 'Otp not matched');
   }
 
-  // Delete OTP after verification
+  // 5. Delete OTP after successful verification
   await OtpService.deleteOtpById(otpRecord._id.toString());
 
-  // Prepare user payload for tokens
+  // 6. Prepare payload for token generation
   const userPayload = {
     userId: user._id,
     studentId: user.studentId,
@@ -243,28 +236,47 @@ const verifyOtp = async (token: string, otp: { otp: number }) => {
     mySchoolId: school?._id,
   };
 
-  // Generate access and refresh tokens
+  // 7. Generate tokens
   const accessToken = generateToken(
     userPayload,
     config.jwt.access_token as Secret,
-    config.jwt.access_expires_in as string,
+    config.jwt.access_expires_in as string
   );
 
   const refreshToken = generateToken(
     userPayload,
     config.jwt.refresh_token as Secret,
-    config.jwt.refresh_expires_in as string,
+    config.jwt.refresh_expires_in as string
   );
 
-  // Find super admin
-  const superAdmin = await User.findOne({
-    role: USER_ROLE.supperAdmin,
-  });
+  // 8. Get super admin
+  const superAdmin = await User.findOne({ role: USER_ROLE.supperAdmin });
 
-  // Final response
+  // 9. Generate children token if role is "parents"
+  let childrenToken = '';
+  if (user.role === USER_ROLE.parents) {
+    const headers = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    };
+
+    const res = await axios.get(`${config.base_api_url}/student/my_child`, { headers });
+    const firstChild = res?.data?.data?.[0]?.children;
+
+    if (firstChild?._id) {
+      const selectChild = await axios.get(
+        `${config.base_api_url}/student/select_child/${firstChild._id}`,
+        { headers }
+      );
+      childrenToken = selectChild?.data?.data?.accessToken || '';
+    }
+  }
+
+  // 10. Return response
   return {
     accessToken,
     refreshToken,
+    childrenToken,
     user,
     mySchoolUserId: school?.userId,
     supperAdminUserId: superAdmin?._id,

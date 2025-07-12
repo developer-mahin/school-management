@@ -100,8 +100,15 @@ const getBaseOnStudent = async (user: TAuthUser) => {
     },
     {
       $project: {
-        // teacher: 1,
-        user: 1,
+        user: {
+          _id: '$user._id',
+          name: '$user.name',
+          phoneNumber: '$user.phoneNumber',
+          image: '$user.image',
+          teacherId: '$teacher.teacherId',
+          createdAt: '$user.createdAt',
+          subjectName: '$teacher.subjectName',
+        },
       },
     },
   ]);
