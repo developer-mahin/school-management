@@ -207,12 +207,17 @@ const verifyOtp = async (token: string, otp: { otp: number }) => {
 
   const school = await getSchoolByRole(user);
 
-  const otpRecord = await OtpService.checkOtpByPhoneNumber(decodedUser.phoneNumber);
+  const otpRecord = await OtpService.checkOtpByPhoneNumber(
+    decodedUser.phoneNumber,
+  );
   if (!otpRecord) {
     throw new AppError(httpStatus.NOT_FOUND, "Otp doesn't exist");
   }
 
-  const isOtpValid = await OtpService.verifyOTP(otp.otp, otpRecord._id.toString());
+  const isOtpValid = await OtpService.verifyOTP(
+    otp.otp,
+    otpRecord._id.toString(),
+  );
   if (!isOtpValid) {
     throw new AppError(httpStatus.BAD_REQUEST, 'Otp not matched');
   }
@@ -240,13 +245,13 @@ const verifyOtp = async (token: string, otp: { otp: number }) => {
   const accessToken = generateToken(
     userPayload,
     config.jwt.access_token as Secret,
-    config.jwt.access_expires_in as string
+    config.jwt.access_expires_in as string,
   );
 
   const refreshToken = generateToken(
     userPayload,
     config.jwt.refresh_token as Secret,
-    config.jwt.refresh_expires_in as string
+    config.jwt.refresh_expires_in as string,
   );
 
   // 8. Get super admin
@@ -260,13 +265,15 @@ const verifyOtp = async (token: string, otp: { otp: number }) => {
       Authorization: `Bearer ${accessToken}`,
     };
 
-    const res = await axios.get(`${config.base_api_url}/student/my_child`, { headers });
+    const res = await axios.get(`${config.base_api_url}/student/my_child`, {
+      headers,
+    });
     const firstChild = res?.data?.data?.[0]?.children;
 
     if (firstChild?._id) {
       const selectChild = await axios.get(
         `${config.base_api_url}/student/select_child/${firstChild._id}`,
-        { headers }
+        { headers },
       );
       childrenToken = selectChild?.data?.data?.accessToken || '';
     }

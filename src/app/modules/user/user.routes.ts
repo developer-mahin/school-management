@@ -21,23 +21,25 @@ router
     UserController.addParentsMessage,
   )
   .post('/file_upload', upload.single('file'), UserController.fileUpload)
-  .get(
-    '/get_parents_message/:studentId',
-    auth(
-      USER_ROLE.parents,
-      USER_ROLE.admin,
-      USER_ROLE.supperAdmin,
-      USER_ROLE.school,
-      USER_ROLE.teacher,
-    ),
-    UserController.getParentsMessage,
-  )
+
   .get('/', auth(USER_ROLE.admin), UserController.getAllCustomers)
   .get('/all_admin', auth(USER_ROLE.admin), UserController.getAllAdmin)
   .get(
     '/count_total',
     auth(USER_ROLE.admin, USER_ROLE.supperAdmin, USER_ROLE.school),
     UserController.countTotal,
+  )
+  .get(
+    '/my_profile',
+    auth(
+      USER_ROLE.parents,
+      USER_ROLE.admin,
+      USER_ROLE.supperAdmin,
+      USER_ROLE.school,
+      USER_ROLE.teacher,
+      USER_ROLE.student,
+    ),
+    UserController.myProfile,
   )
   .get(
     '/user_overview',
@@ -66,6 +68,17 @@ router
     '/action',
     auth(USER_ROLE.admin, USER_ROLE.supperAdmin, USER_ROLE.school),
     UserController.updateUserActions,
+  )
+  .get(
+    '/get_parents_message/:studentId',
+    auth(
+      USER_ROLE.parents,
+      USER_ROLE.admin,
+      USER_ROLE.supperAdmin,
+      USER_ROLE.school,
+      USER_ROLE.teacher,
+    ),
+    UserController.getParentsMessage,
   );
 
 export const UserRoutes = router;

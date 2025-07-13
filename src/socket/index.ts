@@ -3,7 +3,6 @@ import { Server, Socket } from 'socket.io';
 import { TAuthUser } from '../app/interface/authUser';
 import { TMessage } from '../app/modules/message/message.interface';
 import { MessageService } from '../app/modules/message/message.service';
-import User from '../app/modules/user/user.model';
 import { decodeToken } from '../app/utils/decodeToken';
 import config from '../config';
 
@@ -26,7 +25,6 @@ const socketIO = (io: Server) => {
       socket.handshake.auth.token ||
       socket.handshake.headers.token ||
       socket.handshake.headers.authorization;
-
 
     if (!token) {
       return next(new Error('Authentication error: Token not provided.'));
@@ -76,7 +74,7 @@ const socketIO = (io: Server) => {
       'send_message',
       async (payload: Partial<TMessage & { receiverId: string }>, callback) => {
         try {
-          if (!payload.conversationId || !payload.text_message) {
+          if (!payload.conversationId) {
             return callback?.({ success: false, message: 'Invalid payload' });
           }
 

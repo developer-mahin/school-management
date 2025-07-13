@@ -115,7 +115,23 @@ const getMyChildren = async (user: TAuthUser) => {
 
     {
       $project: {
-        children: 1,
+        children: {
+          _id: '$children._id',
+          uid: '$children.uid',
+          name: '$children.name',
+          role: '$children.role',
+          status: '$children.status',
+          isDeleted: '$children.isDeleted',
+          createdAt: '$children.createdAt',
+          updatedAt: '$children.updatedAt',
+          phoneNumber: '$children.phoneNumber',
+          image: '$children.image',
+          studentId: '$student._id',
+          parentsMessage: '$student.parentsMessage',
+          section: '$student.section',
+          className: '$student.className',
+          schoolName: '$student.schoolName',
+        },
       },
     },
   ]);
@@ -131,7 +147,7 @@ const selectChild = async (id: string) => {
 
   const student = await Student.findOne(findUser.studentId);
   const school = await School.findById(student?.schoolId);
-  
+
   const userData = {
     userId: findUser._id,
     studentId: findUser.studentId,
