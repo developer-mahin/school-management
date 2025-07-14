@@ -1,9 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { JwtPayload, Secret } from 'jsonwebtoken';
 import { Server, Socket } from 'socket.io';
 import { TAuthUser } from '../app/interface/authUser';
 import { TMessage } from '../app/modules/message/message.interface';
 import { MessageService } from '../app/modules/message/message.service';
-import User from '../app/modules/user/user.model';
 import { decodeToken } from '../app/utils/decodeToken';
 import config from '../config';
 
@@ -22,7 +22,11 @@ const socketIO = (io: Server) => {
 
   // Middleware to handle JWT authentication
   io.use(async (socket: Socket, next) => {
-    const token = socket.handshake.headers.authorization;
+    const token =
+      socket.handshake.auth.token ||
+      socket.handshake.headers.token ||
+      socket.handshake.headers.authorization;
+
     if (!token) {
       return next(new Error('Authentication error: Token not provided.'));
     }
@@ -71,7 +75,7 @@ const socketIO = (io: Server) => {
       'send_message',
       async (payload: Partial<TMessage & { receiverId: string }>, callback) => {
         try {
-          if (!payload.conversationId || !payload.text_message) {
+          if (!payload.conversationId) {
             return callback?.({ success: false, message: 'Invalid payload' });
           }
 
@@ -86,12 +90,24 @@ const socketIO = (io: Server) => {
           });
 
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const connectUser: any = connectedUser.get(
+          const receiver: any = connectedUser.get(
             payload!.receiverId!.toString(),
           );
 
-          if (connectUser) {
-            io.to(connectUser.socketId).emit('new_message', {
+          const sender: any = connectedUser.get(
+            payload!.sender!.toString(),
+          );
+
+
+          if (receiver) {
+            io.to(receiver.socketId).emit('new_message', {
+              success: true,
+              data: savedMessage,
+            });
+          }
+
+          if (sender) {
+            io.to(sender.socketId).emit('new_message', {
               success: true,
               data: savedMessage,
             });
@@ -113,50 +129,6 @@ const socketIO = (io: Server) => {
       }
     });
 
-    // Handle user location updates
-    // Buffer to store location data
-    const locationBuffer = [];
-    const LOCATION_LIMIT = 30;
-    let lastUpdateTime = Date.now();
-
-    socket.on('client_location', async (data, callback) => {
-      const longitude = Number(data.lang);
-      const latitude = Number(data.lat);
-      locationBuffer.push({ longitude, latitude });
-
-      if (locationBuffer.length >= LOCATION_LIMIT) {
-        const currentTime = Date.now();
-        const timeElapsed = currentTime - lastUpdateTime;
-        if (timeElapsed >= 30 * 1000) {
-          try {
-            await User.findByIdAndUpdate(
-              socket.user.userId,
-              { $set: { 'location.coordinates': [longitude, latitude] } },
-              { new: true },
-            );
-
-            locationBuffer.length = 0;
-            lastUpdateTime = Date.now();
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          } catch (error: any) {
-            // eslint-disable-next-line no-console
-            console.error('Error updating the database:', error.message);
-          }
-        } else {
-          // eslint-disable-next-line no-console
-          console.log(
-            `Waiting for 1 minute. Time remaining: ${
-              30 - Math.floor(timeElapsed / 1000)
-            } seconds`,
-          );
-        }
-      }
-      callback({ success: true, message: 'user data', result: data });
-      // io.emit(`server_location::${user?._id?.toString()}`, data);
-      io.emit(`server_location::${user?.userId.toString()}`, data);
-      socket.emit(`server_location::${user?.userId.toString()}`, data);
-    });
-
     socket.on('disconnect', () => {
       // eslint-disable-next-line no-console
       console.log('Socket disconnected', socket.id);
@@ -171,6 +143,7 @@ const socketIO = (io: Server) => {
         return;
       }
       connectedUser.delete(socket.user.userId);
+      io.emit('online_users', Array.from(connectedUser.keys()));
     });
 
     socket.on('error', (err) => {

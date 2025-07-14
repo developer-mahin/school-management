@@ -41,7 +41,7 @@ const getAllManager = async (
   user: TAuthUser,
   query: Record<string, unknown>,
 ) => {
-  const managerQuery = new AggregationQueryBuilder(query)
+  const managerQuery = new AggregationQueryBuilder(query);
 
   const result = await managerQuery
     .customPipeline([
@@ -56,27 +56,27 @@ const getAllManager = async (
           localField: '_id',
           foreignField: 'managerId',
           as: 'user',
-        }
+        },
       },
       {
         $unwind: {
           path: '$user',
           preserveNullAndEmptyArrays: true,
-        }
+        },
       },
       {
         $project: {
           _id: 1,
           schoolId: 1,
           managerRole: 1,
-          userId: "$user._id",
+          userId: '$user._id',
           name: '$user.name',
           phoneNumber: '$user.phoneNumber',
           image: '$user.image',
           role: '$user.role',
           status: '$user.status',
-        }
-      }
+        },
+      },
     ])
     .search(['name'])
     .sort()
@@ -115,23 +115,20 @@ const updateManager = async (
       new: true,
       session,
     });
-  })
+  });
 
-  return result
+  return result;
 };
 
 const deleteManager = async (managerId: string) => {
-
   const result = transactionWrapper(async (session) => {
     const student = await Manager.findByIdAndDelete(managerId, { session });
     if (!student) throw new Error('Student not found');
 
     await User.findOneAndDelete({ managerId: managerId }, { session });
+  });
 
-  })
-
-  return result
-
+  return result;
 };
 
 export const ManagerService = {

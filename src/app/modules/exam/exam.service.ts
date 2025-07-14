@@ -14,15 +14,18 @@ import { TeacherService } from '../teacher/teacher.service';
 import { commonPipeline } from './exam.helper';
 import { TExam } from './exam.interface';
 import Exam from './exam.model';
+import { getSchoolIdFromUser } from '../../utils/getSchoolIdForManager';
 
 const createExam = async (payload: Partial<TExam>, user: TAuthUser) => {
   const examDate = new Date(payload?.date as Date);
   examDate.setUTCHours(0, 0, 0, 0);
 
+  const schoolId = getSchoolIdFromUser(user);
+
   const result = await Exam.create({
     ...payload,
     date: examDate,
-    schoolId: user.schoolId,
+    schoolId,
   });
 
   const findStudent = await Student.find({
@@ -52,11 +55,13 @@ const getTermsExams = async (
 ) => {
   const examQuery = new AggregationQueryBuilder(query);
 
+  const schoolId = getSchoolIdFromUser(user);
+
   const result = await examQuery
     .customPipeline([
       {
         $match: {
-          schoolId: new mongoose.Types.ObjectId(String(user.schoolId)),
+          schoolId: new mongoose.Types.ObjectId(String(schoolId)),
           termsId: new mongoose.Types.ObjectId(String(termsId)),
         },
       },

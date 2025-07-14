@@ -18,6 +18,7 @@ export const auth = (...requestedRole: TUserRole[]) => {
         'You are not authorized to access this route & token is not found please login',
       );
     }
+
     const token = bearerToken?.split(' ')[1];
 
     const decoded = decodeToken(

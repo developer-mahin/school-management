@@ -58,6 +58,7 @@ const getBaseOnStudent = async (user: TAuthUser) => {
   if (!findStudent)
     throw new AppError(httpStatus.NOT_FOUND, 'Student not found');
 
+  const currentUserId = new mongoose.Types.ObjectId(String(user.userId));
   const result = await ClassSchedule.aggregate([
     {
       $match: {
@@ -99,9 +100,52 @@ const getBaseOnStudent = async (user: TAuthUser) => {
       },
     },
     {
+      $lookup: {
+        from: "conversations",
+        let: { userId: "$user._id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $in: ["$$userId", "$users"],
+              },
+            },
+          },
+        ],
+        as: "conversation",
+      },
+    },
+    {
+      $addFields: {
+        conversation: {
+          $filter: {
+            input: "$conversation",
+            as: "conv",
+            cond: {
+              $in: [currentUserId, "$$conv.users"],
+            },
+          },
+        },
+      },
+    },
+    {
+      $unwind: {
+        path: '$conversation',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
       $project: {
-        // teacher: 1,
-        user: 1,
+        user: {
+          _id: '$user._id',
+          name: '$user.name',
+          phoneNumber: '$user.phoneNumber',
+          image: '$user.image',
+          teacherId: '$teacher.teacherId',
+          createdAt: '$user.createdAt',
+          subjectName: '$teacher.subjectName',
+          conversationId: "$conversation._id",
+        },
       },
     },
   ]);

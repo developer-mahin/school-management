@@ -1,18 +1,24 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { TAuthUser } from '../../interface/authUser';
+import { getSchoolIdFromUser } from '../../utils/getSchoolIdForManager';
 import Class from '../class/class.model';
 import { TLevel } from './level.interface';
 import Level from './level.model';
 
 const createLevel = async (payload: TLevel, user: TAuthUser) => {
+  const schoolId = getSchoolIdFromUser(user);
+
   const result = await Level.create({
     ...payload,
-    schoolId: user.schoolId,
+    schoolId,
   });
   return result;
 };
 
 const getAllLevels = async (user: TAuthUser) => {
-  const result = await Level.find({ schoolId: user.schoolId });
+  const schoolId = getSchoolIdFromUser(user);
+
+  const result = await Level.find({ schoolId });
   return result;
 };
 

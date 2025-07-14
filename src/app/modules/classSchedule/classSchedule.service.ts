@@ -10,6 +10,7 @@ import { TeacherService } from '../teacher/teacher.service';
 import { commonPipeline } from './classSchedule.helper';
 import { TClassSchedule } from './classSchedule.interface';
 import ClassSchedule from './classSchedule.model';
+import { getSchoolIdFromUser } from '../../utils/getSchoolIdForManager';
 
 const createClassSchedule = async (
   payload: Partial<TClassSchedule>,
@@ -29,9 +30,10 @@ const createClassSchedule = async (
     throw new AppError(httpStatus.BAD_REQUEST, 'Class Schedule already exists');
   }
 
+  const schoolId = getSchoolIdFromUser(user);
   const result = await ClassSchedule.create({
     ...payload,
-    schoolId: user.schoolId,
+    schoolId,
   });
   return result;
 };
@@ -41,12 +43,15 @@ const getAllClassSchedule = async (
   query: Record<string, unknown>,
 ) => {
   const classQuery = new AggregationQueryBuilder(query);
+  const schoolId = getSchoolIdFromUser(user);
 
   const result = await classQuery
     .customPipeline([
       {
         $match: {
-          schoolId: new mongoose.Types.ObjectId(String(user.schoolId)),
+          $expr: {
+            schoolId: new mongoose.Types.ObjectId(String(schoolId)),
+          },
         },
       },
       ...classAndSubjectQuery,
@@ -84,7 +89,7 @@ const getAllClassSchedule = async (
           let: {
             classId: '$classId',
             section: '$section',
-            schoolId: new mongoose.Types.ObjectId(String(user.schoolId)),
+            schoolId: new mongoose.Types.ObjectId(String(schoolId)),
           },
           pipeline: [
             {

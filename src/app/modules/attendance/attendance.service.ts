@@ -8,10 +8,14 @@ import Attendance from './attendance.model';
 import Class from '../class/class.model';
 import { StudentService } from '../student/student.service';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
-import { commonStageInAttendance } from './attendance.helper';
+import {
+  commonStageInAttendance,
+  commonStageInAttendanceDetails,
+} from './attendance.helper';
 import sendNotification from '../../../socket/sendNotification';
 import { NOTIFICATION_TYPE } from '../notification/notification.interface';
 import { USER_ROLE } from '../../constant';
+import dayjs from 'dayjs';
 
 const createAttendance = async (
   payload: Partial<TAttendance>,
@@ -139,7 +143,7 @@ const getMyAttendance = async (
   const studentObjectId = new mongoose.Types.ObjectId(String(user.studentId));
 
   const attendanceQuery = new AggregationQueryBuilder(query);
-
+  const commonStage = commonStageInAttendanceDetails(studentObjectId);
   const result = await attendanceQuery
     .customPipeline([
       {
@@ -149,63 +153,7 @@ const getMyAttendance = async (
           schoolId: new mongoose.Types.ObjectId(String(findStudent.schoolId)),
         },
       },
-      {
-        $addFields: {
-          status: {
-            $cond: {
-              if: {
-                $in: [
-                  studentObjectId,
-                  {
-                    $map: {
-                      input: '$presentStudents',
-                      as: 'student',
-                      in: '$$student.studentId',
-                    },
-                  },
-                ],
-              },
-              then: 'present',
-              else: 'absent',
-            },
-          },
-          dateOnly: {
-            $dateToString: { format: '%Y-%m-%d', date: '$date' },
-          },
-        },
-      },
-      {
-        $group: {
-          _id: '$dateOnly',
-          classInfo: {
-            $push: {
-              _id: '$_id',
-              classScheduleId: '$classScheduleId',
-              status: '$status',
-              date: '$date',
-            },
-          },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          date: '$_id',
-          classInfo: 1,
-          totalClass: {
-            $size: '$classInfo',
-          },
-          presentClass: {
-            $size: {
-              $filter: {
-                input: '$classInfo',
-                as: 'ci',
-                cond: { $eq: ['$$ci.status', 'present'] },
-              },
-            },
-          },
-        },
-      },
+      ...commonStage,
     ])
     .sort()
     .paginate()
@@ -410,10 +358,57 @@ const getAttendanceDetails = async (attendanceId: string) => {
   return result;
 };
 
+const getAttendanceCount = async (
+  user: TAuthUser,
+  query: Record<string, unknown>,
+) => {
+  const findStudent = await StudentService.findStudent(user.studentId);
+  const studentObjectId = new mongoose.Types.ObjectId(String(user.studentId));
+
+  const attendanceQuery = new AggregationQueryBuilder(query);
+
+  // Get the first and last day of the current month
+  const startOfMonth = dayjs().startOf('month').toDate();
+  const endOfMonth = dayjs().endOf('month').toDate();
+
+  const commonStage = commonStageInAttendanceDetails(studentObjectId);
+
+  const result = await attendanceQuery
+    .customPipeline([
+      {
+        $match: {
+          className: findStudent.className,
+          section: findStudent.section,
+          schoolId: new mongoose.Types.ObjectId(String(findStudent.schoolId)),
+          date: {
+            $gte: startOfMonth,
+            $lte: endOfMonth,
+          },
+        },
+      },
+      ...commonStage,
+    ])
+    .execute(Attendance);
+
+  let totalPresent = 0;
+  let totalAbsent = 0;
+
+  for (const attendance of result) {
+    totalPresent += attendance.presentClass;
+    totalAbsent += attendance.totalClass - attendance.presentClass;
+  }
+
+  return {
+    totalPresent: totalPresent || 0,
+    totalAbsent: totalAbsent || 0,
+  };
+};
+
 export const AttendanceService = {
   createAttendance,
   getAttendanceHistory,
   getMyAttendance,
   getMyAttendanceDetails,
   getAttendanceDetails,
+  getAttendanceCount,
 };

@@ -8,17 +8,20 @@ import Student from '../student/student.model';
 import { TeacherService } from '../teacher/teacher.service';
 import { TClass } from './class.interface';
 import Class from './class.model';
+import { getSchoolIdFromUser } from '../../utils/getSchoolIdForManager';
 
 const createClass = async (payload: Partial<TClass>, user: TAuthUser) => {
   const findLevel = await Level.findById(payload.levelId);
   if (!findLevel) throw new Error('Level not found');
 
+  // Assign schoolId based on role
+  const schoolId = getSchoolIdFromUser(user);
   const section = payload?.section?.map((item) => item).join(' / ');
 
   const result = await Class.create({
     ...payload,
-    schoolId: user.schoolId,
     levelName: findLevel.levelName,
+    schoolId,
     section,
   });
 
@@ -26,7 +29,8 @@ const createClass = async (payload: Partial<TClass>, user: TAuthUser) => {
 };
 
 const getAllClasses = async (user: TAuthUser, id: string) => {
-  const result = await Class.find({ schoolId: user.schoolId, levelId: id });
+  const schoolId = getSchoolIdFromUser(user);
+  const result = await Class.find({ schoolId, levelId: id });
   return result;
 };
 

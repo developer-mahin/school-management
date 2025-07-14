@@ -6,10 +6,19 @@ import { SubjectController } from './subject.controller';
 const router = Router();
 
 router
-  .post('/create', auth(USER_ROLE.school), SubjectController.createSubject)
+  .post(
+    '/create',
+    auth(USER_ROLE.school, USER_ROLE.manager),
+    SubjectController.createSubject,
+  )
   .get(
     '/',
-    auth(USER_ROLE.school, USER_ROLE.teacher, USER_ROLE.supperAdmin),
+    auth(
+      USER_ROLE.school,
+      USER_ROLE.manager,
+      USER_ROLE.teacher,
+      USER_ROLE.supperAdmin,
+    ),
     SubjectController.getSubject,
   )
   .patch('/action', auth(USER_ROLE.school), SubjectController.updateSubject)
