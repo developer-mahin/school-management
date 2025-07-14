@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { JwtPayload, Secret } from 'jsonwebtoken';
 import { Server, Socket } from 'socket.io';
 import { TAuthUser } from '../app/interface/authUser';
@@ -89,12 +90,24 @@ const socketIO = (io: Server) => {
           });
 
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const connectUser: any = connectedUser.get(
+          const receiver: any = connectedUser.get(
             payload!.receiverId!.toString(),
           );
 
-          if (connectUser) {
-            io.to(connectUser.socketId).emit('new_message', {
+          const sender: any = connectedUser.get(
+            payload!.sender!.toString(),
+          );
+
+
+          if (receiver) {
+            io.to(receiver.socketId).emit('new_message', {
+              success: true,
+              data: savedMessage,
+            });
+          }
+
+          if (sender) {
+            io.to(sender.socketId).emit('new_message', {
               success: true,
               data: savedMessage,
             });
