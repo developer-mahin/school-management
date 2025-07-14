@@ -10,7 +10,7 @@ const router = Router();
 router
   .post(
     '/create',
-    auth(USER_ROLE.school),
+    auth(USER_ROLE.school, USER_ROLE.manager),
     validateRequest(AnnouncementValidation.createAnnouncementValidation),
     AnnouncementController.createAnnouncement,
   )
@@ -21,6 +21,7 @@ router
       USER_ROLE.parents,
       USER_ROLE.teacher,
       USER_ROLE.school,
+      USER_ROLE.manager,
     ),
     AnnouncementController.getAllAnnouncements,
   );

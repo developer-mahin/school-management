@@ -16,7 +16,7 @@ router
   )
   .get(
     '/history',
-    auth(USER_ROLE.teacher, USER_ROLE.school),
+    auth(USER_ROLE.teacher, USER_ROLE.school, USER_ROLE.manager),
     AttendanceController.getAttendanceHistory,
   )
   .get(
@@ -25,13 +25,18 @@ router
     AttendanceController.getMyAttendance,
   )
   .get(
+    '/attendance_count',
+    auth(USER_ROLE.school, USER_ROLE.student),
+    AttendanceController.getAttendanceCount,
+  )
+  .get(
     '/my_attendance/details',
     auth(USER_ROLE.student),
     AttendanceController.getMyAttendanceDetails,
   )
   .get(
     '/details/:attendanceId',
-    auth(USER_ROLE.teacher, USER_ROLE.school),
+    auth(USER_ROLE.teacher, USER_ROLE.school, USER_ROLE.manager),
     AttendanceController.getAttendanceDetails,
   );
 

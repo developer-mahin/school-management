@@ -22,8 +22,13 @@ router
   )
   .get(
     '/all_assignment',
-    auth(USER_ROLE.school),
+    auth(USER_ROLE.school, USER_ROLE.manager),
     AssignmentController.getAllAssignment,
+  )
+  .get(
+    '/my_assignment_details/:assignmentId',
+    auth(USER_ROLE.student),
+    AssignmentController.myAssignmentDetails,
   )
   .get(
     '/active',

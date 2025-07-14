@@ -10,11 +10,15 @@ const router = Router();
 router
   .post(
     '/create',
-    auth(USER_ROLE.school),
+    auth(USER_ROLE.school, USER_ROLE.manager),
     validateRequest(ClassScheduleValidation.classScheduleSchema),
     ClassScheduleController.createClassSchedule,
   )
-  .get('/', auth(USER_ROLE.school), ClassScheduleController.getAllClassSchedule)
+  .get(
+    '/',
+    auth(USER_ROLE.school, USER_ROLE.manager),
+    ClassScheduleController.getAllClassSchedule,
+  )
   .get(
     '/schedule_by_days',
     auth(USER_ROLE.school, USER_ROLE.teacher, USER_ROLE.student),

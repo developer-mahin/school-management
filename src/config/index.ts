@@ -7,6 +7,7 @@ export default {
   NODE_ENV: process.env.NODE_ENV,
   port: process.env.PORT,
   database_url: process.env.DATABASE_URL,
+  base_api_url: process.env.BASE_API_URL,
 
   salt_round: process.env.SALT_ROUND,
   socket_port: process.env.SOCKET_PORT,

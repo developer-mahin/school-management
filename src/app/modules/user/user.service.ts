@@ -303,6 +303,11 @@ const editProfile = async (user: TAuthUser, payload: any) => {
   return result;
 };
 
+const myProfile = async (user: TAuthUser) => {
+  const result = await User.findOne({ _id: user.userId });
+  return result;
+};
+
 export const UserService = {
   updateUserActions,
   createAdmin,
@@ -314,4 +319,5 @@ export const UserService = {
   addParentsMessage,
   getParentsMessage,
   editProfile,
+  myProfile,
 };

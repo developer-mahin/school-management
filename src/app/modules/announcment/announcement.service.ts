@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose from 'mongoose';
 import { TAuthUser } from '../../interface/authUser';
 import Parents from '../parents/parents.model';
@@ -8,18 +9,23 @@ import sendAnnouncement from '../../../socket/sendAnnouncement';
 import Announcement from './announcement.model';
 import QueryBuilder from '../../QueryBuilder/queryBuilder';
 import { USER_ROLE } from '../../constant';
+import { getSchoolIdFromUser } from '../../utils/getSchoolIdForManager';
+import sendNotification from '../../../socket/sendNotification';
+import { NOTIFICATION_TYPE } from '../notification/notification.interface';
 
 const createAnnouncement = async (
   payload: Partial<TAnnouncement>,
   user: TAuthUser,
 ) => {
+  const schoolId = getSchoolIdFromUser(user);
+
   const [allStudent, allTeacher, allParents] = await Promise.all([
-    Student.find({ schoolId: user.schoolId }),
-    Teacher.find({ schoolId: user.schoolId }),
+    Student.find({ schoolId }),
+    Teacher.find({ schoolId }),
     Parents.aggregate([
       {
         $match: {
-          schoolId: new mongoose.Types.ObjectId(String(user.schoolId)),
+          schoolId: new mongoose.Types.ObjectId(String(schoolId)),
         },
       },
       {
@@ -35,36 +41,52 @@ const createAnnouncement = async (
     ]),
   ]);
 
-  const announcementData = {
-    ...payload,
-    schoolId: user.schoolId,
-  };
-
-  const data =
+  const receivers =
     payload.announcementTo === 'student'
       ? allStudent
       : payload.announcementTo === 'teacher'
         ? allTeacher
         : allParents;
 
-  const sendAnnouncements = data.map((item) => {
-    announcementData.receiverId = item.userId;
-    Announcement.create(announcementData);
-    return sendAnnouncement(announcementData);
+  const announcementPromises = receivers.map(async (item) => {
+    const receiverId = item.userId || item._id || item._doc?.userId;
+
+    const newAnnouncement = await Announcement.create({
+      ...payload,
+      schoolId,
+      receiverId,
+    });
+
+    const notificationData = {
+      ...payload,
+      message: payload.title,
+      role: user.role,
+      type: NOTIFICATION_TYPE.ANNOUNCEMENT,
+      linkId: newAnnouncement._id,
+      senderId: user.userId,
+      receiverId,
+    };
+
+    await Promise.all([
+      sendAnnouncement(newAnnouncement),
+      sendNotification(user, notificationData),
+    ]);
   });
 
-  await Promise.all(sendAnnouncements);
+  await Promise.all(announcementPromises);
 };
 
 const getAllAnnouncements = async (
   user: TAuthUser,
   query: Record<string, unknown>,
 ) => {
+  const schoolId = getSchoolIdFromUser(user);
+
   let matchStage = {};
   if (user.role !== USER_ROLE.school) {
     matchStage = { receiverId: user.userId };
   } else {
-    matchStage = { schoolId: user.schoolId };
+    matchStage = { schoolId };
   }
 
   const announcementQuery = new QueryBuilder(

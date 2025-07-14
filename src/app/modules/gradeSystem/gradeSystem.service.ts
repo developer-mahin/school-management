@@ -1,5 +1,6 @@
 import { TAuthUser } from '../../interface/authUser';
 import QueryBuilder from '../../QueryBuilder/queryBuilder';
+import { getSchoolIdFromUser } from '../../utils/getSchoolIdForManager';
 import { TGraderSystem } from './gradeSystem.interface';
 import GradeSystem from './gradeSystem.model';
 
@@ -15,9 +16,11 @@ const createGradeSystem = async (
   if (payload.grade === 'C') gpa = 2.0;
   if (payload.grade === 'D') gpa = 1.0;
 
+  const schoolId = getSchoolIdFromUser(user);
+
   const result = await GradeSystem.create({
     ...payload,
-    schoolId: user.schoolId,
+    schoolId,
     gpa: gpa,
   });
   return result;
@@ -27,8 +30,9 @@ const getAllGradeSystem = async (
   user: TAuthUser,
   query: Record<string, unknown>,
 ) => {
+  const schoolId = getSchoolIdFromUser(user);
   const gradeSystemQuery = new QueryBuilder(
-    GradeSystem.find({ schoolId: user.schoolId }),
+    GradeSystem.find({ schoolId }),
     query,
   );
 

@@ -67,7 +67,7 @@ const createStudent = async (
 };
 
 const findStudent = async (id: string) => {
-  console.log(id, "======> id in student service");
+  console.log(id, '======> id in student service');
   const student = await Student.findById(id);
   if (!student) throw new Error('Student not found');
   return student;
@@ -115,7 +115,23 @@ const getMyChildren = async (user: TAuthUser) => {
 
     {
       $project: {
-        children: 1,
+        children: {
+          _id: '$children._id',
+          uid: '$children.uid',
+          name: '$children.name',
+          role: '$children.role',
+          status: '$children.status',
+          isDeleted: '$children.isDeleted',
+          createdAt: '$children.createdAt',
+          updatedAt: '$children.updatedAt',
+          phoneNumber: '$children.phoneNumber',
+          image: '$children.image',
+          studentId: '$student._id',
+          parentsMessage: '$student.parentsMessage',
+          section: '$student.section',
+          className: '$student.className',
+          schoolName: '$student.schoolName',
+        },
       },
     },
   ]);
@@ -143,6 +159,7 @@ const selectChild = async (id: string) => {
     name: findUser.name,
     image: findUser.image,
     mySchoolUserId: school?.userId,
+    mySchoolId: school?._id,
   };
 
   const tokenGenerate = generateToken(

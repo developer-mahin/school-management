@@ -134,6 +134,16 @@ const fileUpload = catchAsync(async (req, res) => {
   });
 });
 
+const myProfile = catchAsync(async (req, res) => {
+  const result = await UserService.myProfile(req.user as TAuthUser);
+  sendResponse(res, {
+    data: result,
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'user overview fetched successfully',
+  });
+});
+
 export const UserController = {
   updateUserActions,
   createAdmin,
@@ -145,4 +155,5 @@ export const UserController = {
   getParentsMessage,
   editProfile,
   fileUpload,
+  myProfile,
 };

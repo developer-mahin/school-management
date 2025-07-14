@@ -131,7 +131,7 @@ const getConversations = async (
       },
     ])
     .sort()
-    .paginate()
+    // .paginate()
     .search(['self.name', 'otherUser.name'])
     .execute(Conversation);
 
