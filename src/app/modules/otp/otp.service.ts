@@ -19,14 +19,14 @@ const sendOTP = async (
   It will expire in ${otpExpiryTime} minute${otpExpiryTime! > 1 ? 's' : ''}. 
 Please do not share this code with anyone.`;
 
-  if (receiverType === 'phone') {
-    const emailBody = {
-      phoneNumber,
-      message,
-    };
+  // if (receiverType === 'phone') {
+  //   const emailBody = {
+  //     phoneNumber,
+  //     message,
+  //   };
 
-    await sendSMS(emailBody);
-  }
+  //   await sendSMS(emailBody);
+  // }
 
   const findExistingOtp = await OTP.findOne({
     sendTo: phoneNumber,

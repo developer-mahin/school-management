@@ -14,6 +14,7 @@ import sendNotification from '../../../socket/sendNotification';
 import { NOTIFICATION_TYPE } from '../notification/notification.interface';
 import User from '../user/user.model';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
+import { transactionWrapper } from '../../utils/transactionWrapper';
 
 const createTeacher = async (
   payload: Partial<TTeacher> & { phoneNumber: string; name?: string },
@@ -101,28 +102,28 @@ const getBaseOnStudent = async (user: TAuthUser) => {
     },
     {
       $lookup: {
-        from: "conversations",
-        let: { userId: "$user._id" },
+        from: 'conversations',
+        let: { userId: '$user._id' },
         pipeline: [
           {
             $match: {
               $expr: {
-                $in: ["$$userId", "$users"],
+                $in: ['$$userId', '$users'],
               },
             },
           },
         ],
-        as: "conversation",
+        as: 'conversation',
       },
     },
     {
       $addFields: {
         conversation: {
           $filter: {
-            input: "$conversation",
-            as: "conv",
+            input: '$conversation',
+            as: 'conv',
             cond: {
-              $in: [currentUserId, "$$conv.users"],
+              $in: [currentUserId, '$$conv.users'],
             },
           },
         },
@@ -144,7 +145,7 @@ const getBaseOnStudent = async (user: TAuthUser) => {
           teacherId: '$teacher.teacherId',
           createdAt: '$user.createdAt',
           subjectName: '$teacher.subjectName',
-          conversationId: "$conversation._id",
+          conversationId: '$conversation._id',
         },
       },
     },
@@ -234,10 +235,7 @@ const editTeacher = async (
     phoneNumber: payload.phoneNumber,
   };
 
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
-  try {
+  const data = transactionWrapper(async (session) => {
     const teacher = await Teacher.findOneAndUpdate(
       {
         userId: teacherId,
@@ -268,23 +266,13 @@ const editTeacher = async (
 
     if (!user) throw new AppError(httpStatus.NOT_FOUND, 'User not found');
 
-    await session.commitTransaction();
-    session.endSession();
-
-    return user;
-  } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    throw error;
-  }
+    return { teacher, user };
+  });
+  return data;
 };
 
 const deleteTeacher = async (teacherId: string) => {
-  const session = await mongoose.startSession();
-
-  try {
-    session.startTransaction();
-
+  const result = transactionWrapper(async (session) => {
     const teacher = await Teacher.findOneAndDelete(
       { userId: teacherId },
       { session },
@@ -293,16 +281,9 @@ const deleteTeacher = async (teacherId: string) => {
 
     const user = await User.findOneAndDelete({ _id: teacherId }, { session });
     if (!user) throw new Error('User not found');
+  });
 
-    await session.commitTransaction();
-    session.endSession();
-
-    return teacher;
-  } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    throw error;
-  }
+  return result;
 };
 
 export const TeacherService = {

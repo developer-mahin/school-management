@@ -9,6 +9,7 @@ import { createUserWithProfile } from '../user/user.helper';
 import User from '../user/user.model';
 import { TSchool } from './school.interface';
 import School from './school.model';
+import { transactionWrapper } from '../../utils/transactionWrapper';
 
 const createSchool = async (
   payload: Partial<TSchool> & { phoneNumber: string; name?: string },
@@ -162,26 +163,14 @@ const editSchool = async (schoolId: string, payload: Partial<TSchool>) => {
 };
 
 const deleteSchool = async (schoolId: string) => {
-  const session = await mongoose.startSession();
-
-  try {
-    session.startTransaction();
-
+  const result = transactionWrapper(async (session) => {
     const result = await School.findByIdAndDelete(schoolId, { session });
 
     if (!result) throw new Error('School not deleted');
 
     await User.findOneAndDelete({ schoolId }, { session });
-
-    await session.commitTransaction();
-    session.endSession();
-
-    return result;
-  } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    throw error;
-  }
+  });
+  return result;
 };
 
 const getAllStudents = async (

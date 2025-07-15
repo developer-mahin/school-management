@@ -7,6 +7,7 @@ import { TAuthUser } from '../../interface/authUser';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 import generateToken from '../../utils/generateToken';
 import generateUID from '../../utils/generateUID';
+import { transactionWrapper } from '../../utils/transactionWrapper';
 import Parents from '../parents/parents.model';
 import School from '../school/school.model';
 import User from '../user/user.model';
@@ -16,8 +17,6 @@ import {
   createStudentWithProfile,
   handleParentUserCreation,
 } from './students.helper';
-import AppError from '../../utils/AppError';
-import httpStatus from 'http-status';
 
 const createStudent = async (
   payload: Partial<TStudent> & { phoneNumber: string; name?: string },
@@ -265,11 +264,7 @@ const editStudent = async (id: string, payload: any) => {
     name: payload.name,
   };
 
-  const session = await mongoose.startSession();
-
-  try {
-    session.startTransaction();
-
+  const result = transactionWrapper(async (session) => {
     const updateStudent = await Student.findOneAndUpdate(
       { _id: id },
       sudentData,
@@ -282,38 +277,22 @@ const editStudent = async (id: string, payload: any) => {
       new: true,
       session,
     });
-
-    await session.commitTransaction();
-    session.endSession();
-
     return updateStudent;
-  } catch (error: any) {
-    await session.abortTransaction();
-    session.endSession();
-    throw new AppError(httpStatus.BAD_REQUEST, error);
-  }
+  });
+
+  return result;
 };
 
 const deleteStudent = async (id: string) => {
-  const session = await mongoose.startSession();
-
-  try {
-    session.startTransaction();
-
+  const result = transactionWrapper(async (session) => {
     const student = await Student.findByIdAndDelete(id, { session });
     if (!student) throw new Error('Student not found');
 
     await User.findOneAndDelete({ studentId: id }, { session });
 
-    await session.commitTransaction();
-    session.endSession();
-
     return student;
-  } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    throw error;
-  }
+  });
+  return result;
 };
 
 const getParentsList = async (

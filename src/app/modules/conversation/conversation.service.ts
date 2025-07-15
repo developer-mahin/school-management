@@ -222,7 +222,7 @@ const getMessages = async (
 
   const meta = await messageAggregation.countTotal(Message);
 
-  return { meta, result };
+  return { meta, result: result, othersUser: result[0].otherUser };
 };
 
 export const ConversationService = {
