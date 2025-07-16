@@ -1,6 +1,5 @@
-/* eslint-disable no-console */
-import Redis, { Redis as RedisClient } from 'ioredis';
 import colors from 'colors';
+import Redis, { Redis as RedisClient } from 'ioredis';
 
 // Define the type for cache data
 interface CacheData {
@@ -10,8 +9,8 @@ interface CacheData {
 }
 
 const redis: RedisClient = new Redis({
-  host: 'localhost',
-  port: 6380,
+  host: '127.0.0.1',
+  port: 6379, // default Redis port
   keyPrefix: 'app:',
   db: 0,
   maxRetriesPerRequest: null,
