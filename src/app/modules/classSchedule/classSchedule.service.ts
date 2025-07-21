@@ -349,7 +349,6 @@ const getUpcomingClassesByClassScheduleId = async (
         as: 'matchedStudents',
       },
     },
-
     {
       $project: {
         _id: 1,
@@ -365,7 +364,7 @@ const getUpcomingClassesByClassScheduleId = async (
         // totalStudents: { $size: '$matchedStudents' },
         totalStudents: { $size: '$matchedStudents.userInfo' },
         // activeStudents: "$matchedStudents",
-        activeStudents: '$matchedStudents.userInfo',
+        activeStudents: '$matchedStudents',
       },
     },
   ]);

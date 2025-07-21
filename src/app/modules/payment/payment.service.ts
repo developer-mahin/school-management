@@ -84,19 +84,7 @@ const earningStatistic = async (
   const monthlyCounts = await Payment.aggregate([
     {
       $match: {
-        $and: [
-          {
-            $and: [
-              {
-                createdAt: { $gte: startDate, $lt: endDate },
-              },
-              {
-                companyId: new mongoose.Types.ObjectId(String(user.userId)),
-              },
-            ],
-          },
-          { paymentStatus: 'completed' },
-        ],
+        createdAt: { $gte: startDate, $lt: endDate },
       },
     },
     {

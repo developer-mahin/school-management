@@ -36,6 +36,7 @@ const getMessages = catchAsync(async (req, res) => {
   const result = await ConversationService.getMessages(
     req.params.conversationId,
     req.query,
+    req.user as TAuthUser,
   );
 
   sendResponse(res, {
