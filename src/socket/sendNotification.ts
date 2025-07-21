@@ -18,16 +18,20 @@ const sendNotification = async (
     };
 
     const connectUser: any = connectedUser.get(receiverId?.toString());
+    const notification =
+      await NotificationService.createNotification(notificationData);
     if (connectUser) {
       IO.to(connectUser.socketId).emit('notification', {
         success: true,
         data: payload,
       });
+
+      IO.emit(`notification::${receiverId}`, {
+        success: true,
+        data: payload,
+        notification,
+      });
     }
-
-    console.log(notificationData, 'notificationData');
-
-    await NotificationService.createNotification(notificationData);
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Error sending notification:', error);

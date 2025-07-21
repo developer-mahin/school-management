@@ -308,6 +308,29 @@ const myProfile = async (user: TAuthUser) => {
   return result;
 };
 
+const editAdmin = async (user: TAuthUser, payload: any) => {
+  const findUser = await User.findOne({ _id: payload.userId });
+  if (!findUser) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'User not found');
+  }
+
+  const result = await User.findOneAndUpdate(
+    { _id: payload.userId },
+    { $set: payload },
+    { new: true },
+  );
+  return result;
+};
+
+const deleteAdmin = async (userId: string) => {
+  const findUser = await User.findOne({ _id: userId });
+  if (!findUser) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'User not found');
+  }
+  const result = await User.findOneAndDelete({ _id: userId });
+  return result;
+};
+
 export const UserService = {
   updateUserActions,
   createAdmin,
@@ -320,4 +343,6 @@ export const UserService = {
   getParentsMessage,
   editProfile,
   myProfile,
+  editAdmin,
+  deleteAdmin,
 };

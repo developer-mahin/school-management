@@ -144,6 +144,26 @@ const myProfile = catchAsync(async (req, res) => {
   });
 });
 
+const editAdmin = catchAsync(async (req, res) => {
+  const result = await UserService.editAdmin(req.user as TAuthUser, req.body);
+  sendResponse(res, {
+    data: result,
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Admin updated successfully',
+  });
+});
+
+const deleteAdmin = catchAsync(async (req, res) => {
+  const result = await UserService.deleteAdmin(req.params.userId);
+  sendResponse(res, {
+    data: result,
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Admin deleted successfully',
+  });
+});
+
 export const UserController = {
   updateUserActions,
   createAdmin,
@@ -156,4 +176,6 @@ export const UserController = {
   editProfile,
   fileUpload,
   myProfile,
+  editAdmin,
+  deleteAdmin,
 };

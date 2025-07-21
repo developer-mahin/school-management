@@ -12,6 +12,7 @@ import { USER_ROLE } from '../../constant';
 import { getSchoolIdFromUser } from '../../utils/getSchoolIdForManager';
 import sendNotification from '../../../socket/sendNotification';
 import { NOTIFICATION_TYPE } from '../notification/notification.interface';
+import { cacheData, getCachedData } from '../../../redis';
 
 const createAnnouncement = async (
   payload: Partial<TAnnouncement>,
@@ -89,6 +90,16 @@ const getAllAnnouncements = async (
     matchStage = { schoolId };
   }
 
+
+  const cacheKey = `announcements:${user.userId}:${JSON.stringify(query)}`;
+
+  // 🔍 Try to fetch from cache first
+  const cached = await getCachedData<{ meta: any; result: any }>(cacheKey);
+  if (cached) {
+    console.log('🚀 Serving announcements from Redis cache');
+    return cached;
+  }
+
   const announcementQuery = new QueryBuilder(
     Announcement.find(matchStage),
     query,
@@ -99,7 +110,13 @@ const getAllAnnouncements = async (
 
   const meta = await announcementQuery.countTotal();
 
-  return { meta, result };
+  const dataToCache = { meta, result };
+
+  // 💾 Store result in cache for 60 seconds
+  await cacheData(cacheKey, dataToCache, 60);
+
+  console.log('✅ Served fresh announcements and cached to Redis');
+  return dataToCache;
 };
 
 export const AnnouncementService = {

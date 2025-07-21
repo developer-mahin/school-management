@@ -23,7 +23,11 @@ router
   .post('/file_upload', upload.single('file'), UserController.fileUpload)
 
   .get('/', auth(USER_ROLE.admin), UserController.getAllCustomers)
-  .get('/all_admin', auth(USER_ROLE.admin), UserController.getAllAdmin)
+  .get(
+    '/all_admin',
+    auth(USER_ROLE.admin, USER_ROLE.supperAdmin),
+    UserController.getAllAdmin,
+  )
   .get(
     '/count_total',
     auth(USER_ROLE.admin, USER_ROLE.supperAdmin, USER_ROLE.school),
@@ -46,6 +50,7 @@ router
     auth(USER_ROLE.admin, USER_ROLE.supperAdmin, USER_ROLE.school),
     UserController.userOverView,
   )
+  .patch('/edit_admin', auth(USER_ROLE.supperAdmin), UserController.editAdmin)
   .patch(
     '/edit_profile',
     auth(
@@ -79,6 +84,11 @@ router
       USER_ROLE.teacher,
     ),
     UserController.getParentsMessage,
+  )
+  .delete(
+    '/delete_admin/:userId',
+    auth(USER_ROLE.supperAdmin),
+    UserController.deleteAdmin,
   );
 
 export const UserRoutes = router;

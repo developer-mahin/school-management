@@ -21,10 +21,14 @@ const createStaticContent = async (
     return result;
   }
 
-  const result = await StaticContent.create({
-    ...payload,
-    userId: user.userId,
-  });
+  const result = await StaticContent.findOneAndUpdate(
+    { type: payload.type },
+    {
+      ...payload,
+      userId: user.userId,
+    },
+    { upsert: true, new: true },
+  );
 
   return result;
 };

@@ -11,6 +11,7 @@ import seedAdmin from './app/DB/seedAdmin';
 import config from './config';
 import { errorLogger, logger } from './shared/logger';
 import socketIO from './socket';
+import redis from './redis';
 let server: Server;
 
 const socketServer = createServer();
@@ -88,9 +89,9 @@ process.on('uncaughtException', (err: any) => {
   process.exit(1);
 });
 
-// process.on("SIGINT", async () => {
-//   console.log(colors.yellow('🚦 Closing Redis connection...'));
-//   await redis.quit()
-//   console.log(colors.green('✅ Redis connection closed'));
-//   process.exit(0);
-// })
+process.on("SIGINT", async () => {
+  console.log(colors.yellow('🚦 Closing Redis connection...'));
+  await redis.quit()
+  console.log(colors.green('✅ Redis connection closed'));
+  process.exit(0);
+})

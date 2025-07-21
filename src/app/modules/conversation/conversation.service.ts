@@ -3,6 +3,7 @@ import { TAuthUser } from '../../interface/authUser';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 import Message from '../message/message.mode';
 import Conversation from './conversation.model';
+const { ObjectId } = mongoose.Types;
 
 const createConversation = async (
   data: { receiverId: string },
@@ -143,59 +144,22 @@ const getConversations = async (
 const getMessages = async (
   conversationId: string,
   query: Record<string, unknown>,
+  user: TAuthUser
 ) => {
+  const convObjectId = new ObjectId(conversationId);
+  const currentUserId = new ObjectId(user.userId);
   const messageAggregation = new AggregationQueryBuilder(query);
 
+  // ✅ Mark all messages as read (fast write)
   await Message.updateMany(
-    { conversationId: conversationId, isRead: false },
-    { $set: { isRead: true } },
+    { conversationId: convObjectId, isRead: false },
+    { $set: { isRead: true } }
   );
 
+  // ✅ Get paginated messages
   const result = await messageAggregation
     .customPipeline([
-      {
-        $match: {
-          conversationId: new mongoose.Types.ObjectId(String(conversationId)),
-        },
-      },
-      {
-        $lookup: {
-          from: 'conversations',
-          localField: 'conversationId',
-          foreignField: '_id',
-          as: 'conversation',
-        },
-      },
-      {
-        $unwind: '$conversation',
-      },
-      {
-        $addFields: {
-          otherUsers: {
-            $filter: {
-              input: '$conversation.users',
-              as: 'user',
-              cond: {
-                $ne: ['$$user', '$sender'],
-              },
-            },
-          },
-        },
-      },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'otherUsers',
-          foreignField: '_id',
-          as: 'otherUserInfo',
-        },
-      },
-      {
-        $unwind: {
-          path: '$otherUserInfo',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
+      { $match: { conversationId: convObjectId } },
       {
         $project: {
           _id: 1,
@@ -206,12 +170,6 @@ const getMessages = async (
           file: 1,
           isRead: 1,
           conversationId: 1,
-          otherUser: {
-            _id: '$otherUserInfo._id',
-            name: '$otherUserInfo.name',
-            image: '$otherUserInfo.image',
-            role: '$otherUserInfo.role',
-          },
         },
       },
     ])
@@ -220,9 +178,43 @@ const getMessages = async (
     .search(['text_message'])
     .execute(Message);
 
+  // ✅ Get total count
   const meta = await messageAggregation.countTotal(Message);
 
-  return { meta, result };
+  // ✅ Fetch the other user (optimized)
+  const [otherUser] = await Conversation.aggregate([
+    { $match: { _id: convObjectId } },
+    { $unwind: '$users' },
+    { $match: { users: { $ne: currentUserId } } },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'users',
+        foreignField: '_id',
+        as: 'otherUser',
+      },
+    },
+    { $unwind: '$otherUser' },
+    {
+      $project: {
+        _id: 0,
+        otherUser: {
+          _id: '$otherUser._id',
+          name: '$otherUser.name',
+          email: '$otherUser.email',
+          image: '$otherUser.image',
+          role: '$otherUser.role',
+        },
+      },
+    },
+    { $limit: 1 }, // Optional for safety
+  ]);
+
+  return {
+    meta,
+    result,
+    othersUser: otherUser?.otherUser || null,
+  };
 };
 
 export const ConversationService = {

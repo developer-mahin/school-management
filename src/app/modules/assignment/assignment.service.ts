@@ -14,6 +14,7 @@ import Teacher from '../teacher/teacher.model';
 import { TeacherService } from '../teacher/teacher.service';
 import { TAssignment, TMarkComplete } from './assignment.interface';
 import Assignment from './assignment.model';
+import { transactionWrapper } from '../../utils/transactionWrapper';
 
 const createAssignment = async (
   user: TAuthUser,
@@ -324,10 +325,7 @@ const markAssignmentAsCompleted = async (
   payload: TMarkComplete[] | any,
   user: TAuthUser,
 ) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
-  try {
+  const data = transactionWrapper(async (session) => {
     // Step 1: Validate teacher
     const teacher = await Teacher.findById(user.teacherId).session(session);
     if (!teacher) {
@@ -399,17 +397,10 @@ const markAssignmentAsCompleted = async (
         linkId: assignmentId,
       }),
     ]);
-
-    // Step 4: Commit transaction
-    await session.commitTransaction();
-    session.endSession();
-
     return updatedAssignment;
-  } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    throw error; // bubble up error to be handled elsewhere
-  }
+  });
+
+  return data;
 };
 
 const pendingAssignment = async (

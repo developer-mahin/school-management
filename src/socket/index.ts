@@ -38,6 +38,11 @@ const socketIO = (io: Server) => {
       activeUsers[socket.id] = user.userId;
       socket.user = { userId: user.userId, socketId: socket.id };
       // Attach user info to the socket object
+
+
+      if (!user?.userId) throw new Error('User not found in JWT payload');
+
+
       if (
         socket.user.userId === undefined ||
         socket.user.socketId === undefined
@@ -48,7 +53,9 @@ const socketIO = (io: Server) => {
       }
       next();
     } catch (err) {
+      console.log(' err ================>', err);
       // eslint-disable-next-line no-console
+      connectedUser.delete(socket.user.userId);
       console.error('JWT Verification Error:', err);
       return next(new Error('Authentication error: Invalid token.'));
     }
@@ -79,6 +86,10 @@ const socketIO = (io: Server) => {
             return callback?.({ success: false, message: 'Invalid payload' });
           }
 
+          console.log(payload, 'payload');
+
+          console.log(payload, 'payload');
+
           const savedMessage = await MessageService.createMessage(payload);
 
           io.emit(`receive_message::${payload.conversationId}`, savedMessage);
@@ -94,20 +105,29 @@ const socketIO = (io: Server) => {
             payload!.receiverId!.toString(),
           );
 
-          const sender: any = connectedUser.get(
-            payload!.sender!.toString(),
-          );
-
+          const sender: any = connectedUser.get(payload!.sender!.toString());
 
           if (receiver) {
+            console.log(receiver.socketId, 'receiver is socket id');
             io.to(receiver.socketId).emit('new_message', {
+              success: true,
+              data: savedMessage,
+            });
+
+            io.emit(`new_message::${payload.receiverId}`, {
               success: true,
               data: savedMessage,
             });
           }
 
           if (sender) {
+            console.log(sender.socketId, 'sender');
             io.to(sender.socketId).emit('new_message', {
+              success: true,
+              data: savedMessage,
+            });
+
+            io.emit(`new_message::${payload.sender}`, {
               success: true,
               data: savedMessage,
             });

@@ -5,7 +5,6 @@ import { ConversationService } from './conversation.service';
 import { TAuthUser } from '../../interface/authUser';
 
 const createConversation = catchAsync(async (req, res) => {
-
   const result = await ConversationService.createConversation(
     req.body,
     req.user as TAuthUser,
@@ -37,6 +36,7 @@ const getMessages = catchAsync(async (req, res) => {
   const result = await ConversationService.getMessages(
     req.params.conversationId,
     req.query,
+    req.user as TAuthUser,
   );
 
   sendResponse(res, {
