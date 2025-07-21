@@ -89,9 +89,9 @@ process.on('uncaughtException', (err: any) => {
   process.exit(1);
 });
 
-process.on("SIGINT", async () => {
-  console.log(colors.yellow('🚦 Closing Redis connection...'));
-  await redis.quit()
-  console.log(colors.green('✅ Redis connection closed'));
-  process.exit(0);
-})
+// process.on("SIGINT", async () => {
+//   console.log(colors.yellow('🚦 Closing Redis connection...'));
+//   await redis.quit()
+//   console.log(colors.green('✅ Redis connection closed'));
+//   process.exit(0);
+// })
