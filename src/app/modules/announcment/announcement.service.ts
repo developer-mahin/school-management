@@ -91,14 +91,14 @@ const getAllAnnouncements = async (
   }
 
 
-  const cacheKey = `announcements:${user.userId}:${JSON.stringify(query)}`;
+  // const cacheKey = `announcements:${user.userId}:${JSON.stringify(query)}`;
 
   // 🔍 Try to fetch from cache first
-  const cached = await getCachedData<{ meta: any; result: any }>(cacheKey);
-  if (cached) {
-    console.log('🚀 Serving announcements from Redis cache');
-    return cached;
-  }
+  // const cached = await getCachedData<{ meta: any; result: any }>(cacheKey);
+  // if (cached) {
+  //   console.log('🚀 Serving announcements from Redis cache');
+  //   return cached;
+  // }
 
   const announcementQuery = new QueryBuilder(
     Announcement.find(matchStage),
@@ -113,7 +113,7 @@ const getAllAnnouncements = async (
   const dataToCache = { meta, result };
 
   // 💾 Store result in cache for 60 seconds
-  await cacheData(cacheKey, dataToCache, 60);
+  // await cacheData(cacheKey, dataToCache, 60);
 
   console.log('✅ Served fresh announcements and cached to Redis');
   return dataToCache;
