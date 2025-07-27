@@ -11,3 +11,15 @@ export type TStudent = {
   motherPhoneNumber: string;
   parentsMessage: string;
 };
+
+export type StudentRow = {
+  name: string;
+  phoneNumber: string;
+  fatherPhoneNumber: string;
+  motherPhoneNumber: string;
+  className: string;
+  schoolName: string;
+  section: string;
+  schoolId: string;
+  classId: string;
+};

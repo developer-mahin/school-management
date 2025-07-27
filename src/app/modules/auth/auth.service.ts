@@ -183,7 +183,6 @@ const loginUser = async (payload: Pick<TUser, 'phoneNumber'>) => {
 //     }
 //   }
 
-
 //   let managerToSchoolToken
 //   if (user.role === USER_ROLE.manager) {
 
@@ -244,11 +243,14 @@ const loginUser = async (payload: Pick<TUser, 'phoneNumber'>) => {
 //   };
 // };
 
-
 const verifyOtp = async (token: string, otp: { otp: number }) => {
   // 1. Decode token
-  const decodedUser = decodeToken(token, config.jwt.sing_in_token as Secret) as JwtPayload;
-  if (!decodedUser) throw new AppError(httpStatus.UNAUTHORIZED, 'Invalid token');
+  const decodedUser = decodeToken(
+    token,
+    config.jwt.sing_in_token as Secret,
+  ) as JwtPayload;
+  if (!decodedUser)
+    throw new AppError(httpStatus.UNAUTHORIZED, 'Invalid token');
 
   // 2. Fetch user by phone number
   const user = await User.findOne({ phoneNumber: decodedUser.phoneNumber });
@@ -257,11 +259,17 @@ const verifyOtp = async (token: string, otp: { otp: number }) => {
   const school = await getSchoolByRole(user);
 
   // 4. Verify OTP
-  const otpRecord = await OtpService.checkOtpByPhoneNumber(decodedUser.phoneNumber);
+  const otpRecord = await OtpService.checkOtpByPhoneNumber(
+    decodedUser.phoneNumber,
+  );
   if (!otpRecord) throw new AppError(httpStatus.NOT_FOUND, "Otp doesn't exist");
 
-  const isOtpValid = await OtpService.verifyOTP(otp.otp, otpRecord._id.toString());
-  if (!isOtpValid) throw new AppError(httpStatus.BAD_REQUEST, 'Otp not matched');
+  const isOtpValid = await OtpService.verifyOTP(
+    otp.otp,
+    otpRecord._id.toString(),
+  );
+  if (!isOtpValid)
+    throw new AppError(httpStatus.BAD_REQUEST, 'Otp not matched');
 
   // 5. Delete OTP after verification
   await OtpService.deleteOtpById(otpRecord._id.toString());
@@ -270,13 +278,13 @@ const verifyOtp = async (token: string, otp: { otp: number }) => {
   let accessToken = generateToken(
     createUserPayload({}, user, school),
     config.jwt.access_token as Secret,
-    config.jwt.access_expires_in as string
+    config.jwt.access_expires_in as string,
   );
 
   const refreshToken = generateToken(
     createUserPayload({}, user, school),
     config.jwt.refresh_token as Secret,
-    config.jwt.refresh_expires_in as string
+    config.jwt.refresh_expires_in as string,
   );
 
   // 8. Get super admin
@@ -285,20 +293,24 @@ const verifyOtp = async (token: string, otp: { otp: number }) => {
   // 9. Generate children token for parents
   let childrenToken;
   if (user.role === USER_ROLE.parents) {
-    const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` };
-    const res = await axios.get(`${config.base_api_url}/student/my_child`, { headers });
+    const headers = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    };
+    const res = await axios.get(`${config.base_api_url}/student/my_child`, {
+      headers,
+    });
     const firstChild = res?.data?.data?.[0]?.children;
 
-
-    console.log(firstChild, "firstChild");
+    console.log(firstChild, 'firstChild');
 
     if (firstChild?._id) {
       const selectChild = await axios.get(
         `${config.base_api_url}/student/select_child/${firstChild._id}`,
-        { headers }
+        { headers },
       );
 
-      console.log(selectChild, "selectChild");
+      console.log(selectChild, 'selectChild');
       childrenToken = selectChild?.data?.data?.accessToken || '';
     }
   }
@@ -309,18 +321,22 @@ const verifyOtp = async (token: string, otp: { otp: number }) => {
   if (user.role === USER_ROLE.manager && school?.userId) {
     const schoolUser = await User.findById(school.userId);
     if (schoolUser) {
-      const managerPayload = createUserPayload({
-        userId: schoolUser._id,
-        schoolId: schoolUser.schoolId,
-        phoneNumber: schoolUser.phoneNumber,
-        role: schoolUser.role,
-        name: schoolUser.name,
-        image: schoolUser.image,
-      }, user, school);
+      const managerPayload = createUserPayload(
+        {
+          userId: schoolUser._id,
+          schoolId: schoolUser.schoolId,
+          phoneNumber: schoolUser.phoneNumber,
+          role: schoolUser.role,
+          name: schoolUser.name,
+          image: schoolUser.image,
+        },
+        user,
+        school,
+      );
       accessToken = generateToken(
         managerPayload,
         config.jwt.access_token as Secret,
-        config.jwt.access_expires_in as string
+        config.jwt.access_expires_in as string,
       );
     }
   }
@@ -338,7 +354,7 @@ const verifyOtp = async (token: string, otp: { otp: number }) => {
     accessToken = generateToken(
       adminPayload,
       config.jwt.access_token as Secret,
-      config.jwt.access_expires_in as string
+      config.jwt.access_expires_in as string,
     );
   }
 

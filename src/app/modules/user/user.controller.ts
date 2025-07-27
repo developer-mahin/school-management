@@ -93,6 +93,11 @@ export interface MulterFiles {
   [fieldname: string]: any[];
 }
 
+export interface MulterFile {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [fieldname: string]: any;
+}
+
 const editProfile = catchAsync(async (req, res) => {
   const fields = ['image', 'schoolImage', 'coverImage'];
 

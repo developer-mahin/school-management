@@ -34,8 +34,8 @@ app.use(
       'http://localhost:3000',
       'http://localhost:5173',
       'http://localhost:5174',
-      "http://3.123.103.70:8011",
-      "http://classaty.com"
+      'http://3.123.103.70:8011',
+      'http://classaty.com',
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],

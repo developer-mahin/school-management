@@ -4,6 +4,9 @@ import { auth } from '../../middleware/auth';
 import validateRequest from '../../middleware/validation';
 import { StudentController } from './student.controller';
 import { StudentValidation } from './student.validation';
+import fileUpload from '../../utils/uploadImage';
+
+const upload = fileUpload('./public/uploads/files/');
 
 const router = Router();
 
@@ -13,6 +16,17 @@ router
     auth(USER_ROLE.admin, USER_ROLE.supperAdmin, USER_ROLE.school),
     validateRequest(StudentValidation.studentSchema),
     StudentController.createStudent,
+  )
+  .post(
+    '/create_student_using_xlsx',
+    auth(
+      USER_ROLE.admin,
+      USER_ROLE.supperAdmin,
+      USER_ROLE.school,
+      USER_ROLE.manager,
+    ),
+    upload.single('file'),
+    StudentController.createStudentUsingXlsx,
   )
   .get(
     '/student_list',

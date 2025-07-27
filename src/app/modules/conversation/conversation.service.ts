@@ -144,7 +144,7 @@ const getConversations = async (
 const getMessages = async (
   conversationId: string,
   query: Record<string, unknown>,
-  user: TAuthUser
+  user: TAuthUser,
 ) => {
   const convObjectId = new ObjectId(conversationId);
   const currentUserId = new ObjectId(user.userId);
@@ -153,7 +153,7 @@ const getMessages = async (
   // ✅ Mark all messages as read (fast write)
   await Message.updateMany(
     { conversationId: convObjectId, isRead: false },
-    { $set: { isRead: true } }
+    { $set: { isRead: true } },
   );
 
   // ✅ Get paginated messages

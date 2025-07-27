@@ -11,12 +11,14 @@ import { transactionWrapper } from '../../utils/transactionWrapper';
 import Parents from '../parents/parents.model';
 import School from '../school/school.model';
 import User from '../user/user.model';
-import { TStudent } from './student.interface';
+import { StudentRow, TStudent } from './student.interface';
 import Student from './student.model';
 import {
   createStudentWithProfile,
   handleParentUserCreation,
+  parseStudentXlsxData
 } from './students.helper';
+import { MulterFile } from '../user/user.controller';
 
 const createStudent = async (
   payload: Partial<TStudent> & { phoneNumber: string; name?: string },
@@ -471,6 +473,53 @@ const getParentsDetails = async (id: string) => {
   return result;
 };
 
+const createStudentWithXlsx = async (file: MulterFile) => {
+  const data = await parseStudentXlsxData(file) as StudentRow[];
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  const createdStudents = [];
+
+  for (const payload of data) {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      const generateData = {
+        className: payload.className,
+        section: payload.section,
+      };
+
+      const studentUID = await generateUID(generateData);
+
+      const student = await createStudentWithProfile(
+        {
+          phoneNumber: payload.phoneNumber,
+          data: payload,
+          uid: studentUID,
+        },
+        session
+      );
+
+      await handleParentUserCreation(payload, student, session);
+
+      await session.commitTransaction();
+      session.endSession();
+
+      createdStudents.push(student);
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw error; // Or continue if you want partial success
+    }
+  }
+
+  return createdStudents;
+
+
+};
+
 export const StudentService = {
   createStudent,
   findStudent,
@@ -481,4 +530,5 @@ export const StudentService = {
   deleteStudent,
   getParentsList,
   getParentsDetails,
+  createStudentWithXlsx
 };

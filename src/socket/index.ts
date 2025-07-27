@@ -39,9 +39,7 @@ const socketIO = (io: Server) => {
       socket.user = { userId: user.userId, socketId: socket.id };
       // Attach user info to the socket object
 
-
       if (!user?.userId) throw new Error('User not found in JWT payload');
-
 
       if (
         socket.user.userId === undefined ||
