@@ -4,7 +4,7 @@
 // import { TSubscription } from '../subscription/subscription.interface';
 // import { TPayment } from './payment.interface';
 
-import axios from "axios";
+import axios from 'axios';
 
 // export const calculateAmount = (amount: number) => {
 //   return Number(amount) * 100;
@@ -66,7 +66,7 @@ export const executePayment = async (
     mobile: string;
     subscriptionId?: string;
     userId?: string;
-  }
+  },
 ) => {
   const callbackParams = `subscriptionId=${customerInfo.subscriptionId}&userId=${customerInfo.userId}&amount=${invoiceAmount}`;
 

@@ -2,7 +2,9 @@ import httpStatus from 'http-status';
 import { TAuthUser } from '../../interface/authUser';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
+import { MulterFile } from '../user/user.controller';
 import { StudentService } from './student.service';
+import { parseStudentXlsxData } from './students.helper';
 
 const createStudent = catchAsync(async (req, res) => {
   const result = await StudentService.createStudent(
@@ -97,6 +99,18 @@ const getParentsDetails = catchAsync(async (req, res) => {
   });
 });
 
+const createStudentUsingXlsx = catchAsync(async (req, res) => {
+
+  const result = await StudentService.createStudentWithXlsx(req.file as MulterFile);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Students created successfully using xlsx',
+    data: result,
+  });
+});
+
 export const StudentController = {
   createStudent,
   getMyChildren,
@@ -106,4 +120,5 @@ export const StudentController = {
   deleteStudent,
   getParentsList,
   getParentsDetails,
+  createStudentUsingXlsx,
 };

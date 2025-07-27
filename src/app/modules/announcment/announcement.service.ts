@@ -90,7 +90,6 @@ const getAllAnnouncements = async (
     matchStage = { schoolId };
   }
 
-
   // const cacheKey = `announcements:${user.userId}:${JSON.stringify(query)}`;
 
   // 🔍 Try to fetch from cache first

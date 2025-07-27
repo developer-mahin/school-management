@@ -7,6 +7,11 @@ import { UserService } from '../user/user.service';
 import Student from './student.model';
 import sendNotification from '../../../socket/sendNotification';
 import { NOTIFICATION_TYPE } from '../notification/notification.interface';
+import { MulterFile } from '../user/user.controller';
+import fs from 'fs';
+import xlsx from 'xlsx';
+import School from '../school/school.model';
+import Class from '../class/class.model';
 
 async function createStudentWithProfile(
   payload: any,
@@ -156,4 +161,81 @@ async function handleParentUserCreation(
   }
 }
 
-export { createStudentWithProfile, handleParentUserCreation };
+const parseStudentXlsxData = async (file: MulterFile) => {
+  const fileBuffer = fs.readFileSync(file.path);
+  const workbook = xlsx.read(fileBuffer, { type: 'buffer' });
+  const sheetName = workbook.SheetNames[0];
+
+  // Read sheet as an array of arrays
+  const rawData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], {
+    header: 1,
+    raw: true,
+  });
+
+  const [headerRow, ...rows] = rawData as [string[], ...any[]];
+  const headers = headerRow.map((header) => header.trim());
+
+  const stringFields = [
+    'name',
+    'phoneNumber',
+    'fatherPhoneNumber',
+    'motherPhoneNumber',
+    'className',
+    'schoolName',
+    'section',
+  ];
+
+  const parsedData = rows.map((row) => {
+    return headers.reduce(
+      (obj, header, index) => {
+        let fieldValue = row[index] || '';
+
+        fieldValue = fieldValue?.toString().trim();
+
+        if (typeof fieldValue === 'string') {
+          if (fieldValue.startsWith('"') && fieldValue.endsWith('"')) {
+            fieldValue = fieldValue.slice(1, -1).replace(/""/g, '"');
+          }
+        }
+
+        obj[header] = stringFields.includes(header)
+          ? fieldValue
+          : fieldValue.includes(',')
+            ? fieldValue.split(',').map((item: string) => item.trim())
+            : fieldValue;
+
+        return obj;
+      },
+      {} as Record<string, string | string[]>,
+    );
+
+
+  });
+
+  const enrichedData = await Promise.all(
+    parsedData.map(async (row) => {
+      const school = await School.findOne({
+        schoolName: row.schoolName,
+      });
+
+      const classData = await Class.findOne({
+        className: row.className,
+        schoolId: school?.id,
+      });
+
+      return {
+        ...row,
+        schoolId: school?.id || null,
+        classId: classData?.id || null,
+      };
+    })
+  );
+
+  return enrichedData;
+};
+
+export {
+  createStudentWithProfile,
+  handleParentUserCreation,
+  parseStudentXlsxData,
+};
