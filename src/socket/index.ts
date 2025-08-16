@@ -35,15 +35,15 @@ const socketIO = (io: Server) => {
         token,
         config.jwt.access_token as Secret,
       ) as JwtPayload;
-      activeUsers[socket.id] = user.userId;
-      socket.user = { userId: user.userId, socketId: socket.id };
+      activeUsers[socket.id] = user?.userId;
+      socket.user = { userId: user?.userId, socketId: socket?.id };
       // Attach user info to the socket object
 
       if (!user?.userId) throw new Error('User not found in JWT payload');
 
       if (
-        socket.user.userId === undefined ||
-        socket.user.socketId === undefined
+        socket?.user?.userId === undefined ||
+        socket?.user?.socketId === undefined
       ) {
         // eslint-disable-next-line no-console
         console.log('userId or socketId is undefined');
@@ -53,7 +53,7 @@ const socketIO = (io: Server) => {
     } catch (err) {
       console.log(' err ================>', err);
       // eslint-disable-next-line no-console
-      connectedUser.delete(socket.user.userId);
+      connectedUser.delete(socket?.user?.userId);
       console.error('JWT Verification Error:', err);
       return next(new Error('Authentication error: Invalid token.'));
     }
@@ -65,13 +65,13 @@ const socketIO = (io: Server) => {
     console.log('connected', socket.id);
     if (
       socket?.user?.userId === undefined ||
-      socket.user.socketId === undefined
+      socket?.user?.socketId === undefined
     ) {
       // eslint-disable-next-line no-console
       console.log('userId or socketId is undefined');
       return;
     }
-    connectedUser.set(socket.user.userId, { socketId: socket.user.socketId });
+    connectedUser.set(socket?.user?.userId, { socketId: socket?.user?.socketId });
 
     io.emit('online_users', Array.from(connectedUser.keys()));
 
@@ -154,13 +154,13 @@ const socketIO = (io: Server) => {
       delete activeUsers[socket.id];
       if (
         socket?.user?.userId === undefined ||
-        socket.user.socketId === undefined
+        socket?.user?.socketId === undefined
       ) {
         // eslint-disable-next-line no-console
         console.log('userId or socketId is undefined');
         return;
       }
-      connectedUser.delete(socket.user.userId);
+      connectedUser.delete(socket?.user?.userId);
       io.emit('online_users', Array.from(connectedUser.keys()));
     });
 
