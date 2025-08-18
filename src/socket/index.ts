@@ -6,6 +6,9 @@ import { TMessage } from '../app/modules/message/message.interface';
 import { MessageService } from '../app/modules/message/message.service';
 import { decodeToken } from '../app/utils/decodeToken';
 import config from '../config';
+import User from '../app/modules/user/user.model';
+import { NOTIFICATION_TYPE } from '../app/modules/notification/notification.interface';
+import sendNotification from './sendNotification';
 
 export interface IConnectedUser {
   socketId: string;
@@ -84,10 +87,6 @@ const socketIO = (io: Server) => {
             return callback?.({ success: false, message: 'Invalid payload' });
           }
 
-          console.log(payload, 'payload');
-
-          console.log(payload, 'payload');
-
           const savedMessage = await MessageService.createMessage(payload);
 
           io.emit(`receive_message::${payload.conversationId}`, savedMessage);
@@ -104,6 +103,8 @@ const socketIO = (io: Server) => {
           );
 
           const sender: any = connectedUser.get(payload!.sender!.toString());
+
+
 
           if (receiver) {
             console.log(receiver.socketId, 'receiver is socket id');
@@ -130,6 +131,24 @@ const socketIO = (io: Server) => {
               data: savedMessage,
             });
           }
+
+          const findUser = await User.findById(payload.receiverId)
+
+          if (findUser?.role === "supperAdmin") {
+            const notificationData = {
+              ...payload,
+              message: `You have a new message from ${user?.name}`,
+              role: findUser.role,
+              type: NOTIFICATION_TYPE.MESSAGE,
+              linkId: payload.conversationId,
+              senderId: payload.sender,
+              receiverId: payload.receiverId,
+            };
+
+    
+            await sendNotification(user as TAuthUser, notificationData)
+          }
+
         } catch (error) {
           console.error('Error sending message:', error);
           callback?.({ success: false, message: 'Internal server error' });
