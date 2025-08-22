@@ -164,7 +164,9 @@ const editSchool = async (schoolId: string, payload: Partial<TSchool & { phoneNu
     if (!result) throw new Error('School not deleted');
 
     const findPhone = await User.findOne({ phoneNumber: payload.phoneNumber });
-    if (findPhone) throw new Error('Phone number already exist');
+
+    if (findPhone && findPhone?.schoolId.toString() !== schoolId) throw new Error('Phone number already exist');
+
 
     await User.findOneAndUpdate({ schoolId }, payload, { session });
   });

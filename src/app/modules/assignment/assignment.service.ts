@@ -320,12 +320,100 @@ const getAssignmentDetails = async (
   return result;
 };
 
+// const markAssignmentAsCompleted = async (
+//   assignmentId: string,
+//   payload: TMarkComplete[] | any,
+//   user: TAuthUser,
+// ) => {
+//   const data = transactionWrapper(async (session) => {
+//     // Step 1: Validate teacher
+//     const teacher = await Teacher.findById(user.teacherId).session(session);
+//     if (!teacher) {
+//       throw new AppError(httpStatus.NOT_FOUND, 'Teacher not found');
+//     }
+
+//     // Step 2: Update the assignment status
+//     const updatedAssignment = await Assignment.findOneAndUpdate(
+//       {
+//         _id: assignmentId,
+//         schoolId: teacher.schoolId,
+//       },
+//       {
+//         $set: {
+//           status: 'completed',
+//         },
+//       },
+//       {
+//         new: true,
+//         session,
+//       },
+//     );
+
+//     if (!updatedAssignment) {
+//       throw new AppError(httpStatus.NOT_FOUND, 'Assignment not found');
+//     }
+
+//     // Step 3: Update each student's assignment submission in parallel
+//     await Promise.all([
+//       payload.map(async (item: any) => {
+//         // Update the assignment submission
+//         const updatedSubmission = await AssignmentSubmission.findOneAndUpdate(
+//           {
+//             studentId: item.studentId,
+//             assignmentId, // make sure assignmentId matches to avoid wrong updates
+//           },
+//           {
+//             $set: {
+//               grade: item.grade,
+//             },
+//           },
+//           {
+//             new: true,
+//             session,
+//           },
+//         );
+
+//         // If submission was updated successfully, send notification
+//         if (updatedSubmission) {
+//           await sendNotification(user, {
+//             senderId: user.userId,
+//             role: user.role,
+//             receiverId: item.studentUserId,
+//             message: `${updatedAssignment.title} is marked as completed you can now see the marks`,
+//             type: NOTIFICATION_TYPE.ASSIGNMENT,
+//             linkId: assignmentId,
+//           });
+//         }
+
+//         return updatedSubmission;
+//       }),
+
+//       sendNotification(user, {
+//         senderId: user.userId,
+//         role: user.role,
+//         receiverId: user.mySchoolUserId,
+//         message: `${updatedAssignment.title} is marked as completed`,
+//         type: NOTIFICATION_TYPE.ASSIGNMENT,
+//         linkId: assignmentId,
+//       }),
+//     ]);
+//     return updatedAssignment;
+//   });
+
+//   return data;
+// };
+
+
+
 const markAssignmentAsCompleted = async (
   assignmentId: string,
   payload: TMarkComplete[] | any,
   user: TAuthUser,
 ) => {
-  const data = transactionWrapper(async (session) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
     // Step 1: Validate teacher
     const teacher = await Teacher.findById(user.teacherId).session(session);
     if (!teacher) {
@@ -339,9 +427,7 @@ const markAssignmentAsCompleted = async (
         schoolId: teacher.schoolId,
       },
       {
-        $set: {
-          status: 'completed',
-        },
+        $set: { status: 'completed' },
       },
       {
         new: true,
@@ -355,17 +441,14 @@ const markAssignmentAsCompleted = async (
 
     // Step 3: Update each student's assignment submission in parallel
     await Promise.all([
-      payload.map(async (item: any) => {
-        // Update the assignment submission
+      ...payload.map(async (item: any) => {
         const updatedSubmission = await AssignmentSubmission.findOneAndUpdate(
           {
             studentId: item.studentId,
-            assignmentId, // make sure assignmentId matches to avoid wrong updates
+            assignmentId,
           },
           {
-            $set: {
-              grade: item.grade,
-            },
+            $set: { grade: item.grade },
           },
           {
             new: true,
@@ -373,13 +456,12 @@ const markAssignmentAsCompleted = async (
           },
         );
 
-        // If submission was updated successfully, send notification
         if (updatedSubmission) {
           await sendNotification(user, {
             senderId: user.userId,
             role: user.role,
             receiverId: item.studentUserId,
-            message: `${updatedAssignment.title} is marked as completed you can now see the marks`,
+            message: `${updatedAssignment.title} is marked as completed, you can now see the marks.`,
             type: NOTIFICATION_TYPE.ASSIGNMENT,
             linkId: assignmentId,
           });
@@ -397,11 +479,20 @@ const markAssignmentAsCompleted = async (
         linkId: assignmentId,
       }),
     ]);
-    return updatedAssignment;
-  });
 
-  return data;
+    // ✅ Commit transaction
+    await session.commitTransaction();
+    return updatedAssignment;
+  } catch (error) {
+    // ❌ Rollback if any error
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    // ✅ End session
+    session.endSession();
+  }
 };
+
 
 const pendingAssignment = async (
   user: TAuthUser,
