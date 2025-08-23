@@ -21,7 +21,10 @@ export const commonPipeline = [
     $project: {
       teacherName: '$teacher.name',
       subjectName: '$subject.subjectName',
+      subjectId: '$subject._id',
       className: '$class.className',
+      classId: '$class._id',
+      teacherId: '$teacher._id',
       details: 1,
       passGrade: 1,
       date: 1,

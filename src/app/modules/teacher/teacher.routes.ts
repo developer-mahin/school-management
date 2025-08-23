@@ -26,12 +26,12 @@ router
   )
   .patch(
     '/edit_teacher/:teacherUserId',
-    auth(USER_ROLE.admin, USER_ROLE.supperAdmin),
+    auth(USER_ROLE.admin, USER_ROLE.supperAdmin, USER_ROLE.school),
     TeacherController.editTeacher,
   )
   .delete(
     '/delete_teacher/:teacherUserId',
-    auth(USER_ROLE.admin, USER_ROLE.supperAdmin),
+    auth(USER_ROLE.admin, USER_ROLE.supperAdmin, USER_ROLE.school),
     TeacherController.deleteTeacher,
   );
 

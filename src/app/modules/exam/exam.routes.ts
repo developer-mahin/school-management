@@ -29,6 +29,7 @@ router
     auth(USER_ROLE.teacher, USER_ROLE.school),
     ExamController.updateGrade,
   )
+  .patch("/update_result", auth(USER_ROLE.school), ExamController.updateResult)
   .get(
     '/grades_result/:examId',
     auth(USER_ROLE.teacher),
@@ -40,7 +41,6 @@ router
     ExamController.getTermsExams,
   )
   .patch('/:examId', auth(USER_ROLE.school), ExamController.updateExams)
-
   .delete('/:examId', auth(USER_ROLE.school), ExamController.deleteExams);
 
 export const ExamRoutes = router;

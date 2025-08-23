@@ -340,6 +340,7 @@ const getAllStudents = async (
           averageGPA: 1,
           schoolName: 1,
           className: 1,
+          classId: 1,
           section: 1,
           motherPhoneNumber: 1,
           fatherPhoneNumber: 1,
