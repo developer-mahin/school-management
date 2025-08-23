@@ -388,6 +388,8 @@ const getGradesResult = async (user: TAuthUser, examId: string) => {
 };
 
 const updateResult = async (payload: TResultUpdate, user: TAuthUser) => {
+
+  console.log(payload, '======> payload in update result service');
   // Fetch result and grade system concurrently
   const [findResult, findSchoolGrade] = await Promise.all([
     Exam.aggregate([
@@ -422,6 +424,10 @@ const updateResult = async (payload: TResultUpdate, user: TAuthUser) => {
     GradeSystem.find({ schoolId: user.schoolId }).select('grade mark gpa').lean(),
   ]);
 
+  console.log(findResult, '======> findResult in update result service');
+
+
+  // return
   if (!findSchoolGrade.length) {
     throw new Error('Grade system not configured for this school');
   }
@@ -435,6 +441,7 @@ const updateResult = async (payload: TResultUpdate, user: TAuthUser) => {
     .filter(({ min, max }) => !isNaN(min) && !isNaN(max))
     .sort((a, b) => a.min - b.min);
 
+
   // Find the matching grade based on the provided mark
   const foundGrade = sortedGradeSystem.find(({ min, max }) => payload.mark >= min && payload.mark <= max);
   const gradeCalculation = {
@@ -442,10 +449,12 @@ const updateResult = async (payload: TResultUpdate, user: TAuthUser) => {
     gpa: foundGrade?.gpa ?? 0.0,
   };
 
+  console.log(findResult[0]?.results?._id, "findResult[0]?.results?._id");
+
   // Update the result with the new grade and GPA
   const updatedResult = await Result.findOneAndUpdate(
     {
-      _id: findResult[0].results._id,
+      _id: findResult[0]?.results?._id,
       "students._id": payload.resultId,
     },
     {

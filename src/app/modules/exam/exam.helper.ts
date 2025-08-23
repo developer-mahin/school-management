@@ -24,7 +24,7 @@ export const commonPipeline = [
       subjectId: '$subject._id',
       className: '$class.className',
       classId: '$class._id',
-      teacherId: '$teacher._id',
+      teacherId: '$teacher.teacherId',
       details: 1,
       passGrade: 1,
       date: 1,
@@ -33,6 +33,7 @@ export const commonPipeline = [
       duration: 1,
       isSubmitted: 1,
       instruction: 1,
+      totalMarks: 1,
     },
   },
 ];
