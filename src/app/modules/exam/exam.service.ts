@@ -4,9 +4,10 @@ import sendNotification from '../../../socket/sendNotification';
 import { classAndSubjectQuery } from '../../helper/aggregationPipline';
 import { TAuthUser } from '../../interface/authUser';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
+import { getSchoolIdFromUser } from '../../utils/getSchoolIdForManager';
 import GradeSystem from '../gradeSystem/gradeSystem.model';
 import { NOTIFICATION_TYPE } from '../notification/notification.interface';
-import { TStudentsGrader } from '../result/result.interface';
+import { TResultUpdate, TStudentsGrader } from '../result/result.interface';
 import Result from '../result/result.model';
 import Student from '../student/student.model';
 import { StudentService } from '../student/student.service';
@@ -14,7 +15,6 @@ import { TeacherService } from '../teacher/teacher.service';
 import { commonPipeline } from './exam.helper';
 import { TExam } from './exam.interface';
 import Exam from './exam.model';
-import { getSchoolIdFromUser } from '../../utils/getSchoolIdForManager';
 
 const createExam = async (payload: Partial<TExam>, user: TAuthUser) => {
   const examDate = new Date(payload?.date as Date);
@@ -158,8 +158,6 @@ const updateGrade = async (
   user: TAuthUser,
 ) => {
   const { examId, students } = payload;
-
-  console.log(payload, 'updateGrade ==========>');
 
   // Validate required fields early
   if (!examId || !students?.length) {
@@ -389,6 +387,81 @@ const getGradesResult = async (user: TAuthUser, examId: string) => {
   return result;
 };
 
+const updateResult = async (payload: TResultUpdate, user: TAuthUser) => {
+  // Fetch result and grade system concurrently
+  const [findResult, findSchoolGrade] = await Promise.all([
+    Exam.aggregate([
+      {
+        $match: {
+          termsId: new mongoose.Types.ObjectId(String(payload.termsId)),
+        },
+      },
+      {
+        $lookup: {
+          from: "results",
+          localField: "_id",
+          foreignField: "examId",
+          as: "results",
+        },
+      },
+      {
+        $unwind: "$results",
+      },
+      {
+        $unwind: "$results.students",
+      },
+      {
+        $match: {
+          "results.students._id": new mongoose.Types.ObjectId(payload.resultId),
+        },
+      },
+      {
+        $project: { "results": 1 },
+      },
+    ]),
+    GradeSystem.find({ schoolId: user.schoolId }).select('grade mark gpa').lean(),
+  ]);
+
+  if (!findSchoolGrade.length) {
+    throw new Error('Grade system not configured for this school');
+  }
+
+  // Prepare the grade map (only once)
+  const sortedGradeSystem = findSchoolGrade
+    .map(({ grade, mark, gpa }) => {
+      const [min, max] = mark.split('-').map(Number);
+      return { grade, gpa, min, max };
+    })
+    .filter(({ min, max }) => !isNaN(min) && !isNaN(max))
+    .sort((a, b) => a.min - b.min);
+
+  // Find the matching grade based on the provided mark
+  const foundGrade = sortedGradeSystem.find(({ min, max }) => payload.mark >= min && payload.mark <= max);
+  const gradeCalculation = {
+    grade: foundGrade?.grade ?? 'F',
+    gpa: foundGrade?.gpa ?? 0.0,
+  };
+
+  // Update the result with the new grade and GPA
+  const updatedResult = await Result.findOneAndUpdate(
+    {
+      _id: findResult[0].results._id,
+      "students._id": payload.resultId,
+    },
+    {
+      $set: {
+        "students.$.mark": payload.mark,
+        "students.$.grade": gradeCalculation.grade,
+        "students.$.gpa": gradeCalculation.gpa,
+      },
+    },
+    { new: true }
+  );
+
+  return updatedResult;
+};
+
+
 export const ExamService = {
   createExam,
   getTermsExams,
@@ -398,4 +471,5 @@ export const ExamService = {
   updateGrade,
   getExamSchedule,
   getGradesResult,
+  updateResult
 };

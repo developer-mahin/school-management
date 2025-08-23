@@ -441,7 +441,7 @@ const markAssignmentAsCompleted = async (
 
     // Step 3: Update each student's assignment submission in parallel
     await Promise.all([
-      ...payload.map(async (item: any) => {
+      payload.map(async (item: any) => {
         const updatedSubmission = await AssignmentSubmission.findOneAndUpdate(
           {
             studentId: item.studentId,

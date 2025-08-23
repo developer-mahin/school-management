@@ -200,6 +200,8 @@ const getTeacherList = async (user: TAuthUser, query: any) => {
           userId: '$userId',
           subjectName: 1,
           name: '$user.name',
+          subjectId: 1,
+          schoolId: 1,
           phoneNumber: '$user.phoneNumber',
           createdAt: '$user.createdAt',
           image: '$user.image',
@@ -216,6 +218,7 @@ const getTeacherList = async (user: TAuthUser, query: any) => {
 
   const meta = await teacherListQuery.countTotal(Teacher);
 
+  console.log("hitted ");
   return { meta, result };
 };
 
