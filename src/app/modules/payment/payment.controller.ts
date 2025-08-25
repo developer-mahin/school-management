@@ -26,12 +26,12 @@ const confirmPayment = catchAsync(async (req, res) => {
 
   const result = await PaymentService.confirmPayment(req.query);
 
-  // const isMobile = /Mobile|Android|iPhone|iPad|iPod/i.test(userAgent);
+  const isMobile = /Mobile|Android|iPhone|iPad|iPod/i.test(userAgent);
 
-  // const deviceType = isMobile ? 'Mobile' : 'PC';
-  // if (deviceType !== 'Mobile') {
-  //   res.redirect(`https://ootms.com/payment-success?amount`);
-  // }
+  const deviceType = isMobile ? 'Mobile' : 'PC';
+  if (deviceType !== 'Mobile') {
+    res.redirect(`https://ootms.com/payment-success?amount`);
+  }
 
   sendResponse(res, {
     success: true,
