@@ -20,9 +20,6 @@ const handleMySubscriptionAndPayment = async ({
   const findMySubscription = await MySubscription.findOne({
     userId,
   });
-  const findUser = await User.findOne({
-    _id: userId,
-  });
 
   if (findMySubscription) {
     await MySubscription.findOneAndUpdate(
@@ -31,7 +28,7 @@ const handleMySubscriptionAndPayment = async ({
         $set: {
           expiryIn: new Date(
             findMySubscription.expiryIn.getTime() +
-              subscription.timeline * 24 * 60 * 60 * 1000,
+            subscription.timeline * 24 * 60 * 60 * 1000,
           ),
           remainingChildren:
             findMySubscription.remainingChildren +
@@ -40,8 +37,6 @@ const handleMySubscriptionAndPayment = async ({
       },
       { new: true, session },
     );
-
-    await findUser?.save({ session });
   } else {
     const mySubscription = await MySubscription.create([mySubscriptionBody], {
       session,
@@ -50,31 +45,31 @@ const handleMySubscriptionAndPayment = async ({
       throw new AppError(httpStatus.BAD_REQUEST, 'My Subscription not created');
   }
 
-  await Payment.create([subscriptionPaymentBody], { session });
-
-  const payment = await Payment.findOne({
-    paymentId: subscriptionPaymentBody.paymentId,
-  });
+  const data = await Payment.create([subscriptionPaymentBody], { session });
 
   const parents = await Parents.findOne({
     userId: userId,
   });
   const school = await School.findById(parents?.schoolId);
 
+  const findUser = await User.findOne({
+    _id: userId,
+  });
+  
   const user = {
     userId: findUser?._id,
   };
 
-  sendNotification(user as any, {
+  await sendNotification(user as any, {
     senderId: findUser?._id,
     role: findUser?.role,
     receiverId: school?._id,
     message: `New Payment ${subscriptionPaymentBody.amount} USD from ${findUser?.name}`,
     type: NOTIFICATION_TYPE.PAYMENT,
-    linkId: payment?._id,
+    linkId: data[0]?._id,
   });
 
-  if (!payment)
+  if (!data)
     throw new AppError(httpStatus.BAD_REQUEST, 'Payment not created');
 };
 

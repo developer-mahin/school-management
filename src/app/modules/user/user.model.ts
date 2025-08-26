@@ -40,7 +40,7 @@ export const userSchema = new mongoose.Schema<TUser, UserModel>(
     },
     gender: {
       type: String,
-      enum: ['male', 'female'],
+      enum: ['male', 'female', 'other'],
     },
     relation: {
       type: String,

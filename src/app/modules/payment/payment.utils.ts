@@ -38,9 +38,9 @@ export const createCheckoutSession = async (
         },
       ],
 
-      success_url: `${config.base_url}/payment/confirm-payment?sessionId={CHECKOUT_SESSION_ID}&subscriptionId=${subscriptionId}&userId=${user.userId}&amount=${amount}`,
+      success_url: `${config.base_url}/api/v1/payment/confirm-payment?sessionId={CHECKOUT_SESSION_ID}&subscriptionId=${subscriptionId}&userId=${user.userId}&amount=${amount}`,
 
-      cancel_url: `${config.base_url}/payments/cancel?paymentId=${'paymentDummy'}`,
+      cancel_url: `${config.base_url}/api/v1/payments/cancel?paymentId=${'paymentDummy'}`,
       mode: 'payment',
 
       client_reference_id: `${subscriptionId}`,

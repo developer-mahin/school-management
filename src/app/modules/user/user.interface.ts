@@ -11,7 +11,7 @@ export type TRole =
   | 'student';
 
 export type TStatus = 'active' | 'blocked';
-export type TGender = 'male' | 'female' | 'others';
+export type TGender = 'male' | 'female' | 'other';
 
 export type TUser = {
   uid: string;
@@ -24,7 +24,7 @@ export type TUser = {
   name: string;
   image: string;
   role: TRole;
-  gender: TGender;
+  gender?: TGender;
   status: TStatus;
   isDeleted: boolean;
   relation: 'father' | 'mother';

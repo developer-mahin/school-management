@@ -6,10 +6,12 @@ const paymentSchema = new Schema<TPayment>(
     subscriptionId: {
       type: Schema.Types.ObjectId,
       ref: 'Subscription',
+      required: true,
     },
     userId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
+      required: true,
     },
 
     paymentType: {
