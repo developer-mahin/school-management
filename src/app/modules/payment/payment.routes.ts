@@ -15,6 +15,7 @@ router
     PaymentController.makePayment,
   )
   .get('/confirm-payment', PaymentController.confirmPayment)
+  .get('/cancel-payment', PaymentController.confirmPayment)
   .get(
     '/earning_statistic',
     auth(USER_ROLE.supperAdmin),

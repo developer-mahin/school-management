@@ -30,7 +30,7 @@ const confirmPayment = catchAsync(async (req, res) => {
 
   const deviceType = isMobile ? 'Mobile' : 'PC';
   if (deviceType !== 'Mobile') {
-    res.redirect(`https://ootms.com/payment-success?amount`);
+    res.redirect(`http://classaty.com/payment-success?amount=${req.query.amount}`);
   }
 
   sendResponse(res, {
@@ -67,9 +67,31 @@ const paymentList = catchAsync(async (req, res) => {
   });
 });
 
+const cancelPayment = catchAsync(async (req, res) => {
+
+  const userAgent = req.headers['user-agent'];
+  if (!userAgent) {
+    throw new Error('User agent not found');
+  }
+
+  const isMobile = /Mobile|Android|iPhone|iPad|iPod/i.test(userAgent);
+
+  const deviceType = isMobile ? 'Mobile' : 'PC';
+  if (deviceType !== 'Mobile') {
+    res.redirect(`http://classaty.com/cancel-payment?amount=${req.query.amount}`);
+  }
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.BAD_GATEWAY,
+    message: 'Payment Canceled',
+  });
+});
+
 export const PaymentController = {
   makePayment,
   paymentList,
   confirmPayment,
   earningStatistic,
+  cancelPayment
 };

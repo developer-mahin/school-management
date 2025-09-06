@@ -45,4 +45,9 @@ export default {
     sender: process.env.KWT_SENDER_ID,
     kwt_sms_url: process.env.KWT_SMS_SEND_URL,
   },
+
+  payment_gateway: {
+    my_fatorah_api_key: process.env.MY_FATORAH_API_KEY,
+    my_fatorah_base_url: process.env.MY_FATORAH_BASE_URL,
+  }
 };

@@ -1,17 +1,10 @@
-import config from '../../../config';
+import axios from 'axios';
 import { TAuthUser } from '../../interface/authUser';
-import Stripe from 'stripe';
 import { TSubscription } from '../subscription/subscription.interface';
 import { TPayment } from './payment.interface';
+import config from '../../../config';
 
-export const calculateAmount = (amount: number) => {
-  return Number(amount) * 100;
-};
 
-const stripe = new Stripe(config.stripe_secret_key as string, {
-  apiVersion: '2025-03-31.basil',
-  typescript: true,
-});
 
 export const createCheckoutSession = async (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -20,39 +13,55 @@ export const createCheckoutSession = async (
 ) => {
   const { subscriptionId, amount } = paymentData;
 
-  let paymentGatewayData;
-  if (subscriptionId && amount) {
-    paymentGatewayData = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [
+
+  console.log("#################### ExecutePayment ########################");
+  const executePaymentOptions = {
+    method: "POST",
+    url: `${config.payment_gateway.my_fatorah_base_url}/v2/ExecutePayment`,
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${config.payment_gateway.my_fatorah_api_key}`,
+      'Content-Type': 'application/json',
+    },
+    data: {
+      PaymentMethodId: '2',
+      CustomerName: 'Ahmed',
+      DisplayCurrencyIso: 'KWD',
+      MobileCountryCode: '+965',
+      CustomerMobile: '12345678',
+      CustomerEmail: 'xx@yy.com',
+      InvoiceValue: 100,
+      CallBackUrl: `${config.base_api_url}/payment/confirm-payment?subscriptionId=${subscriptionId}&userId=${user.userId}&amount=${amount}`,
+      ErrorUrl: 'https://google.com',
+      Language: 'en',
+      CustomerReference: 'ref 1',
+      CustomerCivilId: 12345678,
+      UserDefinedField: 'Custom field',
+      ExpiryDate: '',
+      CustomerAddress: {
+        Block: '',
+        Street: '',
+        HouseBuildingNo: '',
+        Address: '',
+        AddressInstructions: '',
+      },
+      InvoiceItems: [
         {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: `Payment from  ${user.name}`,
-              description: `${user.name} purchased a subscription`,
-            },
-            unit_amount: calculateAmount(amount),
-          },
-          quantity: 1,
+          ItemName: 'Product 01',
+          Quantity: 1,
+          UnitPrice: 100,
         },
       ],
+    },
+  };
 
-      success_url: `${config.base_url}/api/v1/payment/confirm-payment?sessionId={CHECKOUT_SESSION_ID}&subscriptionId=${subscriptionId}&userId=${user.userId}&amount=${amount}`,
 
-      cancel_url: `${config.base_url}/api/v1/payments/cancel?paymentId=${'paymentDummy'}`,
-      mode: 'payment',
+  const res = await axios.request(executePaymentOptions);
 
-      client_reference_id: `${subscriptionId}`,
-      invoice_creation: {
-        enabled: true,
-      },
-    });
-  } else {
-    throw new Error('Payment data is not valid');
-  }
+  return res.data;
 
-  return paymentGatewayData.url;
+
+
 };
 
 

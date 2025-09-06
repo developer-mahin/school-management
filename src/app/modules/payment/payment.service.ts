@@ -31,6 +31,9 @@ const makePayment = async (
 };
 
 const confirmPayment = async (query: Record<string, unknown>) => {
+
+  console.log("#################### confirmPayment ########################");
+
   const { userId, subscriptionId, amount } = query;
 
   const paymentId = `pi_${crypto.randomBytes(16).toString('hex')}`;
