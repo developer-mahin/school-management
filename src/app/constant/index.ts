@@ -16,5 +16,5 @@ export const USER_STATUS = {
 export const GENDER = {
   male: 'male',
   female: 'female',
-  others: 'others',
+  other: 'other',
 } as const;

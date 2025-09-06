@@ -101,25 +101,26 @@ export const TermsService = {
           as: 'subject',
         },
       },
-      {
-        $unwind: {
-          path: '$subject',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $project: {
-          subjectName: '$subject.subjectName',
-          mark: '$result.students.mark',
-          grade: '$result.students.grade',
-          gpa: '$result.students.gpa',
-        },
-      },
+      // {
+      //   $unwind: {
+      //     path: '$subject',
+      //     preserveNullAndEmptyArrays: true,
+      //   },
+      // },
+      // {
+      //   $project: {
+      //     subjectName: '$subject.subjectName',
+      //     mark: '$result.students.mark',
+      //     grade: '$result.students.grade',
+      //     gpa: '$result.students.gpa',
+      //   },
+      // },
     ]);
 
-    const totalCgpa = result.reduce((acc, curr) => acc + curr.gpa, 0);
-    const gpa = totalCgpa / result.length;
+    // const totalCgpa = result.reduce((acc, curr) => acc + curr.gpa, 0);
+    // const gpa = totalCgpa / result.length;
 
-    return { result, thisTermGpa: gpa };
+    // return { result, thisTermGpa: gpa };
+    return { result};
   },
 };
