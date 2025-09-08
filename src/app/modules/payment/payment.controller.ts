@@ -29,9 +29,9 @@ const confirmPayment = catchAsync(async (req, res) => {
   const isMobile = /Mobile|Android|iPhone|iPad|iPod/i.test(userAgent);
 
   const deviceType = isMobile ? 'Mobile' : 'PC';
-  if (deviceType !== 'Mobile') {
+  // if (deviceType !== 'Mobile') {
     res.redirect(`http://classaty.com/payment-success?amount=${req.query.amount}`);
-  }
+  // }
 
   sendResponse(res, {
     success: true,
@@ -77,9 +77,9 @@ const cancelPayment = catchAsync(async (req, res) => {
   const isMobile = /Mobile|Android|iPhone|iPad|iPod/i.test(userAgent);
 
   const deviceType = isMobile ? 'Mobile' : 'PC';
-  if (deviceType !== 'Mobile') {
+  // if (deviceType !== 'Mobile') {
     res.redirect(`http://classaty.com/cancel-payment?amount=${req.query.amount}`);
-  }
+  // }
 
   sendResponse(res, {
     success: true,
