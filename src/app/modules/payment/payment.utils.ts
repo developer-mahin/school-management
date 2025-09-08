@@ -30,7 +30,7 @@ export const createCheckoutSession = async (
       MobileCountryCode: '+965',
       CustomerMobile: '12345678',
       CustomerEmail: 'xx@yy.com',
-      InvoiceValue: 100,
+      InvoiceValue: Number(amount),
       CallBackUrl: `${config.base_api_url}/payment/confirm-payment?subscriptionId=${subscriptionId}&userId=${user.userId}&amount=${amount}`,
       ErrorUrl: 'https://google.com',
       Language: 'en',
@@ -49,7 +49,7 @@ export const createCheckoutSession = async (
         {
           ItemName: 'Product 01',
           Quantity: 1,
-          UnitPrice: 100,
+          UnitPrice: Number(amount),
         },
       ],
     },
