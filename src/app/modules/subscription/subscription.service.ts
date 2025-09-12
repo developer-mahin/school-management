@@ -4,6 +4,7 @@ import { TSubscription } from './subscription.interface';
 import Subscription from './subscription.model';
 import { TAuthUser } from '../../interface/authUser';
 import MySubscription from '../mySubscription/mySubscription.model';
+import mongoose from 'mongoose';
 
 const createSubscription = async (payload: TSubscription) => {
   let numberOfChildren = 0;
@@ -57,7 +58,25 @@ const updateSubscription = async (
 };
 
 const getMySubscription = async (user: TAuthUser) => {
-  const subscription = await MySubscription.findOne({ userId: user.userId });
+  const subscription = await MySubscription.aggregate([
+    {
+      $match: { userId: new mongoose.Types.ObjectId(String(user.userId)) }
+    },
+    {
+      $lookup: {
+        from: 'subscriptions',
+        localField: 'subscriptionId',
+        foreignField: '_id',
+        as: 'subscription'
+      }
+    },
+    {
+      $unwind: {
+        path: '$subscription',
+        preserveNullAndEmptyArrays: true
+      }
+    }
+  ])
 
   return subscription || {};
 };
