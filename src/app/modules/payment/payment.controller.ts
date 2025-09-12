@@ -30,7 +30,8 @@ const confirmPayment = catchAsync(async (req, res) => {
 
   const deviceType = isMobile ? 'Mobile' : 'PC';
   // if (deviceType !== 'Mobile') {
-    res.redirect(`http://classaty.com/payment-success?amount=${req.query.amount}`);
+  res.redirect(`http://classaty.com/payment-success?amount=${req.query.amount}`);
+  // res.redirect(`http://10.10.10.30:8010/api/v1/payment/confirm-payment?subscriptionId=${req.query.subscriptionId}&userId=${req.query.userId}&amount=${req.query.amount}&paymentId=${req.query.paymentId}`);
   // }
 
   sendResponse(res, {
@@ -78,7 +79,7 @@ const cancelPayment = catchAsync(async (req, res) => {
 
   const deviceType = isMobile ? 'Mobile' : 'PC';
   // if (deviceType !== 'Mobile') {
-    res.redirect(`http://classaty.com/cancel-payment?amount=${req.query.amount}`);
+  res.redirect(`http://classaty.com/cancel-payment?amount=${req.query.amount}`);
   // }
 
   sendResponse(res, {

@@ -49,9 +49,9 @@ const getAllClassSchedule = async (
     .customPipeline([
       {
         $match: {
-          $expr: {
+          // $expr: {
             schoolId: new mongoose.Types.ObjectId(String(schoolId)),
-          },
+          // },
         },
       },
       ...classAndSubjectQuery,
