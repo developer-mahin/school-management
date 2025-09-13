@@ -8,7 +8,8 @@ export type TRole =
   | 'manager'
   | 'teacher'
   | 'parents'
-  | 'student';
+  | 'student'
+  | 'schoolAdmin';
 
 export type TStatus = 'active' | 'blocked';
 export type TGender = 'male' | 'female' | 'other';

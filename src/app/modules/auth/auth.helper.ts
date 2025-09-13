@@ -24,6 +24,10 @@ export const getSchoolByRole = async (user: any): Promise<any> => {
       const manager = await Manager.findById(user.managerId);
       return School.findById(manager?.schoolId);
     },
+    [USER_ROLE.schoolAdmin]: async () => {
+      const school = await School.findById(user.schoolId);
+      return school;
+    },
   };
 
   const role = user.role as keyof typeof roleMap;
