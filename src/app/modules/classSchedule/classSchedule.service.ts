@@ -18,6 +18,7 @@ import User from '../user/user.model';
 import { commonPipeline } from './classSchedule.helper';
 import { TClassSchedule } from './classSchedule.interface';
 import ClassSchedule from './classSchedule.model';
+import Teacher from '../teacher/teacher.model';
 
 const createClassSchedule = async (
   payload: Partial<TClassSchedule>,
@@ -519,6 +520,16 @@ const createClassScheduleXlsx = async (file: MulterFile, user: TAuthUser) => {
         name: row.teacher,
       });
 
+      const teacherData = await Teacher.findOne({
+        _id: teacherUser?.teacherId,
+        schoolId: user.schoolId,
+      });
+
+      if (!teacherData) {
+        throw new AppError(httpStatus.BAD_REQUEST, `This ("${row.teacher}") Teacher is not found`);
+      }
+
+
       return {
         ...row,
         schoolId: user.schoolId,
@@ -530,8 +541,8 @@ const createClassScheduleXlsx = async (file: MulterFile, user: TAuthUser) => {
     }),
   );
 
-  const result = await ClassSchedule.insertMany(enrichedData);
-  return result;
+  // const result = await ClassSchedule.insertMany(enrichedData);
+  return enrichedData;
 };
 
 export const ClassScheduleService = {
