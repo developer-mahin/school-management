@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { USER_ROLE } from '../../constant';
 import { TAuthUser } from '../../interface/authUser';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
+import { transactionWrapper } from '../../utils/transactionWrapper';
 import Exam from '../exam/exam.model';
 import Student from '../student/student.model';
 import Teacher from '../teacher/teacher.model';
@@ -9,7 +10,6 @@ import { createUserWithProfile } from '../user/user.helper';
 import User from '../user/user.model';
 import { TSchool } from './school.interface';
 import School from './school.model';
-import { transactionWrapper } from '../../utils/transactionWrapper';
 
 const createSchool = async (
   payload: Partial<TSchool> & { phoneNumber: string; name?: string },
@@ -563,6 +563,22 @@ const updateSchoolProfile = async (
   payload: Partial<TSchool>,
   user: TAuthUser,
 ) => {
+  if (payload.adminPhone) {
+    await User.findOneAndUpdate(
+      { phoneNumber: payload.adminPhone },
+      {
+        name: payload.adminName,
+        phoneNumber: payload.adminPhone,
+        role: USER_ROLE.schoolAdmin,
+        schoolId: user.schoolId,
+      },
+      {
+        upsert: true,
+        new: true,
+      },
+    );
+  }
+
   const result = await School.findOneAndUpdate(
     { _id: user.schoolId },
     payload,
