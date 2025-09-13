@@ -74,7 +74,9 @@ const socketIO = (io: Server) => {
       console.log('userId or socketId is undefined');
       return;
     }
-    connectedUser.set(socket?.user?.userId, { socketId: socket?.user?.socketId });
+    connectedUser.set(socket?.user?.userId, {
+      socketId: socket?.user?.socketId,
+    });
 
     io.emit('online_users', Array.from(connectedUser.keys()));
 
@@ -104,8 +106,6 @@ const socketIO = (io: Server) => {
 
           const sender: any = connectedUser.get(payload!.sender!.toString());
 
-
-
           if (receiver) {
             console.log(receiver.socketId, 'receiver is socket id');
             io.to(receiver.socketId).emit('new_message', {
@@ -132,9 +132,9 @@ const socketIO = (io: Server) => {
             });
           }
 
-          const findUser = await User.findById(payload.receiverId)
+          const findUser = await User.findById(payload.receiverId);
 
-          if (findUser?.role === "supperAdmin") {
+          if (findUser?.role === 'supperAdmin') {
             const notificationData = {
               ...payload,
               message: `You have a new message from ${user?.name}`,
@@ -145,10 +145,8 @@ const socketIO = (io: Server) => {
               receiverId: payload.receiverId,
             };
 
-    
-            await sendNotification(user as TAuthUser, notificationData)
+            await sendNotification(user as TAuthUser, notificationData);
           }
-
         } catch (error) {
           console.error('Error sending message:', error);
           callback?.({ success: false, message: 'Internal server error' });

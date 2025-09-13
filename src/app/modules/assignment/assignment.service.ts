@@ -403,8 +403,6 @@ const getAssignmentDetails = async (
 //   return data;
 // };
 
-
-
 const markAssignmentAsCompleted = async (
   assignmentId: string,
   payload: TMarkComplete[] | any,
@@ -492,7 +490,6 @@ const markAssignmentAsCompleted = async (
     session.endSession();
   }
 };
-
 
 const pendingAssignment = async (
   user: TAuthUser,

@@ -21,8 +21,9 @@ const schoolSchema = new Schema<TSchool>(
     },
     adminName: {
       type: String,
-      required: true,
-      trim: true,
+    },
+    adminPhone: {
+      type: String,
     },
     schoolImage: {
       type: String,

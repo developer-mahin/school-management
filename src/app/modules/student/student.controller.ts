@@ -100,8 +100,9 @@ const getParentsDetails = catchAsync(async (req, res) => {
 });
 
 const createStudentUsingXlsx = catchAsync(async (req, res) => {
-
-  const result = await StudentService.createStudentWithXlsx(req.file as MulterFile);
+  const result = await StudentService.createStudentWithXlsx(
+    req.file as MulterFile,
+  );
 
   sendResponse(res, {
     success: true,

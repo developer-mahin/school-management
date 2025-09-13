@@ -5,6 +5,7 @@ export type TSchool = {
   schoolName: string;
   schoolAddress: string;
   adminName: string;
+  adminPhone: string;
   schoolImage: string;
   coverImage: string;
 };

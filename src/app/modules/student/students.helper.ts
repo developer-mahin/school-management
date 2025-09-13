@@ -25,7 +25,10 @@ async function createStudentWithProfile(
     const uniquePhoneNumber = await UserService.uniquePhoneNumber(
       payload.phoneNumber,
     );
-    if (uniquePhoneNumber) throw new Error('Phone number already exists');
+    if (uniquePhoneNumber)
+      throw new Error(
+        `This ("${payload.phoneNumber}") Phone number already exists`,
+      );
   }
 
   const [newUser] = await User.create(
@@ -208,8 +211,6 @@ const parseStudentXlsxData = async (file: MulterFile) => {
       },
       {} as Record<string, string | string[]>,
     );
-
-
   });
 
   const enrichedData = await Promise.all(
@@ -228,7 +229,7 @@ const parseStudentXlsxData = async (file: MulterFile) => {
         schoolId: school?.id || null,
         classId: classData?.id || null,
       };
-    })
+    }),
   );
 
   return enrichedData;

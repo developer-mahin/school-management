@@ -155,8 +155,10 @@ const getTeachers = async (user: TAuthUser, query: Record<string, unknown>) => {
   return { meta, result };
 };
 
-const editSchool = async (schoolId: string, payload: Partial<TSchool & { phoneNumber: string; name?: string }>) => {
-
+const editSchool = async (
+  schoolId: string,
+  payload: Partial<TSchool & { phoneNumber: string; name?: string }>,
+) => {
   const result = transactionWrapper(async (session) => {
     const result = await School.findOneAndUpdate({ _id: schoolId }, payload, {
       new: true,
@@ -165,8 +167,8 @@ const editSchool = async (schoolId: string, payload: Partial<TSchool & { phoneNu
 
     const findPhone = await User.findOne({ phoneNumber: payload.phoneNumber });
 
-    if (findPhone && findPhone?.schoolId.toString() !== schoolId) throw new Error('Phone number already exist');
-
+    if (findPhone && findPhone?.schoolId.toString() !== schoolId)
+      throw new Error('Phone number already exist');
 
     await User.findOneAndUpdate({ schoolId }, payload, { session });
   });
@@ -557,6 +559,25 @@ const getResultOfStudents = async (
   return { meta, result };
 };
 
+const updateSchoolProfile = async (
+  payload: Partial<TSchool>,
+  user: TAuthUser,
+) => {
+  const result = await School.findOneAndUpdate(
+    { _id: user.schoolId },
+    payload,
+    {
+      new: true,
+    },
+  );
+  return result;
+};
+
+const getSchoolProfile = async (user: TAuthUser) => {
+  const result = await School.findOne({ _id: user.schoolId });
+  return result;
+};
+
 export const SchoolService = {
   createSchool,
   getSchoolList,
@@ -565,4 +586,6 @@ export const SchoolService = {
   deleteSchool,
   getAllStudents,
   getResultOfStudents,
+  updateSchoolProfile,
+  getSchoolProfile,
 };

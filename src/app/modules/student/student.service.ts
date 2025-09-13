@@ -16,7 +16,7 @@ import Student from './student.model';
 import {
   createStudentWithProfile,
   handleParentUserCreation,
-  parseStudentXlsxData
+  parseStudentXlsxData,
 } from './students.helper';
 import { MulterFile } from '../user/user.controller';
 
@@ -474,7 +474,7 @@ const getParentsDetails = async (id: string) => {
 };
 
 const createStudentWithXlsx = async (file: MulterFile) => {
-  const data = await parseStudentXlsxData(file) as StudentRow[];
+  const data = (await parseStudentXlsxData(file)) as StudentRow[];
 
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -499,7 +499,7 @@ const createStudentWithXlsx = async (file: MulterFile) => {
           data: payload,
           uid: studentUID,
         },
-        session
+        session,
       );
 
       await handleParentUserCreation(payload, student, session);
@@ -516,8 +516,6 @@ const createStudentWithXlsx = async (file: MulterFile) => {
   }
 
   return createdStudents;
-
-
 };
 
 export const StudentService = {
@@ -530,5 +528,5 @@ export const StudentService = {
   deleteStudent,
   getParentsList,
   getParentsDetails,
-  createStudentWithXlsx
+  createStudentWithXlsx,
 };

@@ -28,7 +28,7 @@ const handleMySubscriptionAndPayment = async ({
         $set: {
           expiryIn: new Date(
             findMySubscription.expiryIn.getTime() +
-            subscription.timeline * 24 * 60 * 60 * 1000,
+              subscription.timeline * 24 * 60 * 60 * 1000,
           ),
           remainingChildren:
             findMySubscription.remainingChildren +
@@ -55,7 +55,7 @@ const handleMySubscriptionAndPayment = async ({
   const findUser = await User.findOne({
     _id: userId,
   });
-  
+
   const user = {
     userId: findUser?._id,
   };
@@ -69,8 +69,7 @@ const handleMySubscriptionAndPayment = async ({
     linkId: data[0]?._id,
   });
 
-  if (!data)
-    throw new AppError(httpStatus.BAD_REQUEST, 'Payment not created');
+  if (!data) throw new AppError(httpStatus.BAD_REQUEST, 'Payment not created');
 };
 
 // Helper function to create payment body

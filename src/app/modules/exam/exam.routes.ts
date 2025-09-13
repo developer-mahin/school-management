@@ -29,7 +29,7 @@ router
     auth(USER_ROLE.teacher, USER_ROLE.school),
     ExamController.updateGrade,
   )
-  .patch("/update_result", auth(USER_ROLE.school), ExamController.updateResult)
+  .patch('/update_result', auth(USER_ROLE.school), ExamController.updateResult)
   .get(
     '/grades_result/:examId',
     auth(USER_ROLE.teacher),

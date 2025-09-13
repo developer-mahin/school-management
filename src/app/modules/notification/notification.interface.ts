@@ -13,7 +13,8 @@ type TType =
   | 'parent'
   | 'custom'
   | 'manager'
-  | 'announcement' | 'message';
+  | 'announcement'
+  | 'message';
 
 export const NOTIFICATION_TYPE = {
   ASSIGNMENT: 'assignment',

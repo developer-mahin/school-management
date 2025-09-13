@@ -388,7 +388,6 @@ const getGradesResult = async (user: TAuthUser, examId: string) => {
 };
 
 const updateResult = async (payload: TResultUpdate, user: TAuthUser) => {
-
   console.log(payload, '======> payload in update result service');
   // Fetch result and grade system concurrently
   const [findResult, findSchoolGrade] = await Promise.all([
@@ -400,32 +399,33 @@ const updateResult = async (payload: TResultUpdate, user: TAuthUser) => {
       },
       {
         $lookup: {
-          from: "results",
-          localField: "_id",
-          foreignField: "examId",
-          as: "results",
+          from: 'results',
+          localField: '_id',
+          foreignField: 'examId',
+          as: 'results',
         },
       },
       {
-        $unwind: "$results",
+        $unwind: '$results',
       },
       {
-        $unwind: "$results.students",
+        $unwind: '$results.students',
       },
       {
         $match: {
-          "results.students._id": new mongoose.Types.ObjectId(payload.resultId),
+          'results.students._id': new mongoose.Types.ObjectId(payload.resultId),
         },
       },
       {
-        $project: { "results": 1 },
+        $project: { results: 1 },
       },
     ]),
-    GradeSystem.find({ schoolId: user.schoolId }).select('grade mark gpa').lean(),
+    GradeSystem.find({ schoolId: user.schoolId })
+      .select('grade mark gpa')
+      .lean(),
   ]);
 
   console.log(findResult, '======> findResult in update result service');
-
 
   // return
   if (!findSchoolGrade.length) {
@@ -441,35 +441,35 @@ const updateResult = async (payload: TResultUpdate, user: TAuthUser) => {
     .filter(({ min, max }) => !isNaN(min) && !isNaN(max))
     .sort((a, b) => a.min - b.min);
 
-
   // Find the matching grade based on the provided mark
-  const foundGrade = sortedGradeSystem.find(({ min, max }) => payload.mark >= min && payload.mark <= max);
+  const foundGrade = sortedGradeSystem.find(
+    ({ min, max }) => payload.mark >= min && payload.mark <= max,
+  );
   const gradeCalculation = {
     grade: foundGrade?.grade ?? 'F',
     gpa: foundGrade?.gpa ?? 0.0,
   };
 
-  console.log(findResult[0]?.results?._id, "findResult[0]?.results?._id");
+  console.log(findResult[0]?.results?._id, 'findResult[0]?.results?._id');
 
   // Update the result with the new grade and GPA
   const updatedResult = await Result.findOneAndUpdate(
     {
       _id: findResult[0]?.results?._id,
-      "students._id": payload.resultId,
+      'students._id': payload.resultId,
     },
     {
       $set: {
-        "students.$.mark": payload.mark,
-        "students.$.grade": gradeCalculation.grade,
-        "students.$.gpa": gradeCalculation.gpa,
+        'students.$.mark': payload.mark,
+        'students.$.grade': gradeCalculation.grade,
+        'students.$.gpa': gradeCalculation.gpa,
       },
     },
-    { new: true }
+    { new: true },
   );
 
   return updatedResult;
 };
-
 
 export const ExamService = {
   createExam,
@@ -480,5 +480,5 @@ export const ExamService = {
   updateGrade,
   getExamSchedule,
   getGradesResult,
-  updateResult
+  updateResult,
 };
