@@ -60,23 +60,23 @@ const updateSubscription = async (
 const getMySubscription = async (user: TAuthUser) => {
   const subscription = await MySubscription.aggregate([
     {
-      $match: { userId: new mongoose.Types.ObjectId(String(user.userId)) }
+      $match: { userId: new mongoose.Types.ObjectId(String(user.userId)) },
     },
     {
       $lookup: {
         from: 'subscriptions',
         localField: 'subscriptionId',
         foreignField: '_id',
-        as: 'subscription'
-      }
+        as: 'subscription',
+      },
     },
     {
       $unwind: {
         path: '$subscription',
-        preserveNullAndEmptyArrays: true
-      }
-    }
-  ])
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+  ]);
 
   return subscription || {};
 };

@@ -4,6 +4,10 @@ import { SchoolController } from './school.controller';
 import { SchoolValidation } from './school.velidation';
 import { auth } from '../../middleware/auth';
 import { USER_ROLE } from '../../constant';
+import fileUpload from '../../utils/uploadImage';
+import parseFormData from '../../middleware/parsedData';
+
+const upload = fileUpload('./public/uploads/images/');
 
 const router = Router();
 
@@ -24,6 +28,21 @@ router
     '/result_of_students',
     auth(USER_ROLE.school),
     SchoolController.getResultOfStudents,
+  )
+  .get(
+    '/school_profile',
+    auth(USER_ROLE.school),
+    SchoolController.getSchoolProfile,
+  )
+  .patch(
+    '/update_school_profile',
+    auth(USER_ROLE.school),
+    upload.fields([
+      { name: 'schoolImage', maxCount: 1 },
+      { name: 'coverImage', maxCount: 1 },
+    ]),
+    parseFormData,
+    SchoolController.updateSchoolProfile,
   )
   .patch(
     '/edit_school/:schoolId',

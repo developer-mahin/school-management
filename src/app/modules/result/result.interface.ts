@@ -18,5 +18,5 @@ export type TResultUpdate = {
   termsId: string;
   resultId: string;
   subjectName: string;
-  mark: number
-}
+  mark: number;
+};

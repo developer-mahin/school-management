@@ -13,7 +13,6 @@ import { TPayment } from './payment.interface';
 import Payment from './payment.model';
 import { createCheckoutSession } from './payment.utils';
 
-
 const makePayment = async (
   payload: Partial<TPayment | TSubscription | any>,
   user: TAuthUser,
@@ -31,8 +30,7 @@ const makePayment = async (
 };
 
 const confirmPayment = async (query: Record<string, unknown>) => {
-
-  console.log("#################### confirmPayment ########################");
+  console.log('#################### confirmPayment ########################');
 
   const { userId, subscriptionId, amount } = query;
 

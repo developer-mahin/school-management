@@ -105,7 +105,10 @@ const getGradesResult = catchAsync(async (req, res) => {
 });
 
 const updateResult = catchAsync(async (req, res) => {
-  const result = await ExamService.updateResult(req.body, req.user as TAuthUser);
+  const result = await ExamService.updateResult(
+    req.body,
+    req.user as TAuthUser,
+  );
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -123,5 +126,5 @@ export const ExamController = {
   updateGrade,
   getExamSchedule,
   getGradesResult,
-  updateResult
+  updateResult,
 };

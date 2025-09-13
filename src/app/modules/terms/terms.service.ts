@@ -121,6 +121,6 @@ export const TermsService = {
     // const gpa = totalCgpa / result.length;
 
     // return { result, thisTermGpa: gpa };
-    return { result};
+    return { result };
   },
 };

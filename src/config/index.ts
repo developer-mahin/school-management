@@ -49,5 +49,5 @@ export default {
   payment_gateway: {
     my_fatorah_api_key: process.env.MY_FATORAH_API_KEY,
     my_fatorah_base_url: process.env.MY_FATORAH_BASE_URL,
-  }
+  },
 };

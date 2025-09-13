@@ -3,6 +3,7 @@ import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { SchoolService } from './school.service';
 import { TAuthUser } from '../../interface/authUser';
+import { MulterFiles } from '../user/user.controller';
 
 const createSchool = catchAsync(async (req, res) => {
   const result = await SchoolService.createSchool(req.body);
@@ -83,6 +84,45 @@ const getResultOfStudents = catchAsync(async (req, res) => {
   });
 });
 
+const updateSchoolProfile = catchAsync(async (req, res) => {
+  const fields = ['schoolImage', 'coverImage'];
+
+  const files = req.files as MulterFiles | undefined;
+
+  if (files && !Array.isArray(files) && typeof files === 'object') {
+    await Promise.all(
+      fields.map(async (field) => {
+        const fileArray = files[field];
+        if (fileArray && fileArray.length > 0) {
+          // const s3Url = await uploadFileWithS3(fileArray[0]);
+          req.body[field] = fileArray[0]?.path;
+        }
+      }),
+    );
+  }
+
+  const result = await SchoolService.updateSchoolProfile(
+    req.body,
+    req.user as TAuthUser,
+  );
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'School profile updated successfully',
+    data: result,
+  });
+});
+
+const getSchoolProfile = catchAsync(async (req, res) => {
+  const result = await SchoolService.getSchoolProfile(req.user as TAuthUser);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'School profile fetched successfully',
+    data: result,
+  });
+});
+
 export const SchoolController = {
   createSchool,
   getSchoolList,
@@ -91,4 +131,6 @@ export const SchoolController = {
   deleteSchool,
   getAllStudents,
   getResultOfStudents,
+  updateSchoolProfile,
+  getSchoolProfile,
 };

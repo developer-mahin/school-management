@@ -4,8 +4,6 @@ import { TSubscription } from '../subscription/subscription.interface';
 import { TPayment } from './payment.interface';
 import config from '../../../config';
 
-
-
 export const createCheckoutSession = async (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   paymentData: Partial<TPayment | TSubscription | any>,
@@ -13,10 +11,9 @@ export const createCheckoutSession = async (
 ) => {
   const { subscriptionId, amount } = paymentData;
 
-
-  console.log("#################### ExecutePayment ########################");
+  console.log('#################### ExecutePayment ########################');
   const executePaymentOptions = {
-    method: "POST",
+    method: 'POST',
     url: `${config.payment_gateway.my_fatorah_base_url}/v2/ExecutePayment`,
     headers: {
       Accept: 'application/json',
@@ -55,13 +52,7 @@ export const createCheckoutSession = async (
     },
   };
 
-
   const res = await axios.request(executePaymentOptions);
 
   return res.data;
-
-
-
 };
-
-

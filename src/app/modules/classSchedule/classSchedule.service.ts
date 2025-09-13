@@ -50,7 +50,7 @@ const getAllClassSchedule = async (
       {
         $match: {
           // $expr: {
-            schoolId: new mongoose.Types.ObjectId(String(schoolId)),
+          schoolId: new mongoose.Types.ObjectId(String(schoolId)),
           // },
         },
       },
