@@ -1,16 +1,23 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import fs from 'fs';
 import httpStatus from 'http-status';
 import mongoose from 'mongoose';
+import xlsx from 'xlsx';
 import { USER_ROLE } from '../../constant';
 import { classAndSubjectQuery } from '../../helper/aggregationPipline';
 import { TAuthUser } from '../../interface/authUser';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 import AppError from '../../utils/AppError';
+import { getSchoolIdFromUser } from '../../utils/getSchoolIdForManager';
+import Class from '../class/class.model';
 import { StudentService } from '../student/student.service';
+import Subject from '../subject/subject.model';
 import { TeacherService } from '../teacher/teacher.service';
+import { MulterFile } from '../user/user.controller';
+import User from '../user/user.model';
 import { commonPipeline } from './classSchedule.helper';
 import { TClassSchedule } from './classSchedule.interface';
 import ClassSchedule from './classSchedule.model';
-import { getSchoolIdFromUser } from '../../utils/getSchoolIdForManager';
 
 const createClassSchedule = async (
   payload: Partial<TClassSchedule>,
@@ -417,6 +424,116 @@ const getWeeklySchedule = async (user: TAuthUser) => {
   return result;
 };
 
+const createClassScheduleXlsx = async (file: MulterFile, user: TAuthUser) => {
+  const decimalToTime = (decimal: any) => {
+    if (!decimal) return '';
+    const totalHours = decimal * 24;
+    const hours = Math.floor(totalHours);
+    const minutes = Math.round((totalHours - hours) * 60);
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  };
+
+  // Helper function to convert MM-DD-YYYY to Date object
+  // Helper function to convert Excel date serial number to JavaScript Date object
+  const excelSerialToDate = (serial: any) => {
+    if (!serial) return '';
+    const excelStartDate = new Date(1900, 0, 1); // Excel's "zero" date is 1900-01-01
+    const date = new Date(excelStartDate.getTime() + (serial - 1) * 86400000); // Convert serial to date
+    return date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+  };
+
+  // Read the file buffer
+  const fileBuffer = fs.readFileSync(file.path);
+  const workbook = xlsx.read(fileBuffer, { type: 'buffer' });
+  const sheetName = workbook.SheetNames[0];
+
+  // Read sheet as an array of arrays
+  const rawData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], {
+    header: 1,
+    raw: true,
+  });
+
+  const [headerRow, ...rows] = rawData as [string[], ...any[]];
+  const headers = headerRow.map((header) => header.trim());
+
+  const stringFields = [
+    'className',
+    'section',
+    'subject',
+    'period',
+    'teacher',
+    'selectTime',
+    'endTime',
+    'days',
+    'roomNo',
+    'date',
+  ];
+
+  const parsedData = rows.map((row) => {
+    return headers.reduce(
+      (obj, header, index) => {
+        let fieldValue = row[index] || ''; // Handle missing values
+
+        fieldValue = fieldValue?.toString().trim(); // Ensure trimming for all fields
+
+        if (typeof fieldValue === 'string') {
+          // Remove surrounding quotes and handle quotes inside strings
+          if (fieldValue.startsWith('"') && fieldValue.endsWith('"')) {
+            fieldValue = fieldValue.slice(1, -1).replace(/""/g, '"'); // Fix double quotes
+          }
+        }
+
+        // Convert decimal time fields to HH:MM format
+        if (header === 'selectTime' || header === 'endTime') {
+          obj[header] = decimalToTime(parseFloat(fieldValue)); // Convert the decimal time
+        } else if (header === 'date') {
+          obj[header] = excelSerialToDate(fieldValue); // Parse and format the date
+        } else {
+          // Check if the field should be a string or an array
+          obj[header] = stringFields.includes(header)
+            ? fieldValue
+            : fieldValue.includes(',')
+              ? fieldValue.split(',').map((item: any) => item.trim()) // Split by comma if multiple values exist
+              : fieldValue;
+        }
+
+        return obj;
+      },
+      {} as Record<string, string | string[]>, // Ensure the return type is consistent
+    );
+  });
+
+  const enrichedData = await Promise.all(
+    parsedData.map(async (row) => {
+      const classData = await Class.findOne({
+        className: row.className,
+        schoolId: user.schoolId,
+      });
+
+      const subjectData = await Subject.findOne({
+        subjectName: row.subject,
+        schoolId: user.schoolId,
+      });
+
+      const teacherUser = await User.findOne({
+        name: row.teacher,
+      });
+
+      return {
+        ...row,
+        schoolId: user.schoolId,
+        classId: classData?._id,
+        subjectId: subjectData?._id,
+        teacherId: teacherUser?.teacherId,
+        date: new Date(row.date as any),
+      };
+    }),
+  );
+
+  const result = await ClassSchedule.insertMany(enrichedData);
+  return result;
+};
+
 export const ClassScheduleService = {
   createClassSchedule,
   getAllClassSchedule,
@@ -426,4 +543,5 @@ export const ClassScheduleService = {
   getUpcomingClasses,
   getUpcomingClassesByClassScheduleId,
   getWeeklySchedule,
+  createClassScheduleXlsx,
 };

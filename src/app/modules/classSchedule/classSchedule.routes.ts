@@ -4,6 +4,9 @@ import { USER_ROLE } from '../../constant';
 import { ClassScheduleController } from './classSchedule.controller';
 import validateRequest from '../../middleware/validation';
 import { ClassScheduleValidation } from './classSchedule.validation';
+import fileUpload from '../../utils/uploadImage';
+
+const upload = fileUpload('./public/uploads/files/');
 
 const router = Router();
 
@@ -13,6 +16,12 @@ router
     auth(USER_ROLE.school, USER_ROLE.manager),
     validateRequest(ClassScheduleValidation.classScheduleSchema),
     ClassScheduleController.createClassSchedule,
+  )
+  .post(
+    '/create_class_schedule_xlsx',
+    auth(USER_ROLE.school),
+    upload.single('file'),
+    ClassScheduleController.createClassScheduleXlsx,
   )
   .get(
     '/',

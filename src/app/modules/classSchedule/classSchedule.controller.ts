@@ -3,6 +3,7 @@ import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { ClassScheduleService } from './classSchedule.service';
 import { TAuthUser } from '../../interface/authUser';
+import { MulterFile } from '../user/user.controller';
 
 const createClassSchedule = catchAsync(async (req, res) => {
   const result = await ClassScheduleService.createClassSchedule(
@@ -108,6 +109,19 @@ const getWeeklySchedule = catchAsync(async (req, res) => {
   });
 });
 
+const createClassScheduleXlsx = catchAsync(async (req, res) => {
+  const result = await ClassScheduleService.createClassScheduleXlsx(
+    req.file as MulterFile,
+    req.user as TAuthUser,
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.CREATED,
+    success: true,
+    message: 'Class Schedule created successfully',
+    data: result,
+  });
+});
+
 export const ClassScheduleController = {
   createClassSchedule,
   getAllClassSchedule,
@@ -117,4 +131,5 @@ export const ClassScheduleController = {
   getUpcomingClasses,
   getUpcomingClassesByClassScheduleId,
   getWeeklySchedule,
+  createClassScheduleXlsx,
 };

@@ -4,7 +4,6 @@ import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { MulterFile } from '../user/user.controller';
 import { StudentService } from './student.service';
-import { parseStudentXlsxData } from './students.helper';
 
 const createStudent = catchAsync(async (req, res) => {
   const result = await StudentService.createStudent(
