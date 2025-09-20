@@ -29,7 +29,7 @@ export const createCheckoutSession = async (
       CustomerEmail: 'xx@yy.com',
       InvoiceValue: Number(amount),
       CallBackUrl: `${config.base_api_url}/payment/confirm-payment?subscriptionId=${subscriptionId}&userId=${user.userId}&amount=${amount}`,
-      ErrorUrl: 'https://google.com',
+      ErrorUrl: `${config.base_api_url}/payment/failed-payment?subscriptionId=${subscriptionId}&userId=${user.userId}&amount=${amount}`,
       Language: 'en',
       CustomerReference: 'ref 1',
       CustomerCivilId: 12345678,
@@ -53,6 +53,8 @@ export const createCheckoutSession = async (
   };
 
   const res = await axios.request(executePaymentOptions);
+
+  console.log(res);
 
   return res.data;
 };

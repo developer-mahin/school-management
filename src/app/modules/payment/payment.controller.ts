@@ -3,6 +3,8 @@ import { TAuthUser } from '../../interface/authUser';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { PaymentService } from './payment.service';
+import { paymentFailedHtml } from '../../../shared/html/paymentFailed';
+import { paymentSuccessHtml } from '../../../shared/html/paymentSuccess';
 
 const makePayment = catchAsync(async (req, res) => {
   const result = await PaymentService.makePayment(
@@ -19,22 +21,11 @@ const makePayment = catchAsync(async (req, res) => {
 });
 
 const confirmPayment = catchAsync(async (req, res) => {
-  const userAgent = req.headers['user-agent'];
-  if (!userAgent) {
-    throw new Error('User agent not found');
-  }
-
   const result = await PaymentService.confirmPayment(req.query);
 
-  const isMobile = /Mobile|Android|iPhone|iPad|iPod/i.test(userAgent);
-
-  const deviceType = isMobile ? 'Mobile' : 'PC';
-  // if (deviceType !== 'Mobile') {
-  res.redirect(
-    `http://classaty.com/payment-success?amount=${req.query.amount}`,
+  res.send(
+    paymentSuccessHtml()
   );
-  // res.redirect(`http://10.10.10.30:8010/api/v1/payment/confirm-payment?subscriptionId=${req.query.subscriptionId}&userId=${req.query.userId}&amount=${req.query.amount}&paymentId=${req.query.paymentId}`);
-  // }
 
   sendResponse(res, {
     success: true,
@@ -43,6 +34,18 @@ const confirmPayment = catchAsync(async (req, res) => {
     data: result,
   });
 });
+
+
+const failedPayment = catchAsync(async (req, res) => {
+  res.send(paymentFailedHtml());
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.BAD_GATEWAY,
+    message: 'Payment failed',
+  });
+});
+
 
 const earningStatistic = catchAsync(async (req, res) => {
   const result = await PaymentService.earningStatistic(
@@ -70,30 +73,10 @@ const paymentList = catchAsync(async (req, res) => {
   });
 });
 
-const cancelPayment = catchAsync(async (req, res) => {
-  const userAgent = req.headers['user-agent'];
-  if (!userAgent) {
-    throw new Error('User agent not found');
-  }
-
-  const isMobile = /Mobile|Android|iPhone|iPad|iPod/i.test(userAgent);
-
-  const deviceType = isMobile ? 'Mobile' : 'PC';
-  // if (deviceType !== 'Mobile') {
-  res.redirect(`http://classaty.com/cancel-payment?amount=${req.query.amount}`);
-  // }
-
-  sendResponse(res, {
-    success: true,
-    statusCode: httpStatus.BAD_GATEWAY,
-    message: 'Payment Canceled',
-  });
-});
-
 export const PaymentController = {
   makePayment,
   paymentList,
   confirmPayment,
   earningStatistic,
-  cancelPayment,
+  failedPayment,
 };
