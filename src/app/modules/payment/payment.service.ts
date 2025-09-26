@@ -30,7 +30,6 @@ const makePayment = async (
 };
 
 const confirmPayment = async (query: Record<string, unknown>) => {
-  console.log('#################### confirmPayment ########################');
 
   const { userId, subscriptionId, amount } = query;
 

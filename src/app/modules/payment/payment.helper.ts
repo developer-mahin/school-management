@@ -10,6 +10,43 @@ import School from '../school/school.model';
 import sendNotification from '../../../socket/sendNotification';
 import { NOTIFICATION_TYPE } from '../notification/notification.interface';
 
+
+// Centralized subscription configs
+const subscriptionConfig: Record<string, any> = {
+  plus: {
+    canChat: true,
+    canSeeExam: true,
+    canSeeAssignment: true,
+    isAttendanceEnabled: true,
+    isExamGradeEnabled: true,
+    unlockedStudents: 1,
+    unlockedParents: 0,
+  },
+  silver: {
+    canChat: true,
+    canSeeExam: true,
+    canSeeAssignment: true,
+    isAttendanceEnabled: true,
+    isExamGradeEnabled: true,
+    unlockedStudents: 10000,
+    unlockedParents: 1,
+  },
+  gold: {
+    canChat: true,
+    canSeeExam: true,
+    canSeeAssignment: true,
+    isAttendanceEnabled: true,
+    isExamGradeEnabled: true,
+    unlockedStudents: 10000,
+    unlockedParents: 2,
+  },
+};
+
+// Utility to get subscription data
+const getSubscriptionData = (planName: string) => {
+  return subscriptionConfig[planName?.toLowerCase()] || {};
+};
+
 const handleMySubscriptionAndPayment = async ({
   session,
   mySubscriptionBody,
@@ -21,6 +58,8 @@ const handleMySubscriptionAndPayment = async ({
     userId,
   });
 
+  const mySubscriptionData = getSubscriptionData(subscription?.planName);
+
   if (findMySubscription) {
     await MySubscription.findOneAndUpdate(
       { userId },
@@ -28,11 +67,12 @@ const handleMySubscriptionAndPayment = async ({
         $set: {
           expiryIn: new Date(
             findMySubscription.expiryIn.getTime() +
-              subscription.timeline * 24 * 60 * 60 * 1000,
+            subscription.timeline * 24 * 60 * 60 * 1000,
           ),
           remainingChildren:
             findMySubscription.remainingChildren +
             subscription.numberOfChildren,
+          ...mySubscriptionData
         },
       },
       { new: true, session },
@@ -95,6 +135,8 @@ const createMySubscriptionBody = ({
   subscription,
   subscriptionId,
 }: any) => {
+  const mySubscriptionData = getSubscriptionData(subscription?.planName);
+
   return {
     userId,
     subscriptionId,
@@ -102,6 +144,7 @@ const createMySubscriptionBody = ({
       Date.now() + subscription.timeline * 24 * 60 * 60 * 1000,
     ),
     remainingChildren: subscription.numberOfChildren,
+    ...mySubscriptionData
   };
 };
 

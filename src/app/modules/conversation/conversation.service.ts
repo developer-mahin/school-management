@@ -3,6 +3,10 @@ import { TAuthUser } from '../../interface/authUser';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 import Message from '../message/message.mode';
 import Conversation from './conversation.model';
+import { SubscriptionService } from '../subscription/subscription.service';
+import { USER_ROLE } from '../../constant';
+import AppError from '../../utils/AppError';
+import httpStatus from 'http-status';
 const { ObjectId } = mongoose.Types;
 
 const createConversation = async (
@@ -10,6 +14,14 @@ const createConversation = async (
   user: TAuthUser,
 ) => {
   let result;
+
+  const subscription = await SubscriptionService.getMySubscription(user);
+  if (user.role === USER_ROLE.parents) {
+    if (!subscription || !subscription.subscriptionId || subscription.canChat === false) {
+      throw new AppError(httpStatus.BAD_REQUEST, 'You need an active subscription to create a conversation');
+    }
+  }
+
   result = await Conversation.findOne({
     users: { $all: [user.userId, data.receiverId], $size: 2 },
   });

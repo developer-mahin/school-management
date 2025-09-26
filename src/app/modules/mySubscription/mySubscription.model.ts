@@ -16,6 +16,13 @@ const mySubscriptionModel = new Schema<TMySubscription>(
       type: Number,
       default: 0,
     },
+    canChat: { type: Boolean, default: false },
+    canSeeExam: { type: Boolean, default: false },
+    canSeeAssignment: { type: Boolean, default: false },
+    isAttendanceEnabled: { type: Boolean, default: false },
+    isExamGradeEnabled: { type: Boolean, default: false },
+    unlockedStudents: { type: Number, default: 0 },
+    unlockedParents: { type: Number, default: 0 },
   },
   { timestamps: true },
 );
