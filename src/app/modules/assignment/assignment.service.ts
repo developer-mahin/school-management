@@ -495,7 +495,9 @@ const pendingAssignment = async (
   user: TAuthUser,
   query: Record<string, unknown>,
 ) => {
-  const { submitted } = query;
+  const { submitted, token } = query;
+
+  console.log(token, 'token in pending assignment');
 
   const date = new Date();
   date.setUTCHours(0, 0, 0, 0);
