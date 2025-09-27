@@ -9,6 +9,10 @@ import config from '../config';
 import User from '../app/modules/user/user.model';
 import { NOTIFICATION_TYPE } from '../app/modules/notification/notification.interface';
 import sendNotification from './sendNotification';
+import { SubscriptionService } from '../app/modules/subscription/subscription.service';
+import { USER_ROLE } from '../app/constant';
+import AppError from '../app/utils/AppError';
+import httpStatus from 'http-status';
 
 export interface IConnectedUser {
   socketId: string;
@@ -87,6 +91,13 @@ const socketIO = (io: Server) => {
         try {
           if (!payload.conversationId) {
             return callback?.({ success: false, message: 'Invalid payload' });
+          }
+
+          if (user?.role === USER_ROLE.parents) {
+            const subscription = await SubscriptionService.getMySubscription(user as TAuthUser);
+            if (Object.keys(subscription || {}).length === 0 || subscription.canChat === false) {
+              throw new AppError(httpStatus.BAD_REQUEST, 'You need an active subscription to send messages');
+            }
           }
 
           const savedMessage = await MessageService.createMessage(payload);

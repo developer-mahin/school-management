@@ -1,20 +1,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
+import { JwtPayload, Secret } from 'jsonwebtoken';
 import mongoose from 'mongoose';
+import config from '../../../config';
 import sendNotification from '../../../socket/sendNotification';
+import { USER_ROLE } from '../../constant';
 import { classAndSubjectQuery } from '../../helper/aggregationPipline';
 import { TAuthUser } from '../../interface/authUser';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 import AppError from '../../utils/AppError';
+import { decodeToken } from '../../utils/decodeToken';
 import AssignmentSubmission from '../assignmentSubmission/assignmentSubmission.model';
 import { NOTIFICATION_TYPE } from '../notification/notification.interface';
 import Student from '../student/student.model';
 import { StudentService } from '../student/student.service';
+import { SubscriptionService } from '../subscription/subscription.service';
 import Teacher from '../teacher/teacher.model';
 import { TeacherService } from '../teacher/teacher.service';
 import { TAssignment, TMarkComplete } from './assignment.interface';
 import Assignment from './assignment.model';
-import { transactionWrapper } from '../../utils/transactionWrapper';
 
 const createAssignment = async (
   user: TAuthUser,
@@ -495,7 +499,21 @@ const pendingAssignment = async (
   user: TAuthUser,
   query: Record<string, unknown>,
 ) => {
-  const { submitted } = query;
+  const { submitted, token } = query;
+
+  let decodedUser;
+
+  if (token) {
+    decodedUser = decodeToken(token as string, config.jwt.access_token as Secret) as JwtPayload;
+  }
+
+  if (decodedUser?.role === USER_ROLE.parents) {
+    const subscription = await SubscriptionService.getMySubscription(decodedUser as TAuthUser);
+
+    if (!subscription || subscription.canSeeAssignment === false) {
+      throw new AppError(httpStatus.BAD_REQUEST, 'You need an active subscription to get assignments');
+    }
+  }
 
   const date = new Date();
   date.setUTCHours(0, 0, 0, 0);

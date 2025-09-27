@@ -3,6 +3,8 @@ import { TAuthUser } from '../../interface/authUser';
 import { TSubscription } from '../subscription/subscription.interface';
 import { TPayment } from './payment.interface';
 import config from '../../../config';
+import Parents from '../parents/parents.model';
+import mongoose from 'mongoose';
 
 export const createCheckoutSession = async (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -11,7 +13,6 @@ export const createCheckoutSession = async (
 ) => {
   const { subscriptionId, amount } = paymentData;
 
-  console.log('#################### ExecutePayment ########################');
   const executePaymentOptions = {
     method: 'POST',
     url: `${config.payment_gateway.my_fatorah_base_url}/v2/ExecutePayment`,
@@ -58,3 +59,19 @@ export const createCheckoutSession = async (
 
   return res.data;
 };
+
+
+export const findPartners = async (userId: string) => {
+
+  const result = await Parents.findOne({ userId })
+
+  const findParents = await Parents.aggregate([
+    {
+      $match: {
+        childId: new mongoose.Types.ObjectId(String(result?.childId)),
+      }
+    }
+  ])
+
+  return findParents;
+}

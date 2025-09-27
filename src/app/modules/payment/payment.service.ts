@@ -8,10 +8,16 @@ import { TAuthUser } from '../../interface/authUser';
 import AppError from '../../utils/AppError';
 import { TSubscription } from '../subscription/subscription.interface';
 import { SubscriptionService } from '../subscription/subscription.service';
-import { PaymentHelper } from './payment.helper';
+import { getSubscriptionData, PaymentHelper } from './payment.helper';
 import { TPayment } from './payment.interface';
 import Payment from './payment.model';
-import { createCheckoutSession } from './payment.utils';
+import { createCheckoutSession, findPartners } from './payment.utils';
+import MySubscription from '../mySubscription/mySubscription.model';
+import Parents from '../parents/parents.model';
+import School from '../school/school.model';
+import User from '../user/user.model';
+import sendNotification from '../../../socket/sendNotification';
+import { NOTIFICATION_TYPE } from '../notification/notification.interface';
 
 const makePayment = async (
   payload: Partial<TPayment | TSubscription | any>,
@@ -30,12 +36,11 @@ const makePayment = async (
 };
 
 const confirmPayment = async (query: Record<string, unknown>) => {
-  console.log('#################### confirmPayment ########################');
-
   const { userId, subscriptionId, amount } = query;
 
   const paymentId = `pi_${crypto.randomBytes(16).toString('hex')}`;
   const session = await mongoose.startSession();
+
   try {
     session.startTransaction();
 
@@ -57,22 +62,127 @@ const confirmPayment = async (query: Record<string, unknown>) => {
       subscriptionId,
     });
 
-    await PaymentHelper.handleMySubscriptionAndPayment({
-      session,
-      mySubscriptionBody,
-      subscriptionPaymentBody,
+    // Combined logic from handleMySubscriptionAndPayment
+    const findMySubscription = await MySubscription.findOne({
       userId,
-      subscription,
+    }).session(session);
+
+    const mySubscriptionData = getSubscriptionData(subscription?.planName);
+
+    let findOtherPartners = null;
+    if (subscription?.planName.toLowerCase() === 'gold') {
+      findOtherPartners = await findPartners(userId as string);
+    }
+
+    if (findMySubscription) {
+      const updateData = {
+        $set: {
+          expiryIn: new Date(
+            findMySubscription.expiryIn.getTime() +
+            subscription.timeline * 24 * 60 * 60 * 1000
+          ),
+          subscriptionId: subscriptionId,
+          remainingChildren:
+            findMySubscription.remainingChildren + subscription.numberOfChildren,
+          ...mySubscriptionData,
+        },
+      };
+
+      if (subscription?.planName.toLowerCase() === "gold") {
+        // Update all partner users
+        const partnerIds = findOtherPartners?.map((partner: any) => partner.userId) || [];
+
+        // Use Promise.all instead of map for proper async handling
+        await Promise.all(
+          partnerIds.map(async (id) => {
+            await MySubscription.findOneAndUpdate({ userId: id }, updateData, {
+              new: true,
+              upsert: true,
+              session,
+            })
+          }
+          )
+        );
+      } else {
+        // Update only the current user
+        await MySubscription.findOneAndUpdate({ userId }, updateData, {
+          new: true,
+          session,
+        });
+      }
+    } else {
+      if (subscription?.planName.toLowerCase() === "gold") {
+        // Create subscriptions for all partner users
+        const partnerIds = findOtherPartners?.map((partner: any) => partner.userId) || [];
+
+        // Use Promise.all instead of map for proper async handling
+        await Promise.all(
+          partnerIds.map(async (id) =>
+            await MySubscription.create(
+              [
+                {
+                  userId: id,
+                  subscriptionId: mySubscriptionBody.subscriptionId,
+                  expiryIn: new Date(
+                    Date.now() + subscription.timeline * 24 * 60 * 60 * 1000,
+                  ),
+                  remainingChildren: subscription.numberOfChildren,
+                  ...mySubscriptionData
+                },
+              ],
+              { session }
+            )
+          )
+        );
+      } else {
+        const mySubscription = await MySubscription.create([mySubscriptionBody], {
+          session,
+        });
+
+        if (!mySubscription)
+          throw new AppError(httpStatus.BAD_REQUEST, 'My Subscription not created');
+      }
+    }
+
+    // Create payment record
+    const data = await Payment.create([subscriptionPaymentBody], { session });
+
+    if (!data) throw new AppError(httpStatus.BAD_REQUEST, 'Payment not created');
+
+    // Get user and school information for notification
+    const parents = await Parents.findOne({
+      userId: userId,
+    }).session(session);
+
+    const school = await School.findById(parents?.schoolId).session(session);
+
+    const findUser = await User.findOne({
+      _id: userId,
+    }).session(session);
+
+    const user = {
+      userId: findUser?._id,
+    };
+
+    // Send notification (this might need to be outside transaction if it's external)
+    await sendNotification(user as any, {
+      senderId: findUser?._id,
+      role: findUser?.role,
+      receiverId: school?._id,
+      message: `New Payment ${subscriptionPaymentBody.amount} USD from ${findUser?.name}`,
+      type: NOTIFICATION_TYPE.PAYMENT,
+      linkId: data[0]?._id,
     });
 
     await session.commitTransaction();
-    await session.endSession();
   } catch (error: any) {
     await session.abortTransaction();
+    throw new AppError(httpStatus.BAD_REQUEST, error.message || error);
+  } finally {
     await session.endSession();
-    throw new AppError(httpStatus.BAD_REQUEST, error);
   }
 };
+
 
 const earningStatistic = async (
   user: TAuthUser,

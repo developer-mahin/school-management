@@ -78,7 +78,7 @@ const getMySubscription = async (user: TAuthUser) => {
     },
   ]);
 
-  return subscription || {};
+  return subscription[0] || {};
 };
 
 export const SubscriptionService = {
