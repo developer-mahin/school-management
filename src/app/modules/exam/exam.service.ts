@@ -15,6 +15,13 @@ import { TeacherService } from '../teacher/teacher.service';
 import { commonPipeline } from './exam.helper';
 import { TExam } from './exam.interface';
 import Exam from './exam.model';
+import { JwtPayload, Secret } from 'jsonwebtoken';
+import { decodeToken } from '../../utils/decodeToken';
+import config from '../../../config';
+import { USER_ROLE } from '../../constant';
+import { SubscriptionService } from '../subscription/subscription.service';
+import AppError from '../../utils/AppError';
+import httpStatus from 'http-status';
 
 const createExam = async (payload: Partial<TExam>, user: TAuthUser) => {
   const examDate = new Date(payload?.date as Date);
@@ -275,6 +282,22 @@ const getExamSchedule = async (
   query: Record<string, unknown>,
 ) => {
   const examQuery = new AggregationQueryBuilder(query);
+
+  const { token } = query;
+
+  let decodedUser;
+
+  if (token) {
+    decodedUser = decodeToken(token as string, config.jwt.access_token as Secret) as JwtPayload;
+  }
+
+  if (decodedUser?.role === USER_ROLE.parents) {
+    const subscription = await SubscriptionService.getMySubscription(decodedUser as TAuthUser);
+
+    if (Object.keys(subscription || {}).length === 0 || subscription.canSeeExam === false) {
+      throw new AppError(httpStatus.BAD_REQUEST, 'You need an active subscription to get exam schedule');
+    }
+  }
 
   const findStudent = await StudentService.findStudent(user.studentId);
   const nowDate = new Date();

@@ -16,6 +16,12 @@ import sendNotification from '../../../socket/sendNotification';
 import { NOTIFICATION_TYPE } from '../notification/notification.interface';
 import { USER_ROLE } from '../../constant';
 import dayjs from 'dayjs';
+import { decodeToken } from '../../utils/decodeToken';
+import config from '../../../config';
+import { JwtPayload, Secret } from 'jsonwebtoken';
+import { SubscriptionService } from '../subscription/subscription.service';
+import httpStatus from 'http-status';
+import AppError from '../../utils/AppError';
 
 const createAttendance = async (
   payload: Partial<TAttendance>,
@@ -138,6 +144,24 @@ const getMyAttendance = async (
   user: TAuthUser,
   query: Record<string, unknown>,
 ) => {
+
+  const { token } = query;
+
+  let decodedUser;
+
+  if (token) {
+    decodedUser = decodeToken(token as string, config.jwt.access_token as Secret) as JwtPayload;
+  }
+
+  if (decodedUser?.role === USER_ROLE.parents) {
+    const subscription = await SubscriptionService.getMySubscription(decodedUser as TAuthUser);
+
+    if (Object.keys(subscription || {}).length === 0 || subscription.isAttendanceEnabled === false) {
+      throw new AppError(httpStatus.BAD_REQUEST, 'You need an active subscription to get attendance');
+    }
+  }
+
+
   const findStudent = await StudentService.findStudent(user.studentId);
 
   const studentObjectId = new mongoose.Types.ObjectId(String(user.studentId));

@@ -92,11 +92,11 @@ const socketIO = (io: Server) => {
           if (!payload.conversationId) {
             return callback?.({ success: false, message: 'Invalid payload' });
           }
-          
-          const subscription = await SubscriptionService.getMySubscription(user as TAuthUser);
+
           if (user?.role === USER_ROLE.parents) {
-            if (!subscription || !subscription.subscriptionId || subscription.canChat === false) {
-              throw new AppError(httpStatus.BAD_REQUEST, 'You need an active subscription to create a conversation');
+            const subscription = await SubscriptionService.getMySubscription(user as TAuthUser);
+            if (Object.keys(subscription || {}).length === 0 || subscription.canChat === false) {
+              throw new AppError(httpStatus.BAD_REQUEST, 'You need an active subscription to send messages');
             }
           }
 

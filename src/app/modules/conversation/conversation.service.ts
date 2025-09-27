@@ -17,7 +17,7 @@ const createConversation = async (
 
   const subscription = await SubscriptionService.getMySubscription(user);
   if (user.role === USER_ROLE.parents) {
-    if (!subscription || !subscription.subscriptionId || subscription.canChat === false) {
+    if (Object.keys(subscription || {}).length === 0 || subscription.canChat === false) {
       throw new AppError(httpStatus.BAD_REQUEST, 'You need an active subscription to create a conversation');
     }
   }
