@@ -1,9 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { JwtPayload, Secret } from 'jsonwebtoken';
 import mongoose from 'mongoose';
+import config from '../../../config';
 import sendNotification from '../../../socket/sendNotification';
+import { USER_ROLE } from '../../constant';
 import { classAndSubjectQuery } from '../../helper/aggregationPipline';
 import { TAuthUser } from '../../interface/authUser';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
+import AppError from '../../utils/AppError';
+import { decodeToken } from '../../utils/decodeToken';
 import { getSchoolIdFromUser } from '../../utils/getSchoolIdForManager';
 import GradeSystem from '../gradeSystem/gradeSystem.model';
 import { NOTIFICATION_TYPE } from '../notification/notification.interface';
@@ -11,17 +16,11 @@ import { TResultUpdate, TStudentsGrader } from '../result/result.interface';
 import Result from '../result/result.model';
 import Student from '../student/student.model';
 import { StudentService } from '../student/student.service';
+import { SubscriptionService } from '../subscription/subscription.service';
 import { TeacherService } from '../teacher/teacher.service';
 import { commonPipeline } from './exam.helper';
 import { TExam } from './exam.interface';
 import Exam from './exam.model';
-import { JwtPayload, Secret } from 'jsonwebtoken';
-import { decodeToken } from '../../utils/decodeToken';
-import config from '../../../config';
-import { USER_ROLE } from '../../constant';
-import { SubscriptionService } from '../subscription/subscription.service';
-import AppError from '../../utils/AppError';
-import httpStatus from 'http-status';
 
 const createExam = async (payload: Partial<TExam>, user: TAuthUser) => {
   const examDate = new Date(payload?.date as Date);
@@ -295,7 +294,7 @@ const getExamSchedule = async (
     const subscription = await SubscriptionService.getMySubscription(decodedUser as TAuthUser);
 
     if (Object.keys(subscription || {}).length === 0 || subscription.canSeeExam === false) {
-      throw new AppError(httpStatus.BAD_REQUEST, 'You need an active subscription to get exam schedule');
+      throw new AppError(700, 'You need an active subscription to get exam schedule');
     }
   }
 

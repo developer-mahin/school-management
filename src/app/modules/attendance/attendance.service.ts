@@ -1,27 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import dayjs from 'dayjs';
+import { JwtPayload, Secret } from 'jsonwebtoken';
 import mongoose from 'mongoose';
+import config from '../../../config';
+import sendNotification from '../../../socket/sendNotification';
+import { USER_ROLE } from '../../constant';
 import { TAuthUser } from '../../interface/authUser';
-import Student from '../student/student.model';
-import { TeacherService } from '../teacher/teacher.service';
-import { TAttendance } from './attendance.interface';
-import Attendance from './attendance.model';
-import Class from '../class/class.model';
-import { StudentService } from '../student/student.service';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
+import AppError from '../../utils/AppError';
+import { decodeToken } from '../../utils/decodeToken';
+import Class from '../class/class.model';
+import { NOTIFICATION_TYPE } from '../notification/notification.interface';
+import Student from '../student/student.model';
+import { StudentService } from '../student/student.service';
+import { SubscriptionService } from '../subscription/subscription.service';
+import { TeacherService } from '../teacher/teacher.service';
 import {
   commonStageInAttendance,
   commonStageInAttendanceDetails,
 } from './attendance.helper';
-import sendNotification from '../../../socket/sendNotification';
-import { NOTIFICATION_TYPE } from '../notification/notification.interface';
-import { USER_ROLE } from '../../constant';
-import dayjs from 'dayjs';
-import { decodeToken } from '../../utils/decodeToken';
-import config from '../../../config';
-import { JwtPayload, Secret } from 'jsonwebtoken';
-import { SubscriptionService } from '../subscription/subscription.service';
-import httpStatus from 'http-status';
-import AppError from '../../utils/AppError';
+import { TAttendance } from './attendance.interface';
+import Attendance from './attendance.model';
 
 const createAttendance = async (
   payload: Partial<TAttendance>,
@@ -157,7 +156,7 @@ const getMyAttendance = async (
     const subscription = await SubscriptionService.getMySubscription(decodedUser as TAuthUser);
 
     if (Object.keys(subscription || {}).length === 0 || subscription.isAttendanceEnabled === false) {
-      throw new AppError(httpStatus.BAD_REQUEST, 'You need an active subscription to get attendance');
+      throw new AppError(700, 'You need an active subscription to get attendance');
     }
   }
 

@@ -1,18 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { JwtPayload, Secret } from 'jsonwebtoken';
 import { Server, Socket } from 'socket.io';
+import { USER_ROLE } from '../app/constant';
 import { TAuthUser } from '../app/interface/authUser';
 import { TMessage } from '../app/modules/message/message.interface';
 import { MessageService } from '../app/modules/message/message.service';
+import { NOTIFICATION_TYPE } from '../app/modules/notification/notification.interface';
+import { SubscriptionService } from '../app/modules/subscription/subscription.service';
+import User from '../app/modules/user/user.model';
+import AppError from '../app/utils/AppError';
 import { decodeToken } from '../app/utils/decodeToken';
 import config from '../config';
-import User from '../app/modules/user/user.model';
-import { NOTIFICATION_TYPE } from '../app/modules/notification/notification.interface';
 import sendNotification from './sendNotification';
-import { SubscriptionService } from '../app/modules/subscription/subscription.service';
-import { USER_ROLE } from '../app/constant';
-import AppError from '../app/utils/AppError';
-import httpStatus from 'http-status';
 
 export interface IConnectedUser {
   socketId: string;
@@ -96,7 +95,7 @@ const socketIO = (io: Server) => {
           if (user?.role === USER_ROLE.parents) {
             const subscription = await SubscriptionService.getMySubscription(user as TAuthUser);
             if (Object.keys(subscription || {}).length === 0 || subscription.canChat === false) {
-              throw new AppError(httpStatus.BAD_REQUEST, 'You need an active subscription to send messages');
+              throw new AppError(700, 'You need an active subscription to send messages');
             }
           }
 
