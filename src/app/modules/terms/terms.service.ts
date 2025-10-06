@@ -25,7 +25,7 @@ export const TermsService = {
 
     const result = await Terms.find({ schoolId }).lean();
 
-    return result;
+    return { result, studentId: user.studentId };
   },
 
   updateTerms: async (
