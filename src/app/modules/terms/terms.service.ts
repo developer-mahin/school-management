@@ -1,17 +1,16 @@
+import { JwtPayload, Secret } from 'jsonwebtoken';
 import mongoose from 'mongoose';
+import config from '../../../config';
+import { USER_ROLE } from '../../constant';
 import { TAuthUser } from '../../interface/authUser';
+import AppError from '../../utils/AppError';
+import { decodeToken } from '../../utils/decodeToken';
+import { getSchoolIdFromUser } from '../../utils/getSchoolIdForManager';
 import Exam from '../exam/exam.model';
+import { StudentService } from '../student/student.service';
+import { SubscriptionService } from '../subscription/subscription.service';
 import { TTerms } from './terms.interface';
 import Terms from './terms.model';
-import { StudentService } from '../student/student.service';
-import { USER_ROLE } from '../../constant';
-import { getSchoolIdFromUser } from '../../utils/getSchoolIdForManager';
-import { decodeToken } from '../../utils/decodeToken';
-import config from '../../../config';
-import { JwtPayload, Secret } from 'jsonwebtoken';
-import { SubscriptionService } from '../subscription/subscription.service';
-import AppError from '../../utils/AppError';
-import httpStatus from 'http-status';
 
 export const TermsService = {
   createTerms: async (payload: Partial<TTerms>, user: TAuthUser) => {
@@ -69,7 +68,7 @@ export const TermsService = {
     if (decodedUser?.role === USER_ROLE.parents) {
       const subscription = await SubscriptionService.getMySubscription(decodedUser as TAuthUser);
       if (Object.keys(subscription || {}).length === 0 || subscription.isExamGradeEnabled === false) {
-        throw new AppError(httpStatus.BAD_REQUEST, 'You need an active subscription to get exam schedule');
+        throw new AppError(700, 'You need an active subscription to get exam schedule');
       }
     }
 

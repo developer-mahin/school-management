@@ -1,12 +1,11 @@
 import mongoose from 'mongoose';
+import { USER_ROLE } from '../../constant';
 import { TAuthUser } from '../../interface/authUser';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
-import Message from '../message/message.mode';
-import Conversation from './conversation.model';
-import { SubscriptionService } from '../subscription/subscription.service';
-import { USER_ROLE } from '../../constant';
 import AppError from '../../utils/AppError';
-import httpStatus from 'http-status';
+import Message from '../message/message.mode';
+import { SubscriptionService } from '../subscription/subscription.service';
+import Conversation from './conversation.model';
 const { ObjectId } = mongoose.Types;
 
 const createConversation = async (
@@ -18,7 +17,7 @@ const createConversation = async (
   const subscription = await SubscriptionService.getMySubscription(user);
   if (user.role === USER_ROLE.parents) {
     if (Object.keys(subscription || {}).length === 0 || subscription.canChat === false) {
-      throw new AppError(httpStatus.BAD_REQUEST, 'You need an active subscription to create a conversation');
+      throw new AppError(700, 'You need an active subscription to create a conversation');
     }
   }
 

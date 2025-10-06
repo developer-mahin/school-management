@@ -510,8 +510,8 @@ const pendingAssignment = async (
   if (decodedUser?.role === USER_ROLE.parents) {
     const subscription = await SubscriptionService.getMySubscription(decodedUser as TAuthUser);
 
-    if (!subscription || subscription.canSeeAssignment === false) {
-      throw new AppError(httpStatus.BAD_REQUEST, 'You need an active subscription to get assignments');
+    if (Object.keys(subscription || {}).length === 0 || subscription?.canSeeAssignment === false) {
+      throw new AppError(700, 'You need an active subscription to get assignments');
     }
   }
 
