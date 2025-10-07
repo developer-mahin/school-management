@@ -59,6 +59,8 @@ const createMySubscriptionBody = ({
   userId,
   subscription,
   subscriptionId,
+  timeline,
+  amount
 }: any) => {
   const mySubscriptionData = getSubscriptionData(subscription?.planName);
 
@@ -68,6 +70,9 @@ const createMySubscriptionBody = ({
     expiryIn: new Date(
       Date.now() + subscription.timeline * 24 * 60 * 60 * 1000,
     ),
+    timeline,
+    amount,
+    remainingParents: subscription.numberOfParents,
     remainingChildren: subscription.numberOfChildren,
     ...mySubscriptionData
   };

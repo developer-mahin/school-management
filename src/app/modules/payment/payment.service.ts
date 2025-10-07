@@ -53,12 +53,17 @@ const confirmPayment = async (query: Record<string, unknown>) => {
       paymentDate: new Date(),
     };
 
+    console.log(amount, 
+      'amount ===========>'
+    );
     const subscription = await SubscriptionService.getSubscription(
       subscriptionId as string,
     );
 
     const mySubscriptionBody = PaymentHelper.createMySubscriptionBody({
+      amount: Number(amount),
       userId,
+      timeline: Number(timeline) === 30 ? 'monthly' : 'yearly',
       subscription,
       subscriptionId,
     });
@@ -82,7 +87,7 @@ const confirmPayment = async (query: Record<string, unknown>) => {
             findMySubscription.expiryIn.getTime() +
             Number(timeline) * 24 * 60 * 60 * 1000
           ),
-          amount,
+          amount: Number(amount),
           timeline: Number(timeline) === 30 ? 'monthly' : 'yearly',
           subscriptionId: subscriptionId,
           remainingChildren:
@@ -129,7 +134,7 @@ const confirmPayment = async (query: Record<string, unknown>) => {
                   expiryIn: new Date(
                     Date.now() + Number(timeline) * 24 * 60 * 60 * 1000,
                   ),
-                  amount,
+                  amount: Number(amount),
                   timeline: Number(timeline) === 30 ? 'monthly' : 'yearly',
                   remainingChildren: subscription.numberOfChildren,
                   ...mySubscriptionData
