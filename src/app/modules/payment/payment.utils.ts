@@ -11,7 +11,7 @@ export const createCheckoutSession = async (
   paymentData: Partial<TPayment | TSubscription | any>,
   user: TAuthUser,
 ) => {
-  const { subscriptionId, amount } = paymentData;
+  const { subscriptionId, amount, timeline } = paymentData;
 
   const executePaymentOptions = {
     method: 'POST',
@@ -29,8 +29,8 @@ export const createCheckoutSession = async (
       CustomerMobile: '12345678',
       CustomerEmail: 'xx@yy.com',
       InvoiceValue: Number(amount),
-      CallBackUrl: `${config.base_api_url}/payment/confirm-payment?subscriptionId=${subscriptionId}&userId=${user.userId}&amount=${amount}`,
-      ErrorUrl: `${config.base_api_url}/payment/failed-payment?subscriptionId=${subscriptionId}&userId=${user.userId}&amount=${amount}`,
+      CallBackUrl: `${config.base_api_url}/payment/confirm-payment?subscriptionId=${subscriptionId}&userId=${user.userId}&amount=${amount}&timeline=${timeline}`,
+      ErrorUrl: `${config.base_api_url}/payment/failed-payment?subscriptionId=${subscriptionId}&userId=${user.userId}&amount=${amount}&timeline=${timeline}`,
       Language: 'en',
       CustomerReference: 'ref 1',
       CustomerCivilId: 12345678,
@@ -54,8 +54,6 @@ export const createCheckoutSession = async (
   };
 
   const res = await axios.request(executePaymentOptions);
-
-  console.log(res);
 
   return res.data;
 };

@@ -36,7 +36,7 @@ const makePayment = async (
 };
 
 const confirmPayment = async (query: Record<string, unknown>) => {
-  const { userId, subscriptionId, amount } = query;
+  const { userId, subscriptionId, amount, timeline } = query;
 
   const paymentId = `pi_${crypto.randomBytes(16).toString('hex')}`;
   const session = await mongoose.startSession();
@@ -49,6 +49,7 @@ const confirmPayment = async (query: Record<string, unknown>) => {
       paymentId,
       amount,
       subscriptionId,
+      timeline,
       paymentDate: new Date(),
     };
 
@@ -79,7 +80,7 @@ const confirmPayment = async (query: Record<string, unknown>) => {
         $set: {
           expiryIn: new Date(
             findMySubscription.expiryIn.getTime() +
-            subscription.timeline * 24 * 60 * 60 * 1000
+            Number(timeline) * 24 * 60 * 60 * 1000
           ),
           subscriptionId: subscriptionId,
           remainingChildren:
@@ -124,7 +125,7 @@ const confirmPayment = async (query: Record<string, unknown>) => {
                   userId: id,
                   subscriptionId: mySubscriptionBody.subscriptionId,
                   expiryIn: new Date(
-                    Date.now() + subscription.timeline * 24 * 60 * 60 * 1000,
+                    Date.now() + Number(timeline) * 24 * 60 * 60 * 1000,
                   ),
                   remainingChildren: subscription.numberOfChildren,
                   ...mySubscriptionData
