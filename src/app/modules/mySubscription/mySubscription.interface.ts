@@ -6,6 +6,7 @@ export type TMySubscription = {
   expiryIn: Date;
   remainingChildren: number;
   timeline:"monthly" | "yearly"
+  amount: number
     //
   // Permissions
   //

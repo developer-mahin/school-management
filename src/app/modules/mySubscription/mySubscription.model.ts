@@ -16,6 +16,7 @@ const mySubscriptionModel = new Schema<TMySubscription>(
       type: Number,
       default: 0,
     },
+    amount: { type: Number, required: true},
     timeline: { type: String, enum: ["monthly", "yearly"], required: true, default: "monthly" },
     canChat: { type: Boolean, default: false },
     canSeeExam: { type: Boolean, default: false },
