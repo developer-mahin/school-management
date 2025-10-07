@@ -35,7 +35,7 @@ export const createCheckoutSession = async (
       CustomerReference: 'ref 1',
       CustomerCivilId: 12345678,
       UserDefinedField: 'Custom field',
-      ExpiryDate: timeline,
+      ExpiryDate: "",
       CustomerAddress: {
         Block: '',
         Street: '',
