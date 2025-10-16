@@ -82,41 +82,42 @@ const getAttendanceHistory = async (
 ) => {
   const { date } = query;
 
-  const targetDate = date ? new Date(date as string) : new Date();
-  targetDate.setUTCHours(0, 0, 0, 0);
+  // const targetDate = date ? new Date(date as string) : new Date();
+  // targetDate.setUTCHours(0, 0, 0, 0);
 
-  const startOfDay = new Date(targetDate);
-  const endOfDay = new Date(targetDate);
-  endOfDay.setUTCHours(23, 59, 59, 999);
+  // const startOfDay = new Date(targetDate);
+  // const endOfDay = new Date(targetDate);
+  // endOfDay.setUTCHours(23, 59, 59, 999);
 
   const matchStage: any = {
-    $match: {},
+    $match: {
+      isAttendance: true,
+    },
   };
 
-  if (user.role === USER_ROLE.school) {
-    matchStage.$match.schoolId = new mongoose.Types.ObjectId(
-      String(user.schoolId),
-    );
-  } else {
-    const findTeacher = await TeacherService.findTeacher(user);
-    if (!findTeacher) throw new Error('Teacher not found');
+  // if (user.role === USER_ROLE.school) {
+  //   matchStage.$match.schoolId = new mongoose.Types.ObjectId(
+  //     String(user.schoolId),
+  //   );
+  // } else {
+  //   const findTeacher = await TeacherService.findTeacher(user);
+  //   if (!findTeacher) throw new Error('Teacher not found');
 
-    matchStage.$match.schoolId = new mongoose.Types.ObjectId(
-      String(findTeacher.schoolId),
-    );
-    matchStage.$match.date = {
-      $gte: startOfDay,
-      $lte: endOfDay,
-    };
-  }
+  //   matchStage.$match.schoolId = new mongoose.Types.ObjectId(
+  //     String(findTeacher.schoolId),
+  //   );
+  //   matchStage.$match.date = {
+  //     $gte: startOfDay,
+  //     $lte: endOfDay,
+  //   };
+  // }
 
   const attendanceQuery = new AggregationQueryBuilder(query);
 
   const result = await attendanceQuery
     .customPipeline([
       matchStage,
-      // ...commonStageInAttendance,
-      isAttendance: true,
+      ...commonStageInAttendance,
       {
         $project: {
           _id: 1,
