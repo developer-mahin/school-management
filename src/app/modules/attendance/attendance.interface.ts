@@ -16,4 +16,5 @@ export type TAttendance = {
   presentStudents: TAttendanceStudent[];
   absentStudents: TAttendanceStudent[];
   date: Date;
+  isAttendance: boolean;
 };

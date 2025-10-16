@@ -61,6 +61,7 @@ const createAttendance = async (
     absentStudents,
     schoolId: findTeacher.schoolId,
     date: attendanceDate,
+    isAttendance: true,
   });
 
   sendNotification(user, {
@@ -114,7 +115,8 @@ const getAttendanceHistory = async (
   const result = await attendanceQuery
     .customPipeline([
       matchStage,
-      ...commonStageInAttendance,
+      // ...commonStageInAttendance,
+      isAttendance: true,
       {
         $project: {
           _id: 1,

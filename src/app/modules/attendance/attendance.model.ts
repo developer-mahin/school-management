@@ -21,7 +21,10 @@ const attendanceSchema = new Schema<TAttendance>(
       required: true,
       ref: 'School',
     },
-
+    isAttendance:{
+      type: Boolean,
+      default: false
+    },
     className: {
       type: String,
       required: true,
