@@ -240,6 +240,7 @@ const getAssignmentDetails = async (
               _id: 0,
               userId: 1,
               grade: 1,
+              submittedFile: 1
             },
           },
         ],
@@ -296,6 +297,7 @@ const getAssignmentDetails = async (
                         ],
                       },
                       grade: '$$matchedSubmission.grade',
+                      submittedFile: '$$matchedSubmission.submittedFile'
                     },
                   ],
                 },
@@ -406,6 +408,9 @@ const getAssignmentDetails = async (
 
 //   return data;
 // };
+
+
+
 
 const markAssignmentAsCompleted = async (
   assignmentId: string,
