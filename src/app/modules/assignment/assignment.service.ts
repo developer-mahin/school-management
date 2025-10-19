@@ -93,9 +93,9 @@ const getActiveAssignment = async (
   let matchStage = {};
   if (graded) {
     matchStage = {
-      dueDate: {
-        $lte: date,
-      },
+    //   dueDate: {
+    //     $lte: date,
+    //   },
       status: {
         $ne: 'on-going',
       },
