@@ -177,7 +177,7 @@ const getAssignmentDetails = async (
     assignmentId: string,
     query: Record<string, unknown>,
 ) => {
-    const { className: nameOfClass, section: classSection } = query;
+    const { className: nameOfClass, section: classSection, classId } = query;
 
     const result = await Assignment.aggregate([
         {
@@ -195,6 +195,7 @@ const getAssignmentDetails = async (
                         $match: {
                             className: nameOfClass,
                             section: classSection,
+                            classId: new mongoose.Types.ObjectId(String(classId)),
                         },
                     },
                     {
