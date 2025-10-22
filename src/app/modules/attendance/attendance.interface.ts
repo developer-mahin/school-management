@@ -8,6 +8,7 @@ export type TAttendanceStudent = {
 export type TAttendance = {
   classScheduleId: ObjectId;
   schoolId: ObjectId;
+  classId: ObjectId;
   className: string;
 
   days: TDays;

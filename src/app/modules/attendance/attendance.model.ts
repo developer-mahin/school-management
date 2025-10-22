@@ -21,6 +21,11 @@ const attendanceSchema = new Schema<TAttendance>(
       required: true,
       ref: 'School',
     },
+    classId: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: 'Class',
+    },
     isAttendance: {
       type: Boolean,
       default: false,
