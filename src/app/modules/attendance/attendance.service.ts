@@ -76,41 +76,99 @@ const createAttendance = async (
     return attendance;
 };
 
-const getAttendanceHistory = async (
-    user: TAuthUser,
-    query: Record<string, unknown>,
-) => {
+// const getAttendanceHistory = async (
+//     user: TAuthUser,
+//     query: Record<string, unknown>,
+// ) => {
+//     const { date } = query;
+
+//     const targetDate = date ? new Date(date as string) : new Date();
+//     targetDate.setUTCHours(0, 0, 0, 0);
+
+//     const startOfDay = new Date(targetDate);
+//     const endOfDay = new Date(targetDate);
+//     endOfDay.setUTCHours(23, 59, 59, 999);
+
+//     console.log(startOfDay);
+//     const matchStage: any = {
+//         $match: {
+//             isAttendance: true,
+//         },
+//     };
+
+//     if (user.role === USER_ROLE.school) {
+//         matchStage.$match.schoolId = new mongoose.Types.ObjectId(
+//             String(user.schoolId),
+//         );
+//     } else {
+//         const findTeacher = await TeacherService.findTeacher(user);
+//         if (!findTeacher) throw new Error('Teacher not found');
+
+//         matchStage.$match.schoolId = new mongoose.Types.ObjectId(
+//             String(findTeacher.schoolId),
+//         );
+//         matchStage.$match.date = {
+//             $gte: startOfDay,
+//             $lte: endOfDay,
+//         };
+//     }
+//     const attendanceQuery = new AggregationQueryBuilder(query);
+//     console.log(matchStage);
+
+//     const result = await attendanceQuery
+//         .customPipeline([
+//             matchStage,
+//             ...commonStageInAttendance,
+//             {
+//                 $project: {
+//                     _id: 1,
+//                     classId: 1,
+//                     className: 1,
+//                     section: 1,
+//                     totalStudents: 1,
+//                     presentStudents: { $size: '$presentStudents' },
+//                     absentStudents: { $size: '$absentStudents' },
+//                     startTime: '$classSchedule.selectTime',
+//                     endTime: '$classSchedule.endTime',
+//                     date: 1,
+//                 },
+//             },
+//         ])
+//         .sort()
+//         .paginate()
+//         .execute(Attendance);
+
+//     const meta = await attendanceQuery.countTotal(Attendance);
+
+//     return { meta, result };
+// };
+
+
+const getAttendanceHistory = async (user: TAuthUser, query: Record<string, unknown>) => {
     const { date } = query;
 
-    // const targetDate = date ? new Date(date as string) : new Date();
-    // targetDate.setUTCHours(0, 0, 0, 0);
+    const targetDate = date ? new Date(date as string) : new Date();
+    targetDate.setUTCHours(0, 0, 0, 0);
 
-    // const startOfDay = new Date(targetDate);
-    // const endOfDay = new Date(targetDate);
-    // endOfDay.setUTCHours(23, 59, 59, 999);
+    const startOfDay = new Date(targetDate);
+    const endOfDay = new Date(targetDate);
+    endOfDay.setUTCHours(23, 59, 59, 999);
 
     const matchStage: any = {
         $match: {
             isAttendance: true,
+            date: { $gte: startOfDay, $lte: endOfDay }, // ✅ moved outside role condition
         },
     };
 
-    // if (user.role === USER_ROLE.school) {
-    //   matchStage.$match.schoolId = new mongoose.Types.ObjectId(
-    //     String(user.schoolId),
-    //   );
-    // } else {
-    //   const findTeacher = await TeacherService.findTeacher(user);
-    //   if (!findTeacher) throw new Error('Teacher not found');
+    if (user.role === USER_ROLE.school) {
+        matchStage.$match.schoolId = new mongoose.Types.ObjectId(String(user.schoolId));
+    } else {
+        const findTeacher = await TeacherService.findTeacher(user);
+        if (!findTeacher) throw new Error('Teacher not found');
 
-    //   matchStage.$match.schoolId = new mongoose.Types.ObjectId(
-    //     String(findTeacher.schoolId),
-    //   );
-    //   matchStage.$match.date = {
-    //     $gte: startOfDay,
-    //     $lte: endOfDay,
-    //   };
-    // }
+        matchStage.$match.schoolId = new mongoose.Types.ObjectId(String(findTeacher.schoolId));
+    }
 
     const attendanceQuery = new AggregationQueryBuilder(query);
 
@@ -141,6 +199,7 @@ const getAttendanceHistory = async (
 
     return { meta, result };
 };
+
 
 const getMyAttendance = async (
     user: TAuthUser,
