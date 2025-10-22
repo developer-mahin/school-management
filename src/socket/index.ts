@@ -93,9 +93,17 @@ const socketIO = (io: Server) => {
           }
 
           if (user?.role === USER_ROLE.parents) {
-            const subscription = await SubscriptionService.getMySubscription(user as TAuthUser);
-            if (Object.keys(subscription || {}).length === 0 || subscription.canChat === false) {
-              throw new AppError(700, 'You need an active subscription to send messages');
+            const subscription = await SubscriptionService.getMySubscription(
+              user as TAuthUser,
+            );
+            if (
+              Object.keys(subscription || {}).length === 0 ||
+              subscription.canChat === false
+            ) {
+              throw new AppError(
+                700,
+                'You need an active subscription to send messages',
+              );
             }
           }
 

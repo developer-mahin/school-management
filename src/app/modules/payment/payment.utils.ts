@@ -35,7 +35,7 @@ export const createCheckoutSession = async (
       CustomerReference: 'ref 1',
       CustomerCivilId: 12345678,
       UserDefinedField: 'Custom field',
-      ExpiryDate: "",
+      ExpiryDate: '',
       CustomerAddress: {
         Block: '',
         Street: '',
@@ -58,18 +58,16 @@ export const createCheckoutSession = async (
   return res.data;
 };
 
-
 export const findPartners = async (userId: string) => {
-
-  const result = await Parents.findOne({ userId })
+  const result = await Parents.findOne({ userId });
 
   const findParents = await Parents.aggregate([
     {
       $match: {
         childId: new mongoose.Types.ObjectId(String(result?.childId)),
-      }
-    }
-  ])
+      },
+    },
+  ]);
 
   return findParents;
-}
+};

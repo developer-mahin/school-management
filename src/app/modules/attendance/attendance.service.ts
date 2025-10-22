@@ -146,23 +146,32 @@ const getMyAttendance = async (
   user: TAuthUser,
   query: Record<string, unknown>,
 ) => {
-
   const { token } = query;
 
   let decodedUser;
 
   if (token) {
-    decodedUser = decodeToken(token as string, config.jwt.access_token as Secret) as JwtPayload;
+    decodedUser = decodeToken(
+      token as string,
+      config.jwt.access_token as Secret,
+    ) as JwtPayload;
   }
 
   if (decodedUser?.role === USER_ROLE.parents) {
-    const subscription = await SubscriptionService.getMySubscription(decodedUser as TAuthUser);
+    const subscription = await SubscriptionService.getMySubscription(
+      decodedUser as TAuthUser,
+    );
 
-    if (Object.keys(subscription || {}).length === 0 || subscription.isAttendanceEnabled === false) {
-      throw new AppError(700, 'You need an active subscription to get attendance');
+    if (
+      Object.keys(subscription || {}).length === 0 ||
+      subscription.isAttendanceEnabled === false
+    ) {
+      throw new AppError(
+        700,
+        'You need an active subscription to get attendance',
+      );
     }
   }
-
 
   const findStudent = await StudentService.findStudent(user.studentId);
 

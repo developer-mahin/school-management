@@ -62,16 +62,26 @@ export const TermsService = {
     let decodedUser;
 
     if (token) {
-      decodedUser = decodeToken(token as string, config.jwt.access_token as Secret) as JwtPayload;
+      decodedUser = decodeToken(
+        token as string,
+        config.jwt.access_token as Secret,
+      ) as JwtPayload;
     }
 
     if (decodedUser?.role === USER_ROLE.parents) {
-      const subscription = await SubscriptionService.getMySubscription(decodedUser as TAuthUser);
-      if (Object.keys(subscription || {}).length === 0 || subscription.isExamGradeEnabled === false) {
-        throw new AppError(700, 'You need an active subscription to get exam schedule');
+      const subscription = await SubscriptionService.getMySubscription(
+        decodedUser as TAuthUser,
+      );
+      if (
+        Object.keys(subscription || {}).length === 0 ||
+        subscription.isExamGradeEnabled === false
+      ) {
+        throw new AppError(
+          700,
+          'You need an active subscription to get exam schedule',
+        );
       }
     }
-
 
     if (user.role === USER_ROLE.student) {
       findStudent = await StudentService.findStudent(user.studentId);

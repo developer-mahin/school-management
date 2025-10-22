@@ -287,14 +287,25 @@ const getExamSchedule = async (
   let decodedUser;
 
   if (token) {
-    decodedUser = decodeToken(token as string, config.jwt.access_token as Secret) as JwtPayload;
+    decodedUser = decodeToken(
+      token as string,
+      config.jwt.access_token as Secret,
+    ) as JwtPayload;
   }
 
   if (decodedUser?.role === USER_ROLE.parents) {
-    const subscription = await SubscriptionService.getMySubscription(decodedUser as TAuthUser);
+    const subscription = await SubscriptionService.getMySubscription(
+      decodedUser as TAuthUser,
+    );
 
-    if (Object.keys(subscription || {}).length === 0 || subscription.canSeeExam === false) {
-      throw new AppError(700, 'You need an active subscription to get exam schedule');
+    if (
+      Object.keys(subscription || {}).length === 0 ||
+      subscription.canSeeExam === false
+    ) {
+      throw new AppError(
+        700,
+        'You need an active subscription to get exam schedule',
+      );
     }
   }
 

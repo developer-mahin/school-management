@@ -60,7 +60,7 @@ const createMySubscriptionBody = ({
   subscription,
   subscriptionId,
   timeline,
-  amount
+  amount,
 }: any) => {
   const mySubscriptionData = getSubscriptionData(subscription?.planName);
 
@@ -74,7 +74,7 @@ const createMySubscriptionBody = ({
     amount,
     remainingParents: subscription.numberOfParents,
     remainingChildren: subscription.numberOfChildren,
-    ...mySubscriptionData
+    ...mySubscriptionData,
   };
 };
 

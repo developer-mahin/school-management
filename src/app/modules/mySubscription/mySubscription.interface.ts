@@ -5,9 +5,9 @@ export type TMySubscription = {
   subscriptionId: ObjectId;
   expiryIn: Date;
   remainingChildren: number;
-  timeline:"monthly" | "yearly"
-  amount: number
-    //
+  timeline: 'monthly' | 'yearly';
+  amount: number;
+  //
   // Permissions
   //
   isAttendanceEnabled?: boolean;

@@ -11,147 +11,149 @@ import { TClass } from './class.interface';
 import Class from './class.model';
 
 const createClass = async (payload: Partial<TClass>, user: TAuthUser) => {
-    const findLevel = await Level.findById(payload.levelId);
-    if (!findLevel) throw new Error('Level not found');
+  const findLevel = await Level.findById(payload.levelId);
+  if (!findLevel) throw new Error('Level not found');
 
-    // Assign schoolId based on role
-    const schoolId = getSchoolIdFromUser(user);
-    const section = payload?.section?.map((item) => item).join(' / ');
+  // Assign schoolId based on role
+  const schoolId = getSchoolIdFromUser(user);
+  const section = payload?.section?.map((item) => item).join(' / ');
 
-    const result = await Class.create({
-        ...payload,
-        levelName: findLevel.levelName,
-        schoolId,
-        section,
-    });
+  const result = await Class.create({
+    ...payload,
+    levelName: findLevel.levelName,
+    schoolId,
+    section,
+  });
 
-    return result;
+  return result;
 };
 
 const getAllClasses = async (user: TAuthUser, id: string) => {
-    const schoolId = getSchoolIdFromUser(user);
-    const result = await Class.find({ schoolId, levelId: id });
-    return result;
+  const schoolId = getSchoolIdFromUser(user);
+  const result = await Class.find({ schoolId, levelId: id });
+  return result;
 };
 
 const updateClass = async (id: string, payload: Partial<TClass>) => {
-    const section = payload?.section?.map((item) => item).join(' / ');
+  const section = payload?.section?.map((item) => item).join(' / ');
 
-    const result = await Class.findByIdAndUpdate(
-        id,
-        { ...payload, section },
-        { new: true },
-    );
-    return result;
+  const result = await Class.findByIdAndUpdate(
+    id,
+    { ...payload, section },
+    { new: true },
+  );
+  return result;
 };
 
 const deleteClass = async (id: string) => {
-    const result = await Class.findByIdAndDelete(id);
-    return result;
+  const result = await Class.findByIdAndDelete(id);
+  return result;
 };
 
 const getClassBySchoolId = async (
-    id: string,
-    user: TAuthUser,
-    query: Record<string, unknown>,
+  id: string,
+  user: TAuthUser,
+  query: Record<string, unknown>,
 ) => {
-    if (user.role === USER_ROLE.school) {
-        id = user.schoolId;
-    } else if (user.role === USER_ROLE.teacher) {
-        const findTeacher = await TeacherService.findTeacher(user);
-        id = findTeacher?.schoolId as any;
-    } else if (user.role === USER_ROLE.supperAdmin) {
-        id = query.schoolId as any;
-    }
+  if (user.role === USER_ROLE.school) {
+    id = user.schoolId;
+  } else if (user.role === USER_ROLE.teacher) {
+    const findTeacher = await TeacherService.findTeacher(user);
+    id = findTeacher?.schoolId as any;
+  } else if (user.role === USER_ROLE.supperAdmin) {
+    id = query.schoolId as any;
+  }
 
-    const result = await Class.find({ schoolId: id });
-    return result;
+  const result = await Class.find({ schoolId: id });
+  return result;
 };
 
 const getSectionsByClassId = async (id: string) => {
-    const result = await Class.findById(id);
-    const section = result?.section
-        ?.map((item) => item.replace(/\s*\/\s*/g, ','))
-        .join(',')
-        .split(',');
+  const result = await Class.findById(id);
+  const section = result?.section
+    ?.map((item) => item.replace(/\s*\/\s*/g, ','))
+    .join(',')
+    .split(',');
 
-    return section;
+  return section;
 };
 
 const getStudentsOfClasses = async (
-    user: TAuthUser,
-    query: Record<string, unknown>,
+  user: TAuthUser,
+  query: Record<string, unknown>,
 ) => {
-    const { className, section, classId } = query;
-    const findTeacher = await TeacherService.findTeacher(user);
+  const { className, section, classId } = query;
+  const findTeacher = await TeacherService.findTeacher(user);
 
-    const matchConditions: Record<string, any>[] = [
-        {
-            schoolId: new mongoose.Types.ObjectId(String(findTeacher.schoolId)),
+  const matchConditions: Record<string, any>[] = [
+    {
+      schoolId: new mongoose.Types.ObjectId(String(findTeacher.schoolId)),
+    },
+  ];
+
+  // Always match className if provided
+  if (className) {
+    matchConditions.push({ className });
+  }
+
+  // Conditionally add section if provided
+  if (section) {
+    matchConditions.push({ section });
+  }
+
+  if (classId) {
+    matchConditions.push({
+      classId: new mongoose.Types.ObjectId(String(classId)),
+    });
+  }
+
+  const studentQuery = new AggregationQueryBuilder(query);
+
+  const result = await studentQuery
+    .customPipeline([
+      {
+        $match: {
+          $and: matchConditions,
         },
-    ];
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      {
+        $unwind: {
+          path: '$user',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          studentId: '$_id',
+          studentName: '$user.name',
+          userId: '$user._id',
+          parentsMessage: 1,
+        },
+      },
+    ])
+    .sort()
+    .paginate()
+    .execute(Student);
 
-    // Always match className if provided
-    if (className) {
-        matchConditions.push({ className });
-    }
+  const meta = await studentQuery.countTotal(Student);
 
-    // Conditionally add section if provided
-    if (section) {
-        matchConditions.push({ section });
-    }
-
-    if (classId) {
-        matchConditions.push({ classId: new mongoose.Types.ObjectId(String(classId)) });
-    }
-
-    const studentQuery = new AggregationQueryBuilder(query);
-
-    const result = await studentQuery
-        .customPipeline([
-            {
-                $match: {
-                    $and: matchConditions,
-                },
-            },
-            {
-                $lookup: {
-                    from: 'users',
-                    localField: 'userId',
-                    foreignField: '_id',
-                    as: 'user',
-                },
-            },
-            {
-                $unwind: {
-                    path: '$user',
-                    preserveNullAndEmptyArrays: true,
-                },
-            },
-            {
-                $project: {
-                    studentId: '$_id',
-                    studentName: '$user.name',
-                    userId: '$user._id',
-                    parentsMessage: 1,
-                },
-            },
-        ])
-        .sort()
-        .paginate()
-        .execute(Student);
-
-    const meta = await studentQuery.countTotal(Student);
-
-    return { meta, result };
+  return { meta, result };
 };
 
 export const ClassService = {
-    createClass,
-    getAllClasses,
-    updateClass,
-    deleteClass,
-    getClassBySchoolId,
-    getSectionsByClassId,
-    getStudentsOfClasses,
+  createClass,
+  getAllClasses,
+  updateClass,
+  deleteClass,
+  getClassBySchoolId,
+  getSectionsByClassId,
+  getStudentsOfClasses,
 };

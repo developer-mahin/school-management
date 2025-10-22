@@ -53,9 +53,7 @@ const confirmPayment = async (query: Record<string, unknown>) => {
       paymentDate: new Date(),
     };
 
-    console.log(amount, 
-      'amount ===========>'
-    );
+    console.log(amount, 'amount ===========>');
     const subscription = await SubscriptionService.getSubscription(
       subscriptionId as string,
     );
@@ -85,20 +83,22 @@ const confirmPayment = async (query: Record<string, unknown>) => {
         $set: {
           expiryIn: new Date(
             findMySubscription.expiryIn.getTime() +
-            Number(timeline) * 24 * 60 * 60 * 1000
+              Number(timeline) * 24 * 60 * 60 * 1000,
           ),
           amount: Number(amount),
           timeline: Number(timeline) === 30 ? 'monthly' : 'yearly',
           subscriptionId: subscriptionId,
           remainingChildren:
-            findMySubscription.remainingChildren + subscription.numberOfChildren,
+            findMySubscription.remainingChildren +
+            subscription.numberOfChildren,
           ...mySubscriptionData,
         },
       };
 
-      if (subscription?.planName.toLowerCase() === "gold") {
+      if (subscription?.planName.toLowerCase() === 'gold') {
         // Update all partner users
-        const partnerIds = findOtherPartners?.map((partner: any) => partner.userId) || [];
+        const partnerIds =
+          findOtherPartners?.map((partner: any) => partner.userId) || [];
 
         // Use Promise.all instead of map for proper async handling
         await Promise.all(
@@ -107,9 +107,8 @@ const confirmPayment = async (query: Record<string, unknown>) => {
               new: true,
               upsert: true,
               session,
-            })
-          }
-          )
+            });
+          }),
         );
       } else {
         // Update only the current user
@@ -119,45 +118,54 @@ const confirmPayment = async (query: Record<string, unknown>) => {
         });
       }
     } else {
-      if (subscription?.planName.toLowerCase() === "gold") {
+      if (subscription?.planName.toLowerCase() === 'gold') {
         // Create subscriptions for all partner users
-        const partnerIds = findOtherPartners?.map((partner: any) => partner.userId) || [];
+        const partnerIds =
+          findOtherPartners?.map((partner: any) => partner.userId) || [];
 
         // Use Promise.all instead of map for proper async handling
         await Promise.all(
-          partnerIds.map(async (id) =>
-            await MySubscription.create(
-              [
-                {
-                  userId: id,
-                  subscriptionId: mySubscriptionBody.subscriptionId,
-                  expiryIn: new Date(
-                    Date.now() + Number(timeline) * 24 * 60 * 60 * 1000,
-                  ),
-                  amount: Number(amount),
-                  timeline: Number(timeline) === 30 ? 'monthly' : 'yearly',
-                  remainingChildren: subscription.numberOfChildren,
-                  ...mySubscriptionData
-                },
-              ],
-              { session }
-            )
-          )
+          partnerIds.map(
+            async (id) =>
+              await MySubscription.create(
+                [
+                  {
+                    userId: id,
+                    subscriptionId: mySubscriptionBody.subscriptionId,
+                    expiryIn: new Date(
+                      Date.now() + Number(timeline) * 24 * 60 * 60 * 1000,
+                    ),
+                    amount: Number(amount),
+                    timeline: Number(timeline) === 30 ? 'monthly' : 'yearly',
+                    remainingChildren: subscription.numberOfChildren,
+                    ...mySubscriptionData,
+                  },
+                ],
+                { session },
+              ),
+          ),
         );
       } else {
-        const mySubscription = await MySubscription.create([mySubscriptionBody], {
-          session,
-        });
+        const mySubscription = await MySubscription.create(
+          [mySubscriptionBody],
+          {
+            session,
+          },
+        );
 
         if (!mySubscription)
-          throw new AppError(httpStatus.BAD_REQUEST, 'My Subscription not created');
+          throw new AppError(
+            httpStatus.BAD_REQUEST,
+            'My Subscription not created',
+          );
       }
     }
 
     // Create payment record
     const data = await Payment.create([subscriptionPaymentBody], { session });
 
-    if (!data) throw new AppError(httpStatus.BAD_REQUEST, 'Payment not created');
+    if (!data)
+      throw new AppError(httpStatus.BAD_REQUEST, 'Payment not created');
 
     // Get user and school information for notification
     const parents = await Parents.findOne({
@@ -192,7 +200,6 @@ const confirmPayment = async (query: Record<string, unknown>) => {
     await session.endSession();
   }
 };
-
 
 const earningStatistic = async (
   user: TAuthUser,

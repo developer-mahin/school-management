@@ -23,9 +23,7 @@ const makePayment = catchAsync(async (req, res) => {
 const confirmPayment = catchAsync(async (req, res) => {
   const result = await PaymentService.confirmPayment(req.query);
 
-  res.send(
-    paymentSuccessHtml()
-  );
+  res.send(paymentSuccessHtml());
 
   sendResponse(res, {
     success: true,
@@ -34,7 +32,6 @@ const confirmPayment = catchAsync(async (req, res) => {
     data: result,
   });
 });
-
 
 const failedPayment = catchAsync(async (req, res) => {
   res.send(paymentFailedHtml());
@@ -45,7 +42,6 @@ const failedPayment = catchAsync(async (req, res) => {
     message: 'Payment failed',
   });
 });
-
 
 const earningStatistic = catchAsync(async (req, res) => {
   const result = await PaymentService.earningStatistic(

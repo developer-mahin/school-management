@@ -12,13 +12,13 @@ import { getSchoolIdFromUser } from '../../utils/getSchoolIdForManager';
 import Class from '../class/class.model';
 import { StudentService } from '../student/student.service';
 import Subject from '../subject/subject.model';
+import Teacher from '../teacher/teacher.model';
 import { TeacherService } from '../teacher/teacher.service';
 import { MulterFile } from '../user/user.controller';
 import User from '../user/user.model';
 import { commonPipeline } from './classSchedule.helper';
 import { TClassSchedule } from './classSchedule.interface';
 import ClassSchedule from './classSchedule.model';
-import Teacher from '../teacher/teacher.model';
 
 const createClassSchedule = async (
   payload: Partial<TClassSchedule>,
@@ -215,6 +215,7 @@ const getClassScheduleByDays = async (
           selectTime: 1,
           section: 1,
           endTime: 1,
+          classId: '$class._id',
           className: '$class.className',
           subjectName: '$subject.subjectName',
         },
@@ -236,7 +237,7 @@ const getUpcomingClasses = async (
 
   const upcomingQuery = new AggregationQueryBuilder(query);
 
-  let matchStage = {}
+  let matchStage = {};
   if (user.role === USER_ROLE.teacher) {
     matchStage = {
       teacherId: new mongoose.Types.ObjectId(String(user.teacherId)),
@@ -526,9 +527,11 @@ const createClassScheduleXlsx = async (file: MulterFile, user: TAuthUser) => {
       });
 
       if (!teacherData) {
-        throw new AppError(httpStatus.BAD_REQUEST, `This ("${row.teacher}") Teacher is not found`);
+        throw new AppError(
+          httpStatus.BAD_REQUEST,
+          `This ("${row.teacher}") Teacher is not found`,
+        );
       }
-
 
       return {
         ...row,
