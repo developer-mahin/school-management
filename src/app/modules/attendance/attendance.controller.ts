@@ -58,7 +58,8 @@ const getMyAttendanceDetails = catchAsync(async (req, res) => {
 
 const getAttendanceDetails = catchAsync(async (req, res) => {
   const result = await AttendanceService.getAttendanceDetails(
-    req.params.attendanceId,
+      req.params.attendanceId,
+      req.query
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
