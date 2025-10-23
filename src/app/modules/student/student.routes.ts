@@ -2,9 +2,9 @@ import { Router } from 'express';
 import { USER_ROLE } from '../../constant';
 import { auth } from '../../middleware/auth';
 import validateRequest from '../../middleware/validation';
+import fileUpload from '../../utils/uploadImage';
 import { StudentController } from './student.controller';
 import { StudentValidation } from './student.validation';
-import fileUpload from '../../utils/uploadImage';
 
 const upload = fileUpload('./public/uploads/files/');
 

@@ -10,6 +10,7 @@ import generateUID from '../../utils/generateUID';
 import { transactionWrapper } from '../../utils/transactionWrapper';
 import Parents from '../parents/parents.model';
 import School from '../school/school.model';
+import { MulterFile } from '../user/user.controller';
 import User from '../user/user.model';
 import { StudentRow, TStudent } from './student.interface';
 import Student from './student.model';
@@ -18,7 +19,6 @@ import {
   handleParentUserCreation,
   parseStudentXlsxData,
 } from './students.helper';
-import { MulterFile } from '../user/user.controller';
 
 const createStudent = async (
   payload: Partial<TStudent> & { phoneNumber: string; name?: string },

@@ -15,6 +15,7 @@ import { NOTIFICATION_TYPE } from '../notification/notification.interface';
 import { TResultUpdate, TStudentsGrader } from '../result/result.interface';
 import Result from '../result/result.model';
 import Student from '../student/student.model';
+import { promoteStudentToNextClass } from '../student/student.promotion.helper';
 import { StudentService } from '../student/student.service';
 import { SubscriptionService } from '../subscription/subscription.service';
 import { TeacherService } from '../teacher/teacher.service';
@@ -272,6 +273,35 @@ const updateGrade = async (
     notificationPromise,
     updateExam,
   ]);
+
+  // 🎓 Auto-promote students who passed all subjects in final term
+  try {
+    const promotionPromises = studentsWithGrades.map(async (student) => {
+      const promotionResult = await promoteStudentToNextClass(
+        student.studentId.toString(),
+        payload.termsId,
+        user,
+      );
+
+      if (promotionResult.promoted) {
+        console.log(
+          `✅ Student ${student.studentId} promoted: ${promotionResult.oldClassName} → ${promotionResult.newClassName}`,
+        );
+      } else {
+        console.log(
+          `ℹ️ Student ${student.studentId} not promoted: ${promotionResult.message}`,
+        );
+      }
+
+      return promotionResult;
+    });
+
+    // Execute all promotions in parallel
+    await Promise.all(promotionPromises);
+  } catch (error) {
+    console.error('Error during student promotion:', error);
+    // Don't throw error - promotion failure shouldn't break grade submission
+  }
 
   return result;
 };
