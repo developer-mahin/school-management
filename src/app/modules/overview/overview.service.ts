@@ -5,10 +5,10 @@ import { TAuthUser } from '../../interface/authUser';
 import Assignment from '../assignment/assignment.model';
 import Attendance from '../attendance/attendance.model';
 import ClassSchedule from '../classSchedule/classSchedule.model';
+import Result from '../result/result.model';
+import { StudentService } from '../student/student.service';
 import { TeacherService } from '../teacher/teacher.service';
 import { calculateAttendanceRate, getAttendanceRate } from './overview.helper';
-import { StudentService } from '../student/student.service';
-import Result from '../result/result.model';
 
 const getTeacherHomePageOverview = async (user: TAuthUser) => {
   const day = new Date()
@@ -109,8 +109,8 @@ const getTeacherHomePageOverview = async (user: TAuthUser) => {
     ]),
 
     Assignment.countDocuments({
-      teacherId: user.teacherId,
-      status: { $ne: 'expired' },
+      teacherId: user.userId,
+      status: { $eq: 'on-going' },
     }),
   ]);
 
@@ -170,10 +170,13 @@ const getAssignmentCount = async (user: TAuthUser) => {
   const [activeAssignment, assignmentThisWeek] = await Promise.all([
     Assignment.countDocuments({
       schoolId,
+      teacherId: user.userId,
       status: 'on-going',
     }),
     Assignment.countDocuments({
       schoolId,
+      teacherId: user.userId,
+      status: "completed",
       dueDate: { $gte: lastWeekDate },
     }),
   ]);

@@ -1,18 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose from 'mongoose';
+import sendAnnouncement from '../../../socket/sendAnnouncement';
+import sendNotification from '../../../socket/sendNotification';
+import QueryBuilder from '../../QueryBuilder/queryBuilder';
+import { USER_ROLE } from '../../constant';
 import { TAuthUser } from '../../interface/authUser';
+import { getSchoolIdFromUser } from '../../utils/getSchoolIdForManager';
+import { NOTIFICATION_TYPE } from '../notification/notification.interface';
 import Parents from '../parents/parents.model';
 import Student from '../student/student.model';
 import Teacher from '../teacher/teacher.model';
 import { TAnnouncement } from './announcement.interface';
-import sendAnnouncement from '../../../socket/sendAnnouncement';
 import Announcement from './announcement.model';
-import QueryBuilder from '../../QueryBuilder/queryBuilder';
-import { USER_ROLE } from '../../constant';
-import { getSchoolIdFromUser } from '../../utils/getSchoolIdForManager';
-import sendNotification from '../../../socket/sendNotification';
-import { NOTIFICATION_TYPE } from '../notification/notification.interface';
-import { cacheData, getCachedData } from '../../../redis';
 
 const createAnnouncement = async (
   payload: Partial<TAnnouncement>,
@@ -20,6 +19,13 @@ const createAnnouncement = async (
 ) => {
   const schoolId = getSchoolIdFromUser(user);
 
+  // Create a single announcement
+  const newAnnouncement = await Announcement.create({
+    ...payload,
+    schoolId,
+  });
+
+  // Get all receivers based on announcement type
   const [allStudent, allTeacher, allParents] = await Promise.all([
     Student.find({ schoolId }),
     Teacher.find({ schoolId }),
@@ -49,14 +55,9 @@ const createAnnouncement = async (
         ? allTeacher
         : allParents;
 
-  const announcementPromises = receivers.map(async (item) => {
+  // Send notifications to all receivers
+  const notificationPromises = receivers.map(async (item) => {
     const receiverId = item.userId || item._id || item._doc?.userId;
-
-    const newAnnouncement = await Announcement.create({
-      ...payload,
-      schoolId,
-      receiverId,
-    });
 
     const notificationData = {
       ...payload,
@@ -68,13 +69,13 @@ const createAnnouncement = async (
       receiverId,
     };
 
-    await Promise.all([
-      sendAnnouncement(newAnnouncement),
-      sendNotification(user, notificationData),
-    ]);
+    await sendNotification(user, notificationData);
   });
 
-  await Promise.all(announcementPromises);
+  await Promise.all([
+    sendAnnouncement(newAnnouncement),
+    ...notificationPromises,
+  ]);
 };
 
 const getAllAnnouncements = async (
@@ -83,21 +84,16 @@ const getAllAnnouncements = async (
 ) => {
   const schoolId = getSchoolIdFromUser(user);
 
-  let matchStage = {};
-  if (user.role !== USER_ROLE.school) {
-    matchStage = { receiverId: user.userId };
-  } else {
-    matchStage = { schoolId };
+  const matchStage: Record<string, unknown> = { schoolId };
+
+  // Filter announcements based on user role
+  if (user.role === USER_ROLE.student) {
+    matchStage.announcementTo = 'student';
+  } else if (user.role === USER_ROLE.teacher) {
+    matchStage.announcementTo = 'teacher';
+  } else if (user.role === USER_ROLE.parents) {
+    matchStage.announcementTo = 'parents';
   }
-
-  // const cacheKey = `announcements:${user.userId}:${JSON.stringify(query)}`;
-
-  // 🔍 Try to fetch from cache first
-  // const cached = await getCachedData<{ meta: any; result: any }>(cacheKey);
-  // if (cached) {
-  //   console.log('🚀 Serving announcements from Redis cache');
-  //   return cached;
-  // }
 
   const announcementQuery = new QueryBuilder(
     Announcement.find(matchStage),
@@ -111,10 +107,6 @@ const getAllAnnouncements = async (
 
   const dataToCache = { meta, result };
 
-  // 💾 Store result in cache for 60 seconds
-  // await cacheData(cacheKey, dataToCache, 60);
-
-  console.log('✅ Served fresh announcements and cached to Redis');
   return dataToCache;
 };
 

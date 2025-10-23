@@ -12,7 +12,7 @@ const announcementSchema = new Schema<TAnnouncement>(
       enum: ['student', 'teacher', 'parents'],
     },
     schoolId: { type: Schema.Types.ObjectId, required: true, ref: 'School' },
-    receiverId: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
+    receiverId: { type: Schema.Types.ObjectId, required: false, ref: 'User' },
   },
   {
     timestamps: true,

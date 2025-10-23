@@ -17,6 +17,7 @@ const classSchema = new Schema<TClass>(
       type: String,
       required: true,
       trim: true,
+      unique: true,
     },
     levelName: {
       type: String,

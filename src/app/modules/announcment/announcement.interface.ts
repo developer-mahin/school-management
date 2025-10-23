@@ -6,5 +6,5 @@ export type TAnnouncement = {
   description: string;
   announcementTo: 'student' | 'teacher' | 'parents';
   schoolId: ObjectId;
-  receiverId: ObjectId;
+  receiverId?: ObjectId;
 };
