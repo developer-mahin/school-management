@@ -23,4 +23,5 @@ export type TClassSchedule = {
   endTime: string;
   date: Date;
   roomNo: string;
+  isAttendance: boolean
 };

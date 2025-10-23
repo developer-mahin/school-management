@@ -10,6 +10,7 @@ import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
 import AppError from '../../utils/AppError';
 import { decodeToken } from '../../utils/decodeToken';
 import Class from '../class/class.model';
+import ClassSchedule from '../classSchedule/classSchedule.model';
 import { NOTIFICATION_TYPE } from '../notification/notification.interface';
 import Student from '../student/student.model';
 import { StudentService } from '../student/student.service';
@@ -63,6 +64,8 @@ const createAttendance = async (
         date: attendanceDate,
         isAttendance: true,
     });
+
+    await ClassSchedule.findByIdAndUpdate(payload.classScheduleId, { isAttendance: true }, { new: true })
 
     sendNotification(user, {
         senderId: user.userId,

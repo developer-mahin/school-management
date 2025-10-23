@@ -203,7 +203,7 @@ const getClassScheduleByDays = async (
     .customPipeline([
       {
         $match: {
-          $and: [...andCondition, { days: query.days }],
+          $and: [...andCondition, { days: query.days }, { isAttendance: { $ne: true } }],
         },
       },
       ...classAndSubjectQuery,
@@ -215,9 +215,11 @@ const getClassScheduleByDays = async (
           selectTime: 1,
           section: 1,
           endTime: 1,
+          isAttendance: 1,
           classId: '$class._id',
           className: '$class.className',
           subjectName: '$subject.subjectName',
+
         },
       },
     ])

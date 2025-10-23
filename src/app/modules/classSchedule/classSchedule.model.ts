@@ -23,6 +23,10 @@ const classScheduleSchema = new Schema<TClassSchedule>(
       ref: 'Teacher',
       required: true,
     },
+
+    isAttendance: {
+      type: Boolean,
+    },
     days: {
       type: String,
       required: true,
