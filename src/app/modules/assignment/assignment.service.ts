@@ -539,11 +539,28 @@ const pendingAssignment = async (
   const pendingAssignmentQuery = new AggregationQueryBuilder(query);
 
   let matchStage = {};
+  const initialMatchConditions: any[] = [
+    {
+      classId: new mongoose.Types.ObjectId(String(findStudent.classId)),
+    },
+    {
+      schoolId: new mongoose.Types.ObjectId(
+        String(findStudent.schoolId),
+      ),
+    },
+  ];
+
   if (submitted === 'true') {
+    // For submitted assignments, don't filter by status or due date
     matchStage = {
       'assignmentSubmissions.studentId': { $eq: myStudentId },
     };
   } else {
+    // For pending assignments, only show on-going with future due dates
+    initialMatchConditions.push(
+      { dueDate: { $gte: date } },
+      { status: 'on-going' },
+    );
     matchStage = {
       'assignmentSubmissions.studentId': { $ne: myStudentId },
     };
@@ -553,18 +570,7 @@ const pendingAssignment = async (
     .customPipeline([
       {
         $match: {
-          $and: [
-            {
-              classId: new mongoose.Types.ObjectId(String(findStudent.classId)),
-            },
-            {
-              schoolId: new mongoose.Types.ObjectId(
-                String(findStudent.schoolId),
-              ),
-            },
-            { dueDate: { $gte: date } },
-            { status: 'on-going' },
-          ],
+          $and: initialMatchConditions,
         },
       },
 
