@@ -463,6 +463,15 @@ const getResultOfStudents = async (
         },
       },
 
+      // CRITICAL: Sort before grouping to ensure deterministic grouping
+      {
+        $sort: {
+          studentId: 1,
+          name: 1,
+          termName: 1,
+        },
+      },
+
       // Group by student and pivot term GPAs
       {
         $group: {
@@ -478,6 +487,14 @@ const getResultOfStudents = async (
               gpa: '$gpa',
             },
           },
+        },
+      },
+
+      // CRITICAL: Sort after grouping to ensure consistent output order
+      {
+        $sort: {
+          name: 1,
+          _id: 1,
         },
       },
 
@@ -521,14 +538,13 @@ const getResultOfStudents = async (
         },
       },
 
-      // // Final formatting
+      // Final formatting
       {
         $project: {
           studentId: 1,
           name: 1,
           class: 1,
           termsId: 1,
-          // allGpas: 1,
           firstTerm: '$firstTerm.gpa',
           secondTerm: '$secondTerm.gpa',
           midTerm: '$midTerm.gpa',
@@ -548,9 +564,17 @@ const getResultOfStudents = async (
           },
         },
       },
+
+      // CRITICAL: Final sort to ensure stable output
+      {
+        $sort: {
+          name: 1,
+          studentId: 1,
+        },
+      },
     ])
-    .sort()
     .search(['className', 'section', 'name'])
+    .sort()
     .paginate()
     .execute(Exam);
 

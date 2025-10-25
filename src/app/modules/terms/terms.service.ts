@@ -141,8 +141,10 @@ export const TermsService = {
       },
       {
         $project: {
+          resultId: '$result._id',
           subjectName: '$subject.subjectName',
           mark: '$result.students.mark',
+          studentId: '$result.students.studentId',
           grade: '$result.students.grade',
           gpa: '$result.students.gpa',
         },
@@ -153,6 +155,5 @@ export const TermsService = {
     const gpa = totalCgpa / result.length;
 
     return { result, thisTermGpa: gpa };
-    return { result };
   },
 };

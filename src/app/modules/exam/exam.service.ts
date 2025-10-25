@@ -279,7 +279,7 @@ const updateGrade = async (
     const promotionPromises = studentsWithGrades.map(async (student) => {
       const promotionResult = await promoteStudentToNextClass(
         student.studentId.toString(),
-        payload.termsId,
+        payload?.termsId?.toString() ?? '',
         user,
       );
 
@@ -451,51 +451,34 @@ const getGradesResult = async (user: TAuthUser, examId: string) => {
 };
 
 const updateResult = async (payload: TResultUpdate, user: TAuthUser) => {
-  console.log(payload, '======> payload in update result service');
-  // Fetch result and grade system concurrently
-  const [findResult, findSchoolGrade] = await Promise.all([
-    Exam.aggregate([
-      {
-        $match: {
-          termsId: new mongoose.Types.ObjectId(String(payload.termsId)),
-        },
-      },
-      {
-        $lookup: {
-          from: 'results',
-          localField: '_id',
-          foreignField: 'examId',
-          as: 'results',
-        },
-      },
-      {
-        $unwind: '$results',
-      },
-      {
-        $unwind: '$results.students',
-      },
-      {
-        $match: {
-          'results.students._id': new mongoose.Types.ObjectId(payload.resultId),
-        },
-      },
-      {
-        $project: { results: 1 },
-      },
-    ]),
+  // Fetch grade system and find the result document concurrently
+  const [findSchoolGrade, resultDoc] = await Promise.all([
     GradeSystem.find({ schoolId: user.schoolId })
       .select('grade mark gpa')
       .lean(),
+
+    // Find the result document by its _id (payload.resultId is the Result document's _id)
+    Result.findById(payload.resultId).lean(),
   ]);
 
-  console.log(findResult, '======> findResult in update result service');
-
-  // return
   if (!findSchoolGrade.length) {
     throw new Error('Grade system not configured for this school');
   }
 
-  // Prepare the grade map (only once)
+  if (!resultDoc) {
+    throw new Error('Result not found');
+  }
+
+  // Verify that the student exists in this result
+  const student = resultDoc.students.find(
+    (s) => s.studentId.toString() === payload.studentId,
+  );
+
+  if (!student) {
+    throw new Error('Student not found in this result');
+  }
+
+  // Calculate grade and GPA based on the mark
   const sortedGradeSystem = findSchoolGrade
     .map(({ grade, mark, gpa }) => {
       const [min, max] = mark.split('-').map(Number);
@@ -504,22 +487,21 @@ const updateResult = async (payload: TResultUpdate, user: TAuthUser) => {
     .filter(({ min, max }) => !isNaN(min) && !isNaN(max))
     .sort((a, b) => a.min - b.min);
 
-  // Find the matching grade based on the provided mark
   const foundGrade = sortedGradeSystem.find(
     ({ min, max }) => payload.mark >= min && payload.mark <= max,
   );
+
   const gradeCalculation = {
     grade: foundGrade?.grade ?? 'F',
     gpa: foundGrade?.gpa ?? 0.0,
   };
 
-  console.log(findResult[0]?.results?._id, 'findResult[0]?.results?._id');
-
-  // Update the result with the new grade and GPA
+  // Update the specific student's result using the positional operator
+  // Match by result _id and studentId to update the correct student entry
   const updatedResult = await Result.findOneAndUpdate(
     {
-      _id: findResult[0]?.results?._id,
-      'students._id': payload.resultId,
+      _id: new mongoose.Types.ObjectId(payload.resultId),
+      'students.studentId': new mongoose.Types.ObjectId(payload.studentId),
     },
     {
       $set: {
@@ -530,6 +512,10 @@ const updateResult = async (payload: TResultUpdate, user: TAuthUser) => {
     },
     { new: true },
   );
+
+  if (!updatedResult) {
+    throw new Error('Failed to update result');
+  }
 
   return updatedResult;
 };
