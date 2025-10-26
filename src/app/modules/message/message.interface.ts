@@ -5,5 +5,6 @@ export type TMessage = {
   text_message?: string;
   file?: string;
   sender: ObjectId;
-  isRead: boolean;
+  isReadByReceiver: boolean;
+  isReadBySender: boolean;
 };

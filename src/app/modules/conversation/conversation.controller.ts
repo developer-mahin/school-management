@@ -1,8 +1,8 @@
 import httpStatus from 'http-status';
+import { TAuthUser } from '../../interface/authUser';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { ConversationService } from './conversation.service';
-import { TAuthUser } from '../../interface/authUser';
 
 const createConversation = catchAsync(async (req, res) => {
   const result = await ConversationService.createConversation(
@@ -47,8 +47,23 @@ const getMessages = catchAsync(async (req, res) => {
   });
 });
 
+const markAllAsRead = catchAsync(async (req, res) => {
+  const result = await ConversationService.markAllAsRead(
+    req.params.conversationId,
+    req.user as TAuthUser,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: result.message,
+    data: { modifiedCount: result.modifiedCount },
+  });
+});
+
 export const ConversationController = {
   createConversation,
   getConversations,
   getMessages,
+  markAllAsRead,
 };

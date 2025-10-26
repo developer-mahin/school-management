@@ -20,16 +20,22 @@ const sendNotification = async (
     const connectUser: any = connectedUser.get(receiverId?.toString());
     const notification =
       await NotificationService.createNotification(notificationData);
+
+    // Get unread notification count for the receiver
+    const unreadCount = await NotificationService.getUnreadCount(receiverId);
+
     if (connectUser) {
       IO.to(connectUser.socketId).emit('notification', {
         success: true,
         data: payload,
+        unreadCount,
       });
 
       IO.emit(`notification::${receiverId}`, {
         success: true,
         data: payload,
         notification,
+        unreadCount,
       });
     }
   } catch (error) {

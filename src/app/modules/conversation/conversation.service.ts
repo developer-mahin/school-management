@@ -74,6 +74,63 @@ const getConversations = async (
       { $unwind: { path: '$lastMessage', preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
+          from: 'messages',
+          let: { convId: '$_id', currentUserId: new mongoose.Types.ObjectId(String(user.userId)) },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ['$conversationId', '$$convId'] }
+              },
+            },
+            {
+              $addFields: {
+                isUnreadForMe: {
+                  $cond: {
+                    if: { $eq: ['$sender', '$$currentUserId'] },
+                    then: { $not: '$isReadBySender' },
+                    else: { $not: '$isReadByReceiver' }
+                  }
+                },
+                isUnreadForOther: {
+                  $cond: {
+                    if: { $eq: ['$sender', '$$currentUserId'] },
+                    then: { $not: '$isReadByReceiver' },
+                    else: { $not: '$isReadBySender' }
+                  }
+                }
+              }
+            },
+            {
+              $group: {
+                _id: null,
+                myUnreadCount: {
+                  $sum: {
+                    $cond: ['$isUnreadForMe', 1, 0]
+                  }
+                },
+                otherUnreadCount: {
+                  $sum: {
+                    $cond: ['$isUnreadForOther', 1, 0]
+                  }
+                }
+              }
+            }
+          ],
+          as: 'unreadCounts',
+        },
+      },
+      {
+        $addFields: {
+          myUnreadCount: {
+            $ifNull: [{ $arrayElemAt: ['$unreadCounts.myUnreadCount', 0] }, 0],
+          },
+          otherUnreadCount: {
+            $ifNull: [{ $arrayElemAt: ['$unreadCounts.otherUnreadCount', 0] }, 0],
+          },
+        },
+      },
+      {
+        $lookup: {
           from: 'users',
           let: { userIds: '$users' },
           pipeline: [
@@ -125,6 +182,7 @@ const getConversations = async (
         $project: {
           users: 0,
           allUsers: 0,
+          unreadCounts: 0,
         },
       },
       {
@@ -133,6 +191,8 @@ const getConversations = async (
           createdAt: 1,
           updatedAt: 1,
           lastMessage: 1,
+          myUnreadCount: 1,
+          otherUnreadCount: 1,
           self: {
             _id: '$self._id',
             name: '$self.name',
@@ -167,10 +227,21 @@ const getMessages = async (
   const currentUserId = new ObjectId(user.userId);
   const messageAggregation = new AggregationQueryBuilder(query);
 
-  // ✅ Mark all messages as read (fast write)
+  // ✅ Mark all messages as read based on sender/receiver
   await Message.updateMany(
-    { conversationId: convObjectId, isRead: false },
-    { $set: { isRead: true } },
+    {
+      conversationId: convObjectId,
+      sender: { $ne: currentUserId }
+    },
+    { $set: { isReadByReceiver: true } },
+  );
+
+  await Message.updateMany(
+    {
+      conversationId: convObjectId,
+      sender: currentUserId
+    },
+    { $set: { isReadBySender: true } },
   );
 
   // ✅ Get paginated messages
@@ -185,7 +256,8 @@ const getMessages = async (
           sender: 1,
           text_message: 1,
           file: 1,
-          isRead: 1,
+          isReadByReceiver: 1,
+          isReadBySender: 1,
           conversationId: 1,
         },
       },
@@ -234,8 +306,53 @@ const getMessages = async (
   };
 };
 
+const markAllAsRead = async (
+  conversationId: string,
+  user: TAuthUser,
+) => {
+  const convObjectId = new ObjectId(conversationId);
+  const currentUserId = new ObjectId(user.userId);
+
+  // Verify the user is part of this conversation
+  const conversation = await Conversation.findOne({
+    _id: convObjectId,
+    users: { $in: [currentUserId] },
+  });
+
+  if (!conversation) {
+    throw new AppError(404, 'Conversation not found or access denied');
+  }
+
+  // Mark all unread messages as read based on sender/receiver
+  const receiverResult = await Message.updateMany(
+    {
+      conversationId: convObjectId,
+      sender: { $ne: currentUserId },
+      isReadByReceiver: false,
+    },
+    { $set: { isReadByReceiver: true } },
+  );
+
+  const senderResult = await Message.updateMany(
+    {
+      conversationId: convObjectId,
+      sender: currentUserId,
+      isReadBySender: false,
+    },
+    { $set: { isReadBySender: true } },
+  );
+
+  const totalModified = receiverResult.modifiedCount + senderResult.modifiedCount;
+
+  return {
+    modifiedCount: totalModified,
+    message: 'All messages marked as read successfully',
+  };
+};
+
 export const ConversationService = {
   createConversation,
   getConversations,
   getMessages,
+  markAllAsRead,
 };
