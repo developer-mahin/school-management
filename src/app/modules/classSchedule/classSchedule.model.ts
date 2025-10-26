@@ -26,6 +26,7 @@ const classScheduleSchema = new Schema<TClassSchedule>(
 
     isAttendance: {
       type: Boolean,
+      default: false,
     },
     days: {
       type: String,

@@ -550,6 +550,22 @@ const createClassScheduleXlsx = async (file: MulterFile, user: TAuthUser) => {
   return enrichedData;
 };
 
+const resetAttendanceDaily = async () => {
+  try {
+    // Reset all isAttendance fields to false
+    const result = await ClassSchedule.updateMany(
+      { isAttendance: true },
+      { $set: { isAttendance: false } }
+    );
+
+    console.log(`Reset attendance for ${result.modifiedCount} class schedules`);
+    return result;
+  } catch (error) {
+    console.error('Error resetting attendance:', error);
+    throw error;
+  }
+};
+
 export const ClassScheduleService = {
   createClassSchedule,
   getAllClassSchedule,
@@ -560,4 +576,5 @@ export const ClassScheduleService = {
   getUpcomingClassesByClassScheduleId,
   getWeeklySchedule,
   createClassScheduleXlsx,
+  resetAttendanceDaily,
 };

@@ -8,10 +8,10 @@ import mongoose from 'mongoose';
 import { Server as SocketIoServer } from 'socket.io';
 import app from './app';
 import seedAdmin from './app/DB/seedAdmin';
+import { scheduleAttendanceReset } from './app/modules/classSchedule/classSchedule.cron';
 import config from './config';
 import { errorLogger, logger } from './shared/logger';
 import socketIO from './socket';
-import redis from './redis';
 let server: Server;
 
 const socketServer = createServer();
@@ -53,6 +53,9 @@ async function main() {
 
     socketIO(IO);
     globalThis.io = IO;
+
+    // Schedule attendance reset cron job
+    scheduleAttendanceReset();
   } catch (error: any) {
     console.error('Server start error:', error);
     logger.error({
