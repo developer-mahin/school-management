@@ -124,17 +124,37 @@ const socketIO = (io: Server) => {
 
           const sender: any = connectedUser.get(payload!.sender!.toString());
 
+          // Check if both users are online for real-time read status
+          const bothUsersOnline = receiver && sender;
+
           if (receiver) {
             console.log(receiver.socketId, 'receiver is socket id');
             io.to(receiver.socketId).emit('new_message', {
               success: true,
               data: savedMessage,
+              bothUsersOnline,
             });
 
             io.emit(`new_message::${payload.receiverId}`, {
               success: true,
               data: savedMessage,
+              bothUsersOnline,
             });
+
+            // If both users are online, mark message as read in real-time
+            if (bothUsersOnline && payload.receiverId) {
+              await MessageService.markMessagesAsReadRealTime(
+                payload.conversationId.toString(),
+                payload.receiverId.toString()
+              );
+
+              // Notify sender that message was read
+              io.to(sender.socketId).emit('message_read_realtime', {
+                conversationId: payload.conversationId,
+                messageId: savedMessage._id,
+                readBy: payload.receiverId,
+              });
+            }
           }
 
           if (sender) {
@@ -142,11 +162,13 @@ const socketIO = (io: Server) => {
             io.to(sender.socketId).emit('new_message', {
               success: true,
               data: savedMessage,
+              bothUsersOnline,
             });
 
             io.emit(`new_message::${payload.sender}`, {
               success: true,
               data: savedMessage,
+              bothUsersOnline,
             });
           }
 
@@ -179,6 +201,107 @@ const socketIO = (io: Server) => {
       } else {
         io.emit(`typing::${payload.receiverId}`, false);
         callback({ success: false, message: payload, result: payload });
+      }
+    });
+
+    // Handle real-time message read status updates
+    socket.on('mark_messages_read', async (payload: { conversationId: string }, callback) => {
+      try {
+        const { conversationId } = payload;
+        const currentUserId = socket.user?.userId;
+
+        if (!conversationId || !currentUserId) {
+          return callback?.({ success: false, message: 'Invalid payload' });
+        }
+
+        // Mark messages as read for the current user
+        const result = await MessageService.markMessagesAsRead(conversationId, currentUserId);
+
+        // Notify the other user in the conversation that messages have been read
+        const conversation = await MessageService.getConversationUsers(conversationId);
+        if (conversation) {
+          const otherUserId = conversation.users.find(id => id.toString() !== currentUserId);
+          if (otherUserId) {
+            const otherUser: any = connectedUser.get(otherUserId.toString());
+            if (otherUser) {
+              io.to(otherUser.socketId).emit('messages_read', {
+                conversationId,
+                readBy: currentUserId,
+                unreadCount: result.unreadCount
+              });
+            }
+          }
+        }
+
+        callback?.({
+          success: true,
+          message: 'Messages marked as read',
+          data: result
+        });
+      } catch (error) {
+        console.error('Error marking messages as read:', error);
+        callback?.({ success: false, message: 'Internal server error' });
+      }
+    });
+
+    // Handle user joining a conversation (for real-time read status)
+    socket.on('join_conversation', async (payload: { conversationId: string }, callback) => {
+      try {
+        const { conversationId } = payload;
+        const currentUserId = socket.user?.userId;
+
+        if (!conversationId || !currentUserId) {
+          return callback?.({ success: false, message: 'Invalid payload' });
+        }
+
+        // Join the conversation room
+        socket.join(`conversation_${conversationId}`);
+
+        // Check if both users are online and mark messages as read in real-time
+        const conversation = await MessageService.getConversationUsers(conversationId);
+        if (conversation) {
+          const otherUserId = conversation.users.find(id => id.toString() !== currentUserId);
+          if (otherUserId) {
+            const otherUser: any = connectedUser.get(otherUserId.toString());
+            const currentUser: any = connectedUser.get(currentUserId);
+
+            // If both users are online, mark messages as read in real-time
+            if (otherUser && currentUser) {
+              await MessageService.markMessagesAsReadRealTime(conversationId, currentUserId);
+
+              // Notify both users about the read status
+              io.to(`conversation_${conversationId}`).emit('conversation_active', {
+                conversationId,
+                bothUsersOnline: true,
+                readBy: currentUserId
+              });
+            }
+          }
+        }
+
+        callback?.({
+          success: true,
+          message: 'Joined conversation successfully'
+        });
+      } catch (error) {
+        console.error('Error joining conversation:', error);
+        callback?.({ success: false, message: 'Internal server error' });
+      }
+    });
+
+    // Handle user leaving a conversation
+    socket.on('leave_conversation', async (payload: { conversationId: string }, callback) => {
+      try {
+        const { conversationId } = payload;
+        socket.leave(`conversation_${conversationId}`);
+
+        callback?.({
+          success: true,
+          message: 'Left conversation successfully'
+        });
+      } catch (error) {
+        console.error('Error leaving conversation:', error);
+        callback?.({ success: false, message: 'Internal server error' });
       }
     });
 
