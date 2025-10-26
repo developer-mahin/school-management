@@ -13,6 +13,7 @@ const notificationSchema = new Schema<TNotification>(
       required: [true, 'Receiver id is required'],
       ref: 'User',
     },
+    senderName: { type: String},
     linkId: {
       type: Schema.Types.ObjectId,
       required: [true, 'Link id is required'],

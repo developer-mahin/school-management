@@ -40,5 +40,6 @@ export type TNotification = {
   role: string;
   type: TType;
   message: string;
+  senderName?: string;
   isRead?: boolean;
 };

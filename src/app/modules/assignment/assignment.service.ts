@@ -484,6 +484,7 @@ const markAssignmentAsCompleted = async (
         message: `${updatedAssignment.title} is marked as completed`,
         type: NOTIFICATION_TYPE.ASSIGNMENT,
         linkId: assignmentId,
+        senderName: user.name,
       }),
     ]);
 
