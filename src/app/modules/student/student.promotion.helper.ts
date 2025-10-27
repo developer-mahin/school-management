@@ -253,6 +253,7 @@ export const promoteStudentToNextClass = async (
             message: `🎉 Congratulations! You have been promoted from ${oldClassName} to ${newClassName}!`,
             type: NOTIFICATION_TYPE.CUSTOM,
             linkId: studentId,
+            senderName: user.name,
         });
 
         // Send notification to school admin
@@ -264,6 +265,7 @@ export const promoteStudentToNextClass = async (
                 message: `Student promoted from ${oldClassName} to ${newClassName}`,
                 type: NOTIFICATION_TYPE.CUSTOM,
                 linkId: studentId,
+                senderName: user.name,
             });
         }
 

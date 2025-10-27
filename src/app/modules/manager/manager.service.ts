@@ -32,6 +32,7 @@ const createManager = async (
     message,
     type: NOTIFICATION_TYPE.MANAGER,
     linkId: manager._id,
+    senderName: payload.name,
   });
 
   return manager;

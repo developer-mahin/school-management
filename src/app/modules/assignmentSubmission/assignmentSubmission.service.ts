@@ -55,6 +55,7 @@ const submitAssignment = async (
         message: `${user.name} submitted assignment ${findAssignment.title}`,
         type: NOTIFICATION_TYPE.ASSIGNMENT_SUBMISSION,
         linkId: result._id,
+        senderName: user.name,
       });
     }),
   ]);

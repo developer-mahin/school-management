@@ -1,20 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
-import { USER_ROLE } from '../../constant';
-import { TAuthUser } from '../../interface/authUser';
-import AppError from '../../utils/AppError';
-import School from '../school/school.model';
-import { createUserWithProfile } from '../user/user.helper';
-import { TTeacher } from './teacher.interface';
-import Teacher from './teacher.model';
-import { StudentService } from '../student/student.service';
-import ClassSchedule from '../classSchedule/classSchedule.model';
 import mongoose from 'mongoose';
 import sendNotification from '../../../socket/sendNotification';
-import { NOTIFICATION_TYPE } from '../notification/notification.interface';
-import User from '../user/user.model';
+import { USER_ROLE } from '../../constant';
+import { TAuthUser } from '../../interface/authUser';
 import AggregationQueryBuilder from '../../QueryBuilder/aggregationBuilder';
+import AppError from '../../utils/AppError';
 import { transactionWrapper } from '../../utils/transactionWrapper';
+import ClassSchedule from '../classSchedule/classSchedule.model';
+import { NOTIFICATION_TYPE } from '../notification/notification.interface';
+import School from '../school/school.model';
+import { StudentService } from '../student/student.service';
+import { createUserWithProfile } from '../user/user.helper';
+import User from '../user/user.model';
+import { TTeacher } from './teacher.interface';
+import Teacher from './teacher.model';
 
 const createTeacher = async (
   payload: Partial<TTeacher> & { phoneNumber: string; name?: string },
@@ -42,6 +42,7 @@ const createTeacher = async (
     message,
     type: NOTIFICATION_TYPE.TEACHER,
     linkId: teacher._id,
+    senderName: payload.name,
   });
 
   return teacher;

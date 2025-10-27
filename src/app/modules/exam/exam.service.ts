@@ -48,6 +48,7 @@ const createExam = async (payload: Partial<TExam>, user: TAuthUser) => {
         message: `Exam scheduled for ${payload.date} at ${payload.startTime}`,
         type: NOTIFICATION_TYPE.EXAM,
         linkId: result._id,
+        senderName: user.name,
       });
     }),
   );
@@ -104,6 +105,7 @@ const updateExams = async (
         message: `Exam scheduled updated`,
         type: NOTIFICATION_TYPE.EXAM,
         linkId: result?._id,
+        senderName: user.name,
       });
     }),
   );
@@ -254,6 +256,7 @@ const updateGrade = async (
     message: `Grades updated for class ${findExam.classId?.className}`,
     type: NOTIFICATION_TYPE.GRADE,
     linkId: examId, // Will be updated after result creation
+    senderName: user.name,
   });
 
   const updateExam = Exam.findOneAndUpdate(

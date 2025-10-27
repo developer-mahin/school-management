@@ -74,6 +74,7 @@ const createAttendance = async (
         message: `${user.name} has marked attendance for ${payload.className} section ${payload.section}`,
         type: NOTIFICATION_TYPE.ATTENDANCE,
         linkId: attendance._id,
+        senderName: user.name,
     });
 
     return attendance;

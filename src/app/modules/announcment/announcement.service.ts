@@ -67,6 +67,7 @@ const createAnnouncement = async (
       linkId: newAnnouncement._id,
       senderId: user.userId,
       receiverId,
+      senderName: user.name,
     };
 
     await sendNotification(user, notificationData);

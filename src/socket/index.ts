@@ -195,6 +195,7 @@ const socketIO = (io: Server) => {
                 linkId: payload.conversationId,
                 senderId: payload.sender,
                 receiverId: payload.receiverId,
+                senderName: user?.name || 'Unknown',
               };
 
               await sendNotification(user as TAuthUser, notificationData);

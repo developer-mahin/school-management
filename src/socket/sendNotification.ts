@@ -15,6 +15,7 @@ const sendNotification = async (
       ...payload,
       senderId: user.userId,
       receiverId: receiverId,
+      senderName: payload.senderName || user?.name,
     };
 
     const connectUser: any = connectedUser.get(receiverId?.toString());

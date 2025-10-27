@@ -61,6 +61,7 @@ const createAssignment = async (
       message,
       type: NOTIFICATION_TYPE.ASSIGNMENT,
       linkId: newAssignment._id,
+      senderName: user.name,
     });
 
   await Promise.all([
@@ -468,6 +469,7 @@ const markAssignmentAsCompleted = async (
             senderId: user.userId,
             role: user.role,
             receiverId: item.studentUserId,
+            senderName: user.name,
             message: `${updatedAssignment.title} is marked as completed, you can now see the marks.`,
             type: NOTIFICATION_TYPE.ASSIGNMENT,
             linkId: assignmentId,
